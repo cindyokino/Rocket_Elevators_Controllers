@@ -1,0 +1,98 @@
+//-------------------------------------------- SUMMARY / NOTES --------------------------------------------
+//---------------------------------------------------------------------------------------------------------
+// SUMMARY:
+1- SEQUENCES OF ESSENTIALS REQUIREMENTS
+2- MAIN PROGRAM 
+
+// NOTES:
+Column: contains a list of N elevators
+    status: online or ofline
+
+Elevator: 
+    status: active or idle  
+    direction: up or down
+    door: open or closed
+
+
+//----------------------------------------------- SEQUENCES -----------------------------------------------
+//---------------------------------------------------------------------------------------------------------
+
+<------------------- OBJECTS ------------------->
+DEFINE Column USING id and status:
+    ID: id,
+    Status: status,
+    ElevatorsList: SET to empty ElevatorsList
+
+    SEQUENCE createElevatorsList USING elevator_amount
+        FOR x IN elevator_amount 
+        SET elevator TO INSTANTIATE Elevator WITH 1 AND idle AND 1 AND closed
+        ADD elevator TO ElevatorsList
+        INCREMENT id by 1
+    ENDSEQUENCE
+
+ENDDEFINE
+
+DEFINE Elevator USING id and status:
+    ID: id,
+    Status: status,
+    Direction: direction,
+    Floor: floor,
+    Door: door,    
+ENDDEFINE
+
+SET column1 TO INSTANTIATE Column WITH 1 AND online
+// SET column1 status TO offline
+
+<------------------- FIND THE BEST ELEVATOR ------------------->
+// The best option is the nearest and already moving elevator that has the same direction that the request direction
+SEQUENCE findElevator USING requestFloor AND requestDirection
+    SET bestElevator = elevator1    //lets take the first element of the array and compare it to each elevatorN  
+    SET bestDistance = |bestElevator_floor - requestFloor|
+        FOR EACH elevator IN ElevatorsList THEN 
+            IF (|elevatorN_floor - requestFloor| < bestDistance)
+                IF (elevatorN IS active AND elevatorN_direction IS equal requestDirection)
+                ENDIF
+            ENDIF
+        IF elevator is traveling AND direction is the same as asked at requestElevator THEN
+            STORE elevatorA in bestElevator 
+    // if both elevators are idle, check for shorter distance then send the closest elevator
+    // else send the elevator moving in that direction
+	ENDFOR
+
+// check the smaller distance, then set the closest elevator as elevatorOn
+    RETURN bestElevator 
+ENDSEQUENCE
+
+// <------------------- FIND THE NEAREST ELEVATOR ------------------->
+// SEQUENCE nearestElevator USING requestFloor AND requestDirection
+//     FOR EACH elevator IN ElevatorsList THEN
+//         IF requestFloor > elevatorFloor AND elevatorDirection IS up AND requestDirection IS up THEN
+//             GET elevator ID
+//         ELSE IF requestFloor < elevatorFloor AND elevatorDirection IS down AND requestDirection IS down THEN
+//             GET elevator ID
+//     ENDFOR
+// ENDSEQUENCE
+
+SEQUENCE
+
+ENDSEQUENCE
+
+SEQUENCE
+ENDSEQUENCE
+
+ 
+//--------------------------------------------- MAIN PROGRAM ---------------------------------------------
+//---------------------------------------------------------------------------------------------------------
+
+// When a user press a button outside the elevator requesting for an elevator
+SEQUENCE requestElevator USING requestFloor AND requestDirection
+    CALL findElevator WITH requestFloor AND requestDirection RETURNING bestElevator
+ENDSEQUENCE
+
+
+//-------------------------------------------- TESTING PROGRAM --------------------------------------------
+//---------------------------------------------------------------------------------------------------------
+//SCENARIO:
+1 column
+2 elevators
+10 floors
