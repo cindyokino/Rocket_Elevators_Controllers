@@ -8,69 +8,119 @@
 
 // NOTES:
 Column: contains a list of N elevators
-    status: ONLINE or OFFLINE
+    status: ACTIVE or INACTIVE    
+    OutsideButton:
+        Status: ON or OFF
 
 Elevator: 
     status: IDLE, UP or DOWN  
-    door: OPEN or CLOSED
-
-// Buttons: exterior, interior
-
+    insideDoor: OPENED or CLOSED
+    OutsideDoor: 
+        status: OPENED or CLOSED
+    InsideButton:
+        Status: ON or OFF
 
 //------------------------------------------- GLOBAL VARIABLES ------------------------------------------
 //-------------------------------------------------------------------------------------------------------
-SET numberOfFloor
-SET numberOfElevator
+SET numberOfFloors
+SET numberOfElevators
 
 //----------------------------------------------- OBJECTS -----------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
 <------------------- COLUMN OBJECT ------------------->
-DEFINE Column USING id AND status AND numberOfElevator AND numberOfFloor:
+DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
     ID: id,
     Status: status,
-    ElevatorsList: SET TO EMPTY ElevatorsList
+    ElevatorsList: SET TO EMPTY ElevatorsList           
+    OutsideButtonsList: SET TO EMPTY OutsideButtonsList //This is a list containing the buttons in each floor (UP and DOWN buttons)
 
-    SEQUENCE createElevatorsList USING numberOfElevator
-        FOR EACH numberOfElevator 
-            SET elevator TO INSTANTIATE Elevator WITH 1 AND "IDLE" AND 1 AND "CLOSED"
-            ADD elevator TO ElevatorsList
-            INCREMENT id by 1
+    SEQUENCE createElevatorsList USING numberOfElevators
+        FOR EACH numberOfElevators 
+            SET tempID = 1
+            ADD (INSTANTIATE Elevator WITH tempID AND "IDLE" AND 1 AND "CLOSED" AND numberOfFloors) TO ElevatorsList
+            INCREMENT tempID by 1
+        ENDFOR
+    ENDSEQUENCE    
+
+    SEQUENCE createOutsideButtonsList USING numberOfFloors
+        FOR EACH numberOfFloors 
+            SET tempID = 1
+            ADD (INSTANTIATE OutsideButton WITH tempID AND numberOfFloors) TO OutsideButtonsList
+            INCREMENT tempID by 1
         ENDFOR
     ENDSEQUENCE
-
 ENDDEFINE
 
 <------------------- ELEVATOR OBJECT ------------------->
-DEFINE Elevator USING id AND status AND floor:
+DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
     ID: id,
     Status: status,
     Floor: floor,
-    Door: door,  
-    FloorList: SET TO EMPTY FloorList
+    InsideDoor: insideDoor,                             //This is the elevator door (each elevator has only on door)
+    OutsideDoorsList: SET TO EMPTY OutsideDoorsList     //This is a list containing the doors controled by each elevator in each floor
+    FloorList: SET TO EMPTY FloorList                   //This is a list of requested floors to stop for an elevator selected with findElevator logic
+
+     SEQUENCE createOutsideDoorsList USING numberOfFloors
+        FOR EACH numberOfFloors 
+            SET tempID = 1
+            ADD (INSTANTIATE OutsideDoor WITH tempID AND numberOfFloors) TO OutsideDoorList
+            INCREMENT tempID by 1
+        ENDFOR
+    ENDSEQUENCE
+
+    SEQUENCE createOutsideDoorsList USING numberOfFloors
+        FOR EACH numberOfFloors 
+            SET tempID = 1
+            ADD (INSTANTIATE OutsideDoor WITH tempID AND numberOfFloors) TO OutsideDoorsList
+            INCREMENT tempID by 1
+        ENDFOR
+    ENDSEQUENCE
+
+    SEQUENCE createInsideButtonsList USING numberOfFloors
+        FOR EACH numberOfFloors 
+            SET tempID = 1
+            ADD (INSTANTIATE InsideButton WITH tempID AND numberOfFloors) TO InsideButtonsList
+            INCREMENT tempID by 1
+        ENDFOR
+    ENDSEQUENCE
 ENDDEFINE
 
-<------------------- INSTANTIATING COLUMN ------------------->
-SET column1 TO INSTANTIATE Column WITH 1 AND "ONLINE"
-// SET column1 status TO "ONLINE"    //set the status to offline to turn off the column
+<------------------- OUTSIDE DOOR OBJECT ------------------->
+DEFINE OutsideDoor USING id AND numberOfFloors
+    ID: id,
+    Status: status,
+ENDDEFINE
+
+<------------------- OUTSIDE BUTTON OBJECT ------------------->
+DEFINE OutsideButton USING id AND numberOfFloors
+    ID: id,
+    Status: status
+ENDDEFINE
+
+<------------------- INSIDE BUTTON OBJECT ------------------->
+DEFINE InsideButton USING id AND numberOfFloors
+    ID: id,
+    Status: status
+ENDDEFINE
 
 
 //----------------------------------------------- SEQUENCES -----------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 
-<------------------- FIND THE BEST ELEVATOR WITH A PRIORIZATION LOGIC ------------------->
-// The best option is the nearest and already moving elevator that has the same direction that the request direction
-// If there is no elevators moving at the same direction as the request direction, the nearest idle elevator is selectedList
+<------------------- LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORIZATION LOGIC ------------------->
+// The best option is the nearest and already moving elevator that has the same direction that the current direction
+// If there is no elevators moving at the same direction as the current direction, the nearest idle elevator is selectedList
 
-SEQUENCE findElevator USING request floor AND request direction AND column1.ElevatorsList   
+SEQUENCE findElevator USING currentFloor AND currentDirection AND column1 ElevatorsList   
     SET ActiveElevatorsList TO EMPTY
     SET IdleElevatorsList TO EMPTY
 
         // Separate the elevators from list in 2 lists: active and idle
         FOR EACH elevatorN IN ElevatorsList  
-            IF (elevatorN IS NOT "IDLE" AND elevatorN status IS EQUAL TO request direction) THEN
-                // Verify if the request is on the elevators way, if the elevator has already passed the request floor, elevator will just continue its way ignoring this call
-                IF (elevatorN status IS "UP" AND elevatorN floor IS < request floor OR elevatorN status IS "DOWN" AND elevatorN floor IS > request floor) THEN
+            IF (elevatorN IS NOT "IDLE" AND elevatorN status IS EQUAL TO currentDirection) THEN
+                // Verify if the request is on the elevators way, if the elevator has already passed the current floor, elevator will just continue its way ignoring this call
+                IF (elevatorN status IS "UP" AND elevatorN floor IS < currentFloor OR elevatorN status IS "DOWN" AND elevatorN floor IS > currentFloor) THEN
                     ADD elevatorN TO ActiveElevatorsList
                 ENDIF
             ELSE 
@@ -86,62 +136,106 @@ SEQUENCE findElevator USING request floor AND request direction AND column1.Elev
     RETURN bestElevator 
 ENDSEQUENCE
 
-<------------------- FIND THE NEAREST ELEVATOR ------------------->
+<------------------- LOGIC TO FIND THE NEAREST ELEVATOR ------------------->
 SEQUENCE findNearestElevator USING selectedList
     SET bestElevator = elevator1    //lets take the first element of the array and compare it to each elevatorN of the array  
-    SET bestDistance = |bestElevator floor - request floor|
+    SET bestDistance = |bestElevator floor - currentFloor|
     FOR EACH elevatorN IN selectedList 
-        IF (|elevatorN floor - request floor| < bestDistance) THEN
+        IF (|elevatorN floor - currentFloor| < bestDistance) THEN
             STORE elevatorN in bestElevator            
         ENDIF
     ENDFOR
     RETURN bestElevator 
 ENDSEQUENCE
 
-<------------------- MOVE ELEVATOR ------------------->
-SEQUENCE moveElevator USING elevator
-    WHILE elevator floorList IS NOT EMPTY DO    
-        IF elevator status IS "UP" THEN
-            MOVE TO the next floor from the FloorList until reach the last element of the list
-            IF FloorList IS EMPTY THEN
-                SET elevator status TO "IDLE"
-            ELSE 
-                SET elevator status TO "DOWN"
-            ENDIF
-        ELSE 
-             MOVE TO the previous floor from the FloorList until reach the first element of the list
-        DISPLAY currentFloorNumber ON internal AND external displays
-    ENDWHILE
-ENDSEQUENCE
-
-<------------------- STORE FLOOR IN LIST WHEN USER PRESS BUTTON INSIDE OR OUTSIDE ELEVATOR ------------------->
+<------------------- LOGIC TO STORE FLOOR IN LIST WHEN USER PRESS BUTTON INSIDE OR OUTSIDE ELEVATOR ------------------->
 SEQUENCE addFloorToFloorList USING elevator AND floor 
     ADD floor TO elevator FloorList
     SORT elevator FloorList ASCENDING
 ENDSEQUENCE
 
+<------------------- LOGIC TO MOVE ELEVATOR ------------------->
+SEQUENCE moveElevator USING elevator AND floorList AND requestFloor
+    WHILE elevator floorList IS NOT EMPTY DO    
+        IF (elevator status IS "IDLE") THEN     //In this case the elevator is idle thus the list will have only one element
+            IF (elevator floor IS < requestFloor) THEN
+                SET elevator status TO "UP"
+            ELSE 
+                SET elevator status TO "DOWN"
+            ENDIF
+        ENDIF
+
+        IF elevator status IS "UP" THEN
+            MOVE TO the NEXT floor FROM the FloorList AND remove floor FROM FloorList UNTIL reach the last element OF the list
+            DISPLAY currentFloorNumber ON internal AND external displays
+            IF FloorList IS EMPTY THEN
+                SET elevator status TO "IDLE"
+            ELSE 
+                SET elevator status TO "DOWN"
+            ENDIF
+        ELSE IF elevator status IS "DOWN" THEN
+            MOVE TO the previous floor FROM the FloorList AND remove floor FROM FloorList UNTIL reach the first element OF the list
+            DISPLAY currentFloorNumber ON internal AND external displays
+            IF FloorList IS EMPTY THEN
+                SET elevator status TO "IDLE"
+            ELSE 
+                SET elevator status TO "UP"
+            ENDIF
+        ENDIF
+    ENDWHILE
+ENDSEQUENCE
+
+<------------------- LOGIC TO MOVE UP ------------------->
+SEQUENCE
+    MOVE TO the NEXT floor FROM the FloorList AND remove floor FROM FloorList UNTIL reach the last element OF the list
+    DISPLAY currentFloorNumber ON internal AND external displays
+    CALL openDoor
+    CALL closeDoor
+ENDSEQUENCE
+
+<------------------- LOGIC TO MOVE DOWN ------------------->
+
+<------------------- LOGIC TO OPEN DOOR ------------------->
+SEQUENCE openDoor USING elevator AND waitingTime AND obstruction
+    SET elevator insideDoor TO "OPENED"
+    SET waitingTime TO 0 seconds
+
+ENDSEQUENCE
+
+
+
  
 //--------------------------------------------- MAIN PROGRAM ----------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 
-// When user press a button outside the elevator requesting for an elevator
-// we have acces to the requestFloor and direction desired
+<------------------- INITIATE SYSTEM ------------------->
+DEFINE initSystem USING numberOfFloors AND numberOfElevators
+    SET column1 TO INSTANTIATE Column WITH 1 AND "ACTIVE" AND numberOfFloors AND numberOfElevators
+    CALL column1 createElevatorsList
+ENDDEFINE
 
-SEQUENCE requestElevator USING request floor AND elevator status
-    CALL findElevator WITH request floor AND elevator status RETURNING bestElevator
-    CALL addFloorToFloorList WITH bestElevator AND requestFloor
-    CALL moveElevator WITH bestElevator AND requestFloor
+<------------------- BUTTON REQUESTS OUTSIDE ELEVATOR ------------------->
+// When user press a button outside the elevator requesting for an elevator we have acces to the request floor and direction desired
+
+SEQUENCE requestElevator USING currentFloor AND elevator status
+    CALL findElevator WITH currentFloor AND elevator RETURNING bestElevator
+    CALL addFloorToFloorList WITH bestElevator AND currentFloor
+    CALL moveElevator WITH bestElevator AND floorList AND currentFloor
+    // CALL openDoor WITH bestElevator AND waitingTime AND obstruction
+ENDSEQUENCE
+
+<------------------- BUTTON REQUESTS INSIDE ELEVATOR ------------------->
+// When user press a button inside the elevator requesting for a destination floor we have acces to the destinationFloor 
+SEQUENCE requestStop USING requestFloor AND elevator
+    CALL addFloorToFloorList WITH elevator AND requestFloor
     //CheckWeight
-    //checkDoors
+    //checkSecurity
+    //CALL closeDoor
+    CALL moveElevator WITH elevator AND floorList AND requestFloor
+    //CALL openDoor
 ENDSEQUENCE
 
 
-// When user press a button inside the elevator requesting for a destination floor
-// we have acces to the destinationFloor 
-
-SEQUENCE
-    // CALL moveElevatorToRequestFloor WITH requestFloor AND destinationFloor AND bestElevator
-ENDSEQUENCE
 
 
 
