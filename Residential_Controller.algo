@@ -46,7 +46,8 @@ DEFINE Elevator USING id and status:
     Status: status,
     Direction: direction,
     Floor: floor,
-    Door: door,    
+    Door: door,  
+    FloorList: SET to empty FloorList
 ENDDEFINE
 
 <------------------- INSTANTIATING COLUMN ------------------->
@@ -92,9 +93,26 @@ SEQUENCE findNearestElevator USING selectedList
     ENDFOR
 ENDSEQUENCE
 
-<------------------- MOVE ELEVATOR TO REQUEST FLOOR ------------------->
-SEQUENCE moveElevatorToRequestFloor USING bestElevator AND requestFloor
+<------------------- MOVE ELEVATOR ------------------->
+SEQUENCE moveElevator USING elevator
+    WHILE elevator_floorList IS NOT empty DO    
+        IF elevator_direction IS "UP" THEN
+            MOVE TO the next floor from the FloorList until reach the last element of the list
+            IF FloorList IS empty THEN
+                SET elevator_status TO "IDLE"
+            ELSE 
+                SET elevator_direction TO "DOWN"
+            ENDIF
+        ELSE 
+             MOVE TO the previous floor from the FloorList until reach the first element of the list
+        DISPLAY currentFloorNumber ON internal AND external displays
+    ENDWHILE
+ENDSEQUENCE
 
+<------------------- MOVE ELEVATOR WHEN USER PRESS BUTTON INSIDE OR OUTSIDE ELEVATOR ------------------->
+SEQUENCE addFloorToFloorList USING elevator AND floor 
+    ADD floor TO elevator_FloorList
+    SORT elevator_FloorList ASCENDING
 ENDSEQUENCE
 
  
@@ -106,12 +124,13 @@ ENDSEQUENCE
 
 SEQUENCE requestElevator USING request_floor AND request_direction
     CALL findElevator WITH request_floor AND request_direction RETURNING bestElevator
-    CALL moveElevatorToRequestFloor WITH bestElevator AND requestFloor
+    CALL addFloorToFloorList WITH bestElevator AND requestFloor
+    CALL moveElevator WITH bestElevator AND requestFloor
 ENDSEQUENCE
 
 
 // When user press a button inside the elevator requesting for a destination floor
-// we have acces to the destinationFloor
+// we have acces to the destinationFloor 
 
 SEQUENCE
     // CALL moveElevatorToRequestFloor WITH requestFloor AND destinationFloor AND bestElevator
