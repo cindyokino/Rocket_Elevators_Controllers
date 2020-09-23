@@ -8,31 +8,32 @@
 
 // NOTES:
 Column: contains a list of N elevators
-    status: online or ofline
+    status: ONLINE or OFFLINE
 
 Elevator: 
-    status: active or idle  
-    direction: up or down
-    door: open or closed
+    status: IDLE, UP or DOWN  
+    door: OPEN or CLOSED
+
+// Buttons: exterior, interior
 
 
 //------------------------------------------- GLOBAL VARIABLES ------------------------------------------
 //-------------------------------------------------------------------------------------------------------
-SET elevator_amount     //This is the total number of elevators
-
+SET numberOfFloor
+SET numberOfElevator
 
 //----------------------------------------------- OBJECTS -----------------------------------------------
 //-------------------------------------------------------------------------------------------------------
 
 <------------------- COLUMN OBJECT ------------------->
-DEFINE Column USING id and status:
+DEFINE Column USING id AND status AND numberOfElevator AND numberOfFloor:
     ID: id,
     Status: status,
-    ElevatorsList: SET to empty ElevatorsList
+    ElevatorsList: SET TO EMPTY ElevatorsList
 
-    SEQUENCE createElevatorsList USING elevator_amount
-        FOR x IN elevator_amount 
-            SET elevator TO INSTANTIATE Elevator WITH 1 AND idle AND 1 AND closed
+    SEQUENCE createElevatorsList USING numberOfElevator
+        FOR EACH numberOfElevator 
+            SET elevator TO INSTANTIATE Elevator WITH 1 AND "IDLE" AND 1 AND "CLOSED"
             ADD elevator TO ElevatorsList
             INCREMENT id by 1
         ENDFOR
@@ -41,18 +42,17 @@ DEFINE Column USING id and status:
 ENDDEFINE
 
 <------------------- ELEVATOR OBJECT ------------------->
-DEFINE Elevator USING id and status:
+DEFINE Elevator USING id AND status AND floor:
     ID: id,
     Status: status,
-    Direction: direction,
     Floor: floor,
     Door: door,  
-    FloorList: SET to empty FloorList
+    FloorList: SET TO EMPTY FloorList
 ENDDEFINE
 
 <------------------- INSTANTIATING COLUMN ------------------->
-SET column1 TO INSTANTIATE Column WITH 1 AND online
-// SET column1 status TO offline    //set the status to offline to turn off the column
+SET column1 TO INSTANTIATE Column WITH 1 AND "ONLINE"
+// SET column1 status TO "ONLINE"    //set the status to offline to turn off the column
 
 
 //----------------------------------------------- SEQUENCES -----------------------------------------------
@@ -62,19 +62,23 @@ SET column1 TO INSTANTIATE Column WITH 1 AND online
 // The best option is the nearest and already moving elevator that has the same direction that the request direction
 // If there is no elevators moving at the same direction as the request direction, the nearest idle elevator is selectedList
 
-SEQUENCE findElevator USING request_floor AND request_direction AND ElevatorsList   
-    SET ActiveElevatorsList to empty
-    SET IdleElevatorsList to empty
+SEQUENCE findElevator USING request floor AND request direction AND column1.ElevatorsList   
+    SET ActiveElevatorsList TO EMPTY
+    SET IdleElevatorsList TO EMPTY
 
+        // Separate the elevators from list in 2 lists: active and idle
         FOR EACH elevatorN IN ElevatorsList  
-            IF (elevatorN IS active AND elevatorN_direction IS equal request_direction) THEN
-                ADD elevatorN TO ActiveElevatorsList
-            ELSE if (elevatorN IS idle) THEN
+            IF (elevatorN IS NOT "IDLE" AND elevatorN status IS EQUAL TO request direction) THEN
+                // Verify if the request is on the elevators way, if the elevator has already passed the request floor, elevator will just continue its way ignoring this call
+                IF (elevatorN status IS "UP" AND elevatorN floor IS < request floor OR elevatorN status IS "DOWN" AND elevatorN floor IS > request floor) THEN
+                    ADD elevatorN TO ActiveElevatorsList
+                ENDIF
+            ELSE 
                 ADD elevatorN TO IdleElevatorsList
             ENDIF
         ENDFOR
 
-        IF (ActiveElevatorsList IS not NULL) THEN
+        IF (ActiveElevatorsList IS not EMPTY) THEN
             CALL findNearestElevator USING ActiveElevatorsList
         ELSE 
             CALL findNearestElevator USING IdleElevatorsList         
@@ -85,23 +89,24 @@ ENDSEQUENCE
 <------------------- FIND THE NEAREST ELEVATOR ------------------->
 SEQUENCE findNearestElevator USING selectedList
     SET bestElevator = elevator1    //lets take the first element of the array and compare it to each elevatorN of the array  
-    SET bestDistance = |bestElevator_floor - request_floor|
+    SET bestDistance = |bestElevator floor - request floor|
     FOR EACH elevatorN IN selectedList 
-        IF (|elevatorN_floor - request_floor| < bestDistance) THEN
+        IF (|elevatorN floor - request floor| < bestDistance) THEN
             STORE elevatorN in bestElevator            
         ENDIF
     ENDFOR
+    RETURN bestElevator 
 ENDSEQUENCE
 
 <------------------- MOVE ELEVATOR ------------------->
 SEQUENCE moveElevator USING elevator
-    WHILE elevator_floorList IS NOT empty DO    
-        IF elevator_direction IS "UP" THEN
+    WHILE elevator floorList IS NOT EMPTY DO    
+        IF elevator status IS "UP" THEN
             MOVE TO the next floor from the FloorList until reach the last element of the list
-            IF FloorList IS empty THEN
-                SET elevator_status TO "IDLE"
+            IF FloorList IS EMPTY THEN
+                SET elevator status TO "IDLE"
             ELSE 
-                SET elevator_direction TO "DOWN"
+                SET elevator status TO "DOWN"
             ENDIF
         ELSE 
              MOVE TO the previous floor from the FloorList until reach the first element of the list
@@ -109,10 +114,10 @@ SEQUENCE moveElevator USING elevator
     ENDWHILE
 ENDSEQUENCE
 
-<------------------- MOVE ELEVATOR WHEN USER PRESS BUTTON INSIDE OR OUTSIDE ELEVATOR ------------------->
+<------------------- STORE FLOOR IN LIST WHEN USER PRESS BUTTON INSIDE OR OUTSIDE ELEVATOR ------------------->
 SEQUENCE addFloorToFloorList USING elevator AND floor 
-    ADD floor TO elevator_FloorList
-    SORT elevator_FloorList ASCENDING
+    ADD floor TO elevator FloorList
+    SORT elevator FloorList ASCENDING
 ENDSEQUENCE
 
  
@@ -122,10 +127,12 @@ ENDSEQUENCE
 // When user press a button outside the elevator requesting for an elevator
 // we have acces to the requestFloor and direction desired
 
-SEQUENCE requestElevator USING request_floor AND request_direction
-    CALL findElevator WITH request_floor AND request_direction RETURNING bestElevator
+SEQUENCE requestElevator USING request floor AND elevator status
+    CALL findElevator WITH request floor AND elevator status RETURNING bestElevator
     CALL addFloorToFloorList WITH bestElevator AND requestFloor
     CALL moveElevator WITH bestElevator AND requestFloor
+    //CheckWeight
+    //checkDoors
 ENDSEQUENCE
 
 
@@ -142,6 +149,6 @@ ENDSEQUENCE
 //---------------------------------------------------------------------------------------------------------
 //SCENARIO:
 1 column
-2 elevators //SET elevator_amount
+2 elevators //SET elevator amount
 10 floors
 
