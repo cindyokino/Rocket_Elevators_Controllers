@@ -1,8 +1,10 @@
 //-------------------------------------------- SUMMARY / NOTES --------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 // SUMMARY:
-1- SEQUENCES OF ESSENTIALS REQUIREMENTS
-2- MAIN PROGRAM 
+1- GLOBAL VARIABLES
+2- OBJECTS
+3- SEQUENCES
+4- MAIN PROGRAM 
 
 // NOTES:
 Column: contains a list of N elevators
@@ -14,10 +16,15 @@ Elevator:
     door: open or closed
 
 
-//----------------------------------------------- SEQUENCES -----------------------------------------------
-//---------------------------------------------------------------------------------------------------------
+//------------------------------------------- GLOBAL VARIABLES ------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+SET elevator_amount     //This is the total number of elevators
 
-<------------------- OBJECTS ------------------->
+
+//----------------------------------------------- OBJECTS -----------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+
+<------------------- COLUMN OBJECT ------------------->
 DEFINE Column USING id and status:
     ID: id,
     Status: status,
@@ -25,13 +32,15 @@ DEFINE Column USING id and status:
 
     SEQUENCE createElevatorsList USING elevator_amount
         FOR x IN elevator_amount 
-        SET elevator TO INSTANTIATE Elevator WITH 1 AND idle AND 1 AND closed
-        ADD elevator TO ElevatorsList
-        INCREMENT id by 1
+            SET elevator TO INSTANTIATE Elevator WITH 1 AND idle AND 1 AND closed
+            ADD elevator TO ElevatorsList
+            INCREMENT id by 1
+        ENDFOR
     ENDSEQUENCE
 
 ENDDEFINE
 
+<------------------- ELEVATOR OBJECT ------------------->
 DEFINE Elevator USING id and status:
     ID: id,
     Status: status,
@@ -40,59 +49,80 @@ DEFINE Elevator USING id and status:
     Door: door,    
 ENDDEFINE
 
+<------------------- INSTANTIATING COLUMN ------------------->
 SET column1 TO INSTANTIATE Column WITH 1 AND online
-// SET column1 status TO offline
+// SET column1 status TO offline    //set the status to offline to turn off the column
 
-<------------------- FIND THE BEST ELEVATOR ------------------->
+
+//----------------------------------------------- SEQUENCES -----------------------------------------------
+//---------------------------------------------------------------------------------------------------------
+
+<------------------- FIND THE BEST ELEVATOR WITH A PRIORIZATION LOGIC ------------------->
 // The best option is the nearest and already moving elevator that has the same direction that the request direction
-SEQUENCE findElevator USING requestFloor AND requestDirection
-    SET bestElevator = elevator1    //lets take the first element of the array and compare it to each elevatorN  
-    SET bestDistance = |bestElevator_floor - requestFloor|
-        FOR EACH elevator IN ElevatorsList THEN 
-            IF (|elevatorN_floor - requestFloor| < bestDistance)
-                IF (elevatorN IS active AND elevatorN_direction IS equal requestDirection)
-                ENDIF
-            ENDIF
-        IF elevator is traveling AND direction is the same as asked at requestElevator THEN
-            STORE elevatorA in bestElevator 
-    // if both elevators are idle, check for shorter distance then send the closest elevator
-    // else send the elevator moving in that direction
-	ENDFOR
+// If there is no elevators moving at the same direction as the request direction, the nearest idle elevator is selectedList
 
-// check the smaller distance, then set the closest elevator as elevatorOn
+SEQUENCE findElevator USING request_floor AND request_direction AND ElevatorsList   
+    SET ActiveElevatorsList to empty
+    SET IdleElevatorsList to empty
+
+        FOR EACH elevatorN IN ElevatorsList  
+            IF (elevatorN IS active AND elevatorN_direction IS equal request_direction) THEN
+                ADD elevatorN TO ActiveElevatorsList
+            ELSE if (elevatorN IS idle) THEN
+                ADD elevatorN TO IdleElevatorsList
+            ENDIF
+        ENDFOR
+
+        IF (ActiveElevatorsList IS not NULL) THEN
+            CALL findNearestElevator USING ActiveElevatorsList
+        ELSE 
+            CALL findNearestElevator USING IdleElevatorsList         
+
     RETURN bestElevator 
 ENDSEQUENCE
 
-// <------------------- FIND THE NEAREST ELEVATOR ------------------->
-// SEQUENCE nearestElevator USING requestFloor AND requestDirection
-//     FOR EACH elevator IN ElevatorsList THEN
-//         IF requestFloor > elevatorFloor AND elevatorDirection IS up AND requestDirection IS up THEN
-//             GET elevator ID
-//         ELSE IF requestFloor < elevatorFloor AND elevatorDirection IS down AND requestDirection IS down THEN
-//             GET elevator ID
-//     ENDFOR
-// ENDSEQUENCE
-
-SEQUENCE
-
+<------------------- FIND THE NEAREST ELEVATOR ------------------->
+SEQUENCE findNearestElevator USING selectedList
+    SET bestElevator = elevator1    //lets take the first element of the array and compare it to each elevatorN of the array  
+    SET bestDistance = |bestElevator_floor - request_floor|
+    FOR EACH elevatorN IN selectedList 
+        IF (|elevatorN_floor - request_floor| < bestDistance) THEN
+            STORE elevatorN in bestElevator            
+        ENDIF
+    ENDFOR
 ENDSEQUENCE
 
-SEQUENCE
+<------------------- MOVE ELEVATOR TO REQUEST FLOOR ------------------->
+SEQUENCE moveElevatorToRequestFloor USING bestElevator AND requestFloor
+
 ENDSEQUENCE
 
  
-//--------------------------------------------- MAIN PROGRAM ---------------------------------------------
+//--------------------------------------------- MAIN PROGRAM ----------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 
-// When a user press a button outside the elevator requesting for an elevator
-SEQUENCE requestElevator USING requestFloor AND requestDirection
-    CALL findElevator WITH requestFloor AND requestDirection RETURNING bestElevator
+// When user press a button outside the elevator requesting for an elevator
+// we have acces to the requestFloor and direction desired
+
+SEQUENCE requestElevator USING request_floor AND request_direction
+    CALL findElevator WITH request_floor AND request_direction RETURNING bestElevator
+    CALL moveElevatorToRequestFloor WITH bestElevator AND requestFloor
 ENDSEQUENCE
+
+
+// When user press a button inside the elevator requesting for a destination floor
+// we have acces to the destinationFloor
+
+SEQUENCE
+    // CALL moveElevatorToRequestFloor WITH requestFloor AND destinationFloor AND bestElevator
+ENDSEQUENCE
+
 
 
 //-------------------------------------------- TESTING PROGRAM --------------------------------------------
 //---------------------------------------------------------------------------------------------------------
 //SCENARIO:
 1 column
-2 elevators
+2 elevators //SET elevator_amount
 10 floors
+
