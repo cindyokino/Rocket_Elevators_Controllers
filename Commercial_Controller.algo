@@ -1,0 +1,21 @@
+SET numberOfFloors
+SET numberOfBasements
+SET totalNumberOfFloors = numberOfFloors + numberOfBasements
+SET numberOfColumns
+SET waitingTime         //How many seconds the door remains open
+SET maxWeight           //Maximum weight an elevator can carry in KG
+
+
+IF there numberOfColumns IS EQUAL TO 1 THEN
+    SET numberOfFloors TO totalNumberOfFloors 
+ELSE    
+    SET numberOfFloorsPerColumn TO (round TO the nearest integer (numberOfFloors DIVIDED BY (numberOfColumns - 1)))
+    FOR EACH columnN IN columnList 
+        IF columnN is the first element THEN
+            SET numberOfFloors TO numberOfBasements 
+            //minFloor=numberOfBasements
+            //maxFloor=numberOfFloorsPerColumn            
+        ENDIF
+        minFloor=maxFloor+1
+        maxFloor=minFloor+numberOfFloorsPerColumn
+    ENDFOR

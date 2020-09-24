@@ -5,6 +5,7 @@
 2- OBJECTS
 3- SEQUENCES
 4- MAIN PROGRAM 
+5- TESTING PROGRAM
 
 // NOTES:
 Column: contains a list of N elevators
@@ -308,10 +309,6 @@ ENDSEQUENCE
 
 //-------------------------------------------- TESTING PROGRAM --------------------------------------------
 //---------------------------------------------------------------------------------------------------------
-SET numberOfFloors      TO 10
-SET numberOfElevators   TO 2
-SET waitingTime         TO 7 seconds (Supposed)
-SET maxWeight           TO 1200 kg (Supposed)
 
 //SCENARIO 1: ----------------------------------------------------------------------------------------------------------------------
 Elevator A is Idle at floor 2
