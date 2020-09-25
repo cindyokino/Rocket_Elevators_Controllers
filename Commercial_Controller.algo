@@ -143,17 +143,22 @@ DEFINE Column USING id AND status AND numberOfElevatorsPerColumn AND minFloor AN
         ENDFOR
     ENDSEQUENCE
 
-    SEQUENCE returnToOrigin USING elevatorsList
-        IF CURRENTTIME IS GREATER THAN 6 AM AND LESS THAN 10 AM THEN
+    SEQUENCE optimizeDisplacement USING elevatorsList   
+        IF CURRENTTIME IS GREATER THAN 6 AM AND LESS THAN 10 AM THEN    //Logic back to the origin
             FOR EACH elevator IN elevatorsList
                 SET floor OF elevator TO 1
+            ENDFOR
+        ELSE IF CURRENTTIME IS GREATER THAN 4 PM AND LESS THAN 7 PM THEN    //Logic to wait at last served floor of the column when people are leaving building
+            FOR EACH elevator IN elevatorsList
+                SET floor OF elevator TO maximumFloor OF COLUMN
             ENDFOR
         ENDIF
     ENDSEQUENCE
 
      <------------------- LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORIZATION LOGIC ------------------->
     // The best option is the nearest and already moving elevator that has the same direction that the current direction
-    // If there is no elevators moving at the same direction as the current direction, the nearest idle elevator is selectedList
+    // Verify if the request is on the elevators way, if the elevator has already passed the current floor, elevator will just continue its way ignoring this call
+    // If there is no elevators moving at the same direction as the current direction, the nearest idle elevator is selected
 
     SEQUENCE findElevator USING currentFloor AND currentDirection AND elevatorsList OF columnN
         SET ActiveElevatorsList TO EMPTY
@@ -161,7 +166,6 @@ DEFINE Column USING id AND status AND numberOfElevatorsPerColumn AND minFloor AN
 
         FOR EACH elevatorN IN elevatorsList
             IF (elevatorN IS NOT "IDLE" AND elevatorN status IS EQUAL TO currentDirection) THEN
-                // Verify if the request is on the elevators way, if the elevator has already passed the current floor, elevator will just continue its way ignoring this call
                 IF (elevatorN status IS "UP" AND elevatorN floor IS < currentFloor OR elevatorN status IS "DOWN" AND elevatorN floor IS > currentFloor) THEN
                     ADD elevatorN TO ActiveElevatorsList
                 ENDIF
@@ -201,27 +205,38 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberServedFloors:
     floor: floor,
     weightSensor: weightSensor,
     obstructionSensor: obstructionSensor,
-    elevatorDoor: (INSTANTIATE Door WITH tempID AND numberServedFloors), //This is the elevator door (each elevator has only on door)
+    elevatorDisplay:(INSTANTIATE Display WITH id AND status)
+    floorDisplaysList: SET TO EMPTY, 
+    elevatorDoor: (INSTANTIATE Door WITH id AND numberServedFloors),     //This is the elevator door (each elevator has only on door)
     floorDoorsList: SET TO EMPTY,                                        //This is a list containing the doors controled by each elevator in each floor
     floorButtonsList: SET TO EMPTY,                                      //This is a list containing the floor buttons inside each elevator
     floorList: SET TO EMPTY,                                             //This is a list of requested floors to stop for an elevator selected with findElevator logic
 
     CALL createFloorDoorsList WITH numberServedFloors
     CALL createFloorButtonsList WITH numberServedFloors
+    CALL createFloorDisplaysList WITH numberServedFloors
 
     SEQUENCE createFloorDoorsList USING numberServedFloors
-        ADD (INSTANTIATE Door WITH 1 AND "CLOSED") TO floorDoorsList
+        ADD (INSTANTIATE Door WITH 1 AND "CLOSED") TO floorDoorsList    //Add the ground floor door to list of controled doors (floorDoorsList)
         FOR doorNumberFloor IN minimumFloor TO maximumFloor
             ADD (INSTANTIATE Door WITH doorNumberFloor AND "CLOSED") TO floorDoorsList
         ENDFOR
     ENDSEQUENCE
 
     SEQUENCE createFloorButtonsList USING minimumFloor AND maximumFloor AND numberServedFloors
-        ADD (INSTANTIATE Button WITH 1 AND "OFF") TO floorButtonsList //this button with ID=1 goes to the floor 1
+        ADD (INSTANTIATE Button WITH 1 AND "OFF") TO floorButtonsList //this button with ID=1 goes to the floor 1 (ground floor)
         FOR buttonNumber IN minimumFloor TO maximumFloor
             ADD (INSTANTIATE Button WITH buttonNumber AND "OFF") TO floorButtonsList
         ENDFOR
     ENDSEQUENCE
+
+    SEQUENCE createFloorDisplaysList USING minimumFloor AND maximumFloor AND numberServedFloors
+        ADD (INSTANTIATE Button WITH 0 AND "ON") TO floorButtonsList //this display  with ID=0 is the display inside the elevator
+        FOR floorDisplay IN minimumFloor TO maximumFloor
+            ADD (INSTANTIATE Button WITH floorDisplay AND "ON") TO floorDisplaysList
+        ENDFOR
+    ENDSEQUENCE
+
 
     <------------------- LOGIC TO MOVE ELEVATOR ------------------->
     SEQUENCE moveElevator USING elevator AND floorList AND requestFloor
@@ -248,7 +263,7 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberServedFloors:
                 CALL closeDoors
             ENDIF
             MOVE elevator UP to the next item
-            DISPLAY floorN ON internal AND external displays
+            CALL updateDisplays
             CALL openDoors
             REMOVE floor
             SET button OF buttonsUpList WITH INDEX EQUAL floorN TO "OFF" //selects the button of corresponding floor from buttonsUpList 
@@ -257,6 +272,7 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberServedFloors:
         MOVE TO the NEXT floorN FROM the floorList AND remove floorN FROM floorList UNTIL reach the last element OF the floorList
                 DISPLAY currentFloorNumber ON internal AND external displays
         IF floorList IS EMPTY THEN
+            CALL optimizeDisplacement WITH elevatorList
             SET status OF elevator TO "IDLE"
         ELSE 
             SET status OF elevator TO "DOWN"
@@ -264,13 +280,13 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberServedFloors:
     ENDSEQUENCE
 
     <------------------- LOGIC TO MOVE DOWN ------------------->
-    SEQUENCE movedown USING elevator     
+    SEQUENCE moveDown USING elevator     
         FOR EACH floor IN floorList use a REVERSE ITERATION
             IF doors are open THEN
                 CALL closeDoors
             ENDIF
             MOVE elevator DOWN to the next item
-            DISPLAY floor ON internal AND external displays
+            CALL updateDisplays
             CALL openDoors
             REMOVE floor
             SET button OF buttonsDownList WITH INDEX EQUAL floorN TO "OFF" 
@@ -279,11 +295,19 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberServedFloors:
         MOVE TO the PREVIOUS floorN FROM the floorList AND remove floorN FROM floorList UNTIL reach the first element OF the floorList
                 DISPLAY currentFloorNumber ON internal AND external displays
                 IF floorList IS EMPTY THEN
+                    CALL optimizeDisplacement WITH elevatorList
                     SET elevator status TO "IDLE"
                 ELSE 
                     SET elevator status TO "UP"
                 ENDIF
             ENDIF    
+    ENDSEQUENCE
+
+    <------------------- LOGIC UPDATE DISPLAYS OF ELEVATOR AND SHOW FLOOR ------------------->
+    SEQUENCE updateDisplays USING floorDisplaysList AND floor
+        FOR EACH display IN floorDisplaysList 
+            DISPLAY floor 
+        ENDFOR
     ENDSEQUENCE
 
     <------------------- LOGIC TO OPEN DOORS ------------------->
@@ -302,20 +326,19 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberServedFloors:
 
     <------------------- LOGIC TO CLOSE DOORS ------------------->
     SEQUENCE closeDoors USING elevator AND waitingTime
-            IF weightSensor IS "OFF" OR obstructionSensor IS "OFF"
-                close elevatorDoor OF elevator
-                SET elevatorDoor OF elevator TO "CLOSED"
-                close floorDoor OF floorDoorsList WITH INDEX EQUAL floor
-                SET floorDoor OF floorDoorsList WITH INDEX EQUAL floor TO "CLOSED"
-            ENDIF
+        IF weightSensor IS "OFF" OR obstructionSensor IS "OFF"  //Security logic
+            close elevatorDoor OF elevator
+            SET elevatorDoor OF elevator TO "CLOSED"
+            close floorDoor OF floorDoorsList WITH INDEX EQUAL floor
+            SET floorDoor OF floorDoorsList WITH INDEX EQUAL floor TO "CLOSED"
         ENDIF
     ENDSEQUENCE
 
     <------------------- LOGIC FOR WEIGHT SENSOR ------------------->
     SEQUENCE checkWeight USING AND maxWeight
         READ weight FROM weight sensor
-        WHILE WEIGHT IS > maxWeight THEN
-            SET weightSensor TO "ON"
+        WHILE WEIGHT IS > maxWeight THEN    //Logic of loading
+            SET weightSensor TO "ON"        //Detect a full elevator
             DISPLAY "Maximum weight reached" ON internal displays
             CALL openDoors
         ENDWHILE
@@ -323,9 +346,9 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberServedFloors:
     ENDSEQUENCE
 
     <------------------- LOGIC FOR OBSTRUCTION SENSOR ------------------->
-    SEQUENCE checkObstruction USING elevator
-        IF an obstacle is detected by the door sensor THEN
-            SET obstructionSensor TO "ON"
+    SEQUENCE checkObstruction USING elevator    
+        IF an obstacle is detected by the door sensor THEN      
+            SET obstructionSensor TO "ON"       
         ELSE 
             SET obstructionSensor TO "OFF"
     ENDSEQUENCE
@@ -357,7 +380,16 @@ DEFINE Button USING id AND status
 ENDDEFINE 
 
 
-//------------------------------------------- LISTENERS ----------------------------------------------------------------------
+//------------------------------------------- DISPLAY OBJECT -------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------
+DEFINE Display USING id AND status
+    ID: id,
+    Status: status,
+    Floor: floor,
+ENDDEFINE 
+
+
+//------------------------------------------- LISTENERS -------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------
 <------------------- BUTTON REQUESTS OUTSIDE ELEVATOR ------------------->
 // User goes to the specific column and press a button outside the elevator requesting for an elevator 
@@ -375,7 +407,7 @@ ENDSEQUENCE
 
 <------------------- BUTTON REQUESTS INSIDE ELEVATOR ------------------->
 // When user press a button inside the elevator requesting for a destination floor we have acces to the destinationFloor 
-SEQUENCE requestStop USING requestFloor AND elevator
+SEQUENCE requestStop USING requestFloor
     CALL checkWeight WITH maxWeight
     CALL checkObstruction WITH obstructionSensor
     READ requestedFloor AND requestedDirection
@@ -391,11 +423,31 @@ ENDSEQUENCE
 
 //------------------------------------------- TESTING PROGRAM ------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------------
+SET numberOfElevatorsPerColumn  TO 3
+SET numberOfColumns             TO 4
+SET numberOfBasements           TO -6                                  
+SET numberOfFloors              TO 60          
+SET totalNumberOfFloors         TO 66   
+SET minBuildingFloor            TO 60                                   
+SET maxBuildingFloor            TO numberOfFloors                             
+SET waitingTime                 TO 7 seconds (Supposed)                               
+SET maxWeight                   TO 1200 kg (Supposed)
+
+//INITIATE SYSTEM: ------------------------------------------------------------------
 SET batery1 INSTANTIATE Battery WITH 1, 4, -6, 60, 3
 
-//CALL returnToOrigin WITH elevatorList // ou mettre ce call?
+//SCENARIO 1: -----------------------------------------------------------------------
+    CALL requestElevator WITH currentFloor="1" AND requestedDirection="UP"
+    CALL requestStop WITH requestFloor="20"
 
+//SCENARIO 2: -----------------------------------------------------------------------
+    CALL requestElevator WITH currentFloor="1" AND requestedDirection="UP"
+    CALL requestStop WITH requestFloor="36"
 
+//SCENARIO 3: -----------------------------------------------------------------------
+    CALL requestElevator WITH currentFloor="54" AND requestedDirection="DOWN"
+    CALL requestStop WITH requestFloor="1"
 
-
-    
+//SCENARIO 4: -----------------------------------------------------------------------
+    CALL requestElevator WITH currentFloor="-3" AND requestedDirection="UP"
+    CALL requestStop WITH requestFloor="1"
