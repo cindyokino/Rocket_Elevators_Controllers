@@ -1,21 +1,150 @@
+//------------------------------------------- SUMMARY / NOTES ---------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+// SUMMARY:
+1- GLOBAL VARIABLES
+2- COLUMN OBJECT
+3- ELEVATOR OBJECT
+4- DOOR OBJECT
+5- BUTTON OBJECT
+6- LISTENERS 
+7- TESTING PROGRAM
+
+// NOTES:
+Battery: contains a list of N columns
+    status: ACTIVE or INACTIVE  
+
+Column: contains a list of N elevators
+    status: ACTIVE or INACTIVE    
+    buttonsUp and buttonsDown from lists: ON or OFF
+
+Elevator: 
+    status: IDLE, UP or DOWN  
+    weightSensor: ON or OFF
+    obstructionSensor: ON or OFF
+    elevatorDoor: OPENED or CLOSED
+    FloorDoors from list: OPENED or CLOSED
+    floorButtons from list: ON or OFF
+
+
+//------------------------------------------- GLOBAL VARIABLES --------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+SET numberOfColumns
 SET numberOfFloors
 SET numberOfBasements
-SET totalNumberOfFloors = numberOfFloors + numberOfBasements
-SET numberOfColumns
 SET waitingTime         //How many seconds the door remains open
 SET maxWeight           //Maximum weight an elevator can carry in KG
 
 
-IF there numberOfColumns IS EQUAL TO 1 THEN
-    SET numberOfFloors TO totalNumberOfFloors 
-ELSE    
-    SET numberOfFloorsPerColumn TO (round TO the nearest integer (numberOfFloors DIVIDED BY (numberOfColumns - 1)))
-    FOR EACH columnN IN columnList 
-        IF columnN is the first element THEN
-            SET numberOfFloors TO numberOfBasements 
-            //minFloor=numberOfBasements
-            //maxFloor=numberOfFloorsPerColumn            
+//------------------------------------------- BATTERY OBJECT ----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+DEFINE Battery USING numberOfColumns AND minFloor AND maxFloor AND numberOfElevators
+    Id: id,
+    status: status,
+    columnsList: SET TO EMPTY,
+
+    SEQUENCE createColumnsList USING numberOfColumns
+        FOR EACH numberOfColumns
+            SET tempID = 1
+            ADD (INSTANTIATE Column WITH tempID AND "ACTIVE" AND 1 AND numberOfElevators AND minFloor AND maxFloor) TO columnsList
+            INCREMENT tempID by 1
+        ENDFOR
+    ENDSEQUENCE
+
+    <------------------- LOGIC TO FIND THE FLOORS SERVED PER EACH COLUMN ------------------->
+    SEQUENCE calculateNumberOfFloorsPerColumn USING numberOfColumns AND numberOfFloors AND numberOfBasements AND minFloor AND maxFloor
+        SET totalNumberOfFloors TO numberOfFloors + numberOfBasements   
+        IF numberOfBasements IS GREATER THAN zero THEN 
+            SET numberOfFloorsPerColumn TO (ROUND TO FLOOR (numberOfFloors DIVIDED BY (numberOfColumns - 1)))
+            SET remainingfloors TO (numberOfFloors MODULO (numberOfColumns - 1))
+        ELSE
+            SET numberOfFloorsPerColumn TO (ROUND TO FLOOR (numberOfFloors DIVIDED BY numberOfColumns))
+            SET remainingfloors TO (numberOfFloors MODULO numberOfColumns)
         ENDIF
-        minFloor=maxFloor+1
-        maxFloor=minFloor+numberOfFloorsPerColumn
-    ENDFOR
+        SET minFloor TO 1   
+
+        IF numberOfColumns IS EQUAL TO 1 THEN       //if there is just one column, it serves all the floors of the building
+            SET numberServedFloors TO totalNumberOfFloors 
+            SET minimumFloor OF column TO minFloor  
+            SET maximumFloor OF column TO totalNumberOfFloors  
+        ELSE 
+            FOR EACH columnN IN columnsList 
+                IF columnN is NOT the FIRST element OF columnsList OR numberOfBasements IS EQUAL TO zero THEN    
+                    SET numberServedFloors TO numberOfFloorsPerColumn 
+                    SET minimumFloor OF columnN TO (minFloor)
+                    SET maximumFloor OF columnN TO (minFloor + numberOfFloorsPerColumn - 1)
+                ENDIF
+                    SET minFloor TO (maximumFloor OF columnN + 1)
+            ENDFOR
+
+            IF remainingfloors IS NOT EQUAL TO zero THEN
+                SET maximumFloor OF the LAST column OF columnsList TO maximumFloor + remainingfloors
+                SET numberServedFloors TO numberOfFloorsPerColumn + remainingfloors
+            ENDIF
+
+            IF numberOfBasements IS GREATER THAN zero THEN
+                SET numberServedFloors OF first column OF columnsList TO numberOfBasements 
+                SET minimumFloor OF first column OF columnsList TO (numberOfBasements MULTIPLIED BY (MINUS 1))
+                SET maximumFloor OF first column OF columnsList TO 1    
+            ENDIF
+        ENDIF
+    ENDSEQUENCE
+ENDDEFINE
+
+
+//------------------------------------------- COLUMN OBJECT -----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+DEFINE Column USING id AND status AND numberOfElevators AND minFloor AND maxFloor:
+    ID: id,
+    status: status,
+    minimumFloor: minFloor,
+    maximumFloor: maxFloor,
+    numberServedFloors: numberServedFloors,
+    elevatorsList: SET TO EMPTY,           
+    buttonsUpList: SET TO EMPTY,        //This is a list containing the UP buttons in each floor
+    buttonsDownList: SET TO EMPTY,      //This is a list containing the DOWN buttons in each floor
+
+    CALL createElevatorsList WITH numberOfElevators
+    CALL createButtonsUpList WITH numberOfFloors
+    CALL createButtonsDownList WITH numberOfFloors
+
+    SEQUENCE createElevatorsList USING numberOfElevators
+        FOR EACH numberOfElevators 
+            SET tempID = 1
+            ADD (INSTANTIATE Elevator WITH tempID AND "IDLE" AND 1 AND "CLOSED" AND numberOfFloors) TO elevatorsList
+            INCREMENT tempID by 1
+        ENDFOR
+    ENDSEQUENCE    
+
+    SEQUENCE createButtonsUpList USING numberOfFloors
+        FOR EACH numberOfFloors 
+            SET tempID = 1
+            IF tempID NOT EQUAL TO maximumFloor THEN
+                ADD (INSTANTIATE Button WITH tempID AND numberOfFloors AND "OFF") TO ButtonsUpList
+            ENDIF
+            INCREMENT tempID by 1
+        ENDFOR
+    ENDSEQUENCE
+
+    SEQUENCE createButtonsDownList USING numberOfFloors
+        FOR EACH numberOfFloors 
+            SET tempID = 1
+            IF tempID IS GREATER THAN TO minimumFloor THEN
+                ADD (INSTANTIATE Button WITH tempID AND numberOfFloors AND "OFF") TO ButtonsDownList
+            ENDIF
+            INCREMENT tempID by 1
+        ENDFOR
+    ENDSEQUENCE
+
+
+**********************************************************************************************************************************************************************************
+***** DES IDÉES... BRAINSTROMINGS ************************************************************************************************************************************************
+**********************************************************************************************************************************************************************************
+
+
+SET batery1 INSTANTIATE Battery WITH 1
+SET elevator1 OF column1 TO createFloorDoorsList
+
+******************************************************
+
+
+    

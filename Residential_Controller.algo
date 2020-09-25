@@ -6,7 +6,7 @@
 3- ELEVATOR OBJECT
 4- DOOR OBJECT
 5- BUTTON OBJECT
-6- MAIN PROGRAM 
+6- LISTENERS 
 7- TESTING PROGRAM
 
 // NOTES:
@@ -36,10 +36,12 @@ SET maxWeight           //Maximum weight an elevator can carry in KG
 //---------------------------------------------------------------------------------------------------------------------------------
 DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
     ID: id,
-    Status: status,
-    ElevatorsList: SET TO EMPTY elevatorsList           
-    ButtonsUpList: SET TO EMPTY buttonsUpList     //This is a list containing the UP buttons in each floor
-    ButtonsDownList: SET TO EMPTY buttonsDownList //This is a list containing the DOWN buttons in each floor
+    status: status,
+    minimumfloor: minFloor,          
+    maximumfloor: maxFloor,          
+    elevatorsList: SET TO EMPTY,           
+    buttonsUpList: SET TO EMPTY,     //This is a list containing the UP buttons in each floor
+    buttonsDownList: SET TO EMPTY,   //This is a list containing the DOWN buttons in each floor
 
     CALL createElevatorsList WITH numberOfElevators
     CALL createButtonsUpList WITH numberOfFloors
@@ -56,7 +58,9 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
     SEQUENCE createButtonsUpList USING numberOfFloors
         FOR EACH numberOfFloors 
             SET tempID = 1
-            ADD (INSTANTIATE Button WITH tempID AND numberOfFloors AND "OFF") TO ButtonsUpList
+            IF tempID NOT EQUAL TO maximumFloor THEN
+                ADD (INSTANTIATE Button WITH tempID AND numberOfFloors AND "OFF") TO ButtonsUpList
+            ENDIF
             INCREMENT tempID by 1
         ENDFOR
     ENDSEQUENCE
@@ -64,7 +68,9 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
     SEQUENCE createButtonsDownList USING numberOfFloors
         FOR EACH numberOfFloors 
             SET tempID = 1
-            ADD (INSTANTIATE Button WITH tempID AND numberOfFloors AND "OFF") TO ButtonsDownList
+            IF tempID IS GREATER THAN TO minimumFloor THEN
+                ADD (INSTANTIATE Button WITH tempID AND numberOfFloors AND "OFF") TO ButtonsDownList
+            ENDIF
             INCREMENT tempID by 1
         ENDFOR
     ENDSEQUENCE
@@ -115,19 +121,19 @@ ENDDEFINE
 //---------------------------------------------------------------------------------------------------------------------------------
 DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
     ID: id,
-    Status: status,
-    Floor: floor,
-    WeightSensor: weightSensor,
-    ObstructionSensor: obstructionSensor,
+    status: status,
+    floor: floor,
+    weightSensor: weightSensor,
+    obstructionSensor: obstructionSensor,
     elevatorDoor: (INSTANTIATE Door WITH tempID AND numberOfFloors), //This is the elevator door (each elevator has only on door)
-    FloorDoorsList: SET TO EMPTY floorDoorsList,                     //This is a list containing the doors controled by each elevator in each floor
-    FloorButtonsList: SET TO EMPTY floorButtonsList,                 //This is a list containing the floor buttons inside each elevator
-    FloorList: SET TO EMPTY floorList,                               //This is a list of requested floors to stop for an elevator selected with findElevator logic
+    floorDoorsList: SET TO EMPTY,                                    //This is a list containing the doors controled by each elevator in each floor
+    floorButtonsList: SET TO EMPTY,                                   //This is a list containing the floor buttons inside each elevator
+    floorList: SET TO EMPTY,                                          //This is a list of requested floors to stop for an elevator selected with findElevator logic
 
     CALL createFloorDoorsList WITH numberOfFloors
     CALL createFloorButtonsList WITH numberOfFloors
 
-     SEQUENCE createFloorDoorsList USING numberOfFloors
+    SEQUENCE createFloorDoorsList USING numberOfFloors
         FOR EACH numberOfFloors 
             SET tempID = 1
             ADD (INSTANTIATE Door WITH tempID AND numberOfFloors) TO floorDoorsList
@@ -277,7 +283,7 @@ DEFINE Button USING id AND numberOfFloors
 ENDDEFINE 
 
 
-//------------------------------------------- MAIN PROGRAM ----------------------------------------------------------------------
+//------------------------------------------- LISTENERS ----------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------
 
 <------------------- INITIATE SYSTEM ------------------->
@@ -332,102 +338,90 @@ CALL initSystem WITH numberOfFloors="10" AND numberOfElevators="2" AND numberOfC
 SET column1 TO INSTANTIATE Column WITH tempID="1" AND "ACTIVE" AND numberOfFloors="10" AND numberOfElevators="2"    
 
 //SCENARIO 1: ----------------------------------------------------------------------------------------------------------------------
-Elevator A is Idle at floor 2
-Elevator B is Idle at floor 6
-* Someone is on floor 3 and wants to go to the 7th floor. Elevator A is expected to be sent.
+//Elevator A is Idle at floor 2
+//Elevator B is Idle at floor 6
+//* Someone is on floor 3 and wants to go to the 7th floor. Elevator A is expected to be sent.
 
-SEQUENCE requestElevator USING currentFloor="3" AND requestedDirection="UP"
-    CALL findElevator           result: "elevator A is choosen"
-    CALL addFloorToFloorList    result: "[3]" 
-    CALL moveElevator           result: "elevator A moves from floor 2 to 3"
-ENDSEQUENCE
+CALL requestElevator WITH currentFloor="3" AND requestedDirection="UP"
+    //CALL findElevator OF "column1"              result: "elevator A is choosen"
+    //CALL addFloorToFloorList OF "elevator A"    result: "[3]" 
+    //CALL moveElevator OF "elevator A"           result: "elevator A moves from floor 2 to 3"
 
-SEQUENCE requestStop USING requestFloor="7" AND elevator="elevator A"
-    CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
-    CALL checkObstruction                                       result: "lets suppose there is no obstruction"
-    CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[7]" 
-    CALL moveElevator                                           result: "elevator A moves from floor 3 to 7"
-ENDSEQUENCE
+CALL requestStop WITH requestFloor="7" AND elevator="elevator A"
+    //CALL checkWeight OF "elevator A"  WITH maxWeight="1200 kg"      result: "1 person has less than 1200 kg"
+    //CALL checkObstruction OF "elevator A"                           result: "lets suppose there is no obstruction"
+    //CALL addFloorToFloorList OF "elevator A"                        result: "[7]" 
+    //CALL moveElevator OF "elevator A"                               result: "elevator A moves from floor 3 to 7"
 
 //SCENARIO 2: ----------------------------------------------------------------------------------------------------------------------
-Elevator A is Idle at floor 10
-Elevator B is idle at floor 3
-* Someone is on the 1st floor and requests the 6th floor.Elevator B should be sent.
-* 2 minutes later, someone else is on the 3rd floor and requests the 5th floor. Elevator B should be sent.
-* Finally, a third person is at floor 9 and wants to go down to the 2nd floor. Elevator A should be sent.
+//Elevator A is Idle at floor 10
+//Elevator B is idle at floor 3
+//* Someone is on the 1st floor and requests the 6th floor.Elevator B should be sent.
+//* 2 minutes later, someone else is on the 3rd floor and requests the 5th floor. Elevator B should be sent.
+//* Finally, a third person is at floor 9 and wants to go down to the 2nd floor. Elevator A should be sent.
 
 //SCENARIO 2: person 1 -----------------------------------------------------------
-SEQUENCE requestElevator USING currentFloor="1" AND requestedDirection="UP"
-    CALL findElevator           result: "elevator B is choosen"
-    CALL addFloorToFloorList    result: "[1]" 
-    CALL moveElevator           result: "elevator B moves from floor 3 to 1"
-ENDSEQUENCE
+CALL requestElevator WITH currentFloor="1" AND requestedDirection="UP"
+    //CALL findElevator           result: "elevator B is choosen"
+    //CALL addFloorToFloorList    result: "[1]" 
+    //CALL moveElevator           result: "elevator B moves from floor 3 to 1"
 
-SEQUENCE requestStop USING requestFloor="6" AND elevator="elevator B"
-    CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
-    CALL checkObstruction                                       result: "lets suppose there is no obstruction"
-    CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[6]" 
-    CALL moveElevator                                           result: "elevator B moves from floor 1 to 6"
-ENDSEQUENCE
+CALL requestStop WITH requestFloor="6" AND elevator="elevator B"
+    //CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
+    //CALL checkObstruction                                       result: "lets suppose there is no obstruction"
+    //CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[6]" 
+    //CALL moveElevator                                           result: "elevator B moves from floor 1 to 6"
 
 //SCENARIO 2: person 2 -----------------------------------------------------------
-SEQUENCE requestElevator USING currentFloor="3" AND requestedDirection="UP"
-    CALL findElevator           result: "elevator B is choosen"
-    CALL addFloorToFloorList    result: "[3]" 
-    CALL moveElevator           result: "2 minutes later the travel 1 is done and elevator B is idle again at floor 6, so it moves from floor 6 to 3"
-ENDSEQUENCE
+CALL requestElevator WITH currentFloor="3" AND requestedDirection="UP"
+    //CALL findElevator           result: "elevator B is choosen"
+    //CALL addFloorToFloorList    result: "[3]" 
+    //CALL moveElevator           result: "2 minutes later the travel 1 is done and elevator B is idle again at floor 6, so it moves from floor 6 to 3"
 
-SEQUENCE requestStop USING requestFloor="6" AND elevator="elevator B"
-    CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
-    CALL checkObstruction                                       result: "lets suppose there is no obstruction"
-    CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[5]" 
-    CALL moveElevator                                           result: "elevator B moves from floor 3 to 5"
-ENDSEQUENCE
+CALL requestStop WITH requestFloor="6" AND elevator="elevator B"
+    //CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
+    //CALL checkObstruction                                       result: "lets suppose there is no obstruction"
+    //CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[5]" 
+    //CALL moveElevator                                           result: "elevator B moves from floor 3 to 5"
 
 //SCENARIO 2: person 3 -----------------------------------------------------------
-SEQUENCE requestElevator USING currentFloor="9" AND requestedDirection="DOWN"
-    CALL findElevator           result: "elevator A is choosen"
-    CALL addFloorToFloorList    result: "[9]" 
-    CALL moveElevator           result: "elevator A moves from floor 10 to 9"
-ENDSEQUENCE
+CALL requestElevator WITH currentFloor="9" AND requestedDirection="DOWN"
+    //CALL findElevator           result: "elevator A is choosen"
+    //CALL addFloorToFloorList    result: "[9]" 
+    //CALL moveElevator           result: "elevator A moves from floor 10 to 9"
 
-SEQUENCE requestStop USING requestFloor="2" AND elevator="elevator A"
-    CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
-    CALL checkObstruction                                       result: "lets suppose there is no obstruction"
-    CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[2]" 
-    CALL moveElevator                                           result: "elevator A moves from floor 9 to 2"
-ENDSEQUENCE
+CALL requestStop WITH requestFloor="2" AND elevator="elevator A"
+    //CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
+    //CALL checkObstruction                                       result: "lets suppose there is no obstruction"
+    //CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[2]" 
+    //CALL moveElevator                                           result: "elevator A moves from floor 9 to 2"
 
 //SCENARIO 3: ----------------------------------------------------------------------------------------------------------------------
-Elevator A is Idle at floor 10
-Elevator B is Moving from floor 3 to floor 6
-* Someone is on floor 3 and requests the 2nd floor. Elevator A should be sent.
-* 5 minutes later, someone else is on the 10th floor and wants to go to the 3rd. Elevator B should be sent.
+//Elevator A is Idle at floor 10
+//Elevator B is Moving from floor 3 to floor 6
+//* Someone is on floor 3 and requests the 2nd floor. Elevator A should be sent.
+//* 5 minutes later, someone else is on the 10th floor and wants to go to the 3rd. Elevator B should be sent.
 
 //SCENARIO 3: person 1 -----------------------------------------------------------
-SEQUENCE requestElevator USING currentFloor="3" AND requestedDirection="DOWN"
-    CALL findElevator           result: "elevator A is choosen because elevator B is moving to the other direction"
-    CALL addFloorToFloorList    result: "[3]" 
-    CALL moveElevator           result: "elevator A moves from floor 10 to 3"
-ENDSEQUENCE
+CALL requestElevator WITH currentFloor="3" AND requestedDirection="DOWN"
+    //CALL findElevator           result: "elevator A is choosen because elevator B is moving to the other direction"
+    //CALL addFloorToFloorList    result: "[3]" 
+    //CALL moveElevator           result: "elevator A moves from floor 10 to 3"
 
-SEQUENCE requestStop USING requestFloor="2" AND elevator="elevator A"
-    CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
-    CALL checkObstruction                                       result: "lets suppose there is no obstruction"
-    CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[2]" 
-    CALL moveElevator                                           result: "elevator A moves from floor 3 to 2"
-ENDSEQUENCE
+CALL requestStop WITH requestFloor="2" AND elevator="elevator A"
+    //CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
+    //CALL checkObstruction                                       result: "lets suppose there is no obstruction"
+    //CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[2]" 
+    //CALL moveElevator                                           result: "elevator A moves from floor 3 to 2"
 
 //SCENARIO 3: person 2 -----------------------------------------------------------
-SEQUENCE requestElevator USING currentFloor="10" AND requestedDirection="DOWN"
-    CALL findElevator           result: "elevator B is choosen"
-    CALL addFloorToFloorList    result: "[10]" 
-    CALL moveElevator           result: "elevator B moves from floor 6 to 10"
-ENDSEQUENCE
+CALL requestElevator WITH currentFloor="10" AND requestedDirection="DOWN"
+    //CALL findElevator           result: "elevator B is choosen"
+    //CALL addFloorToFloorList    result: "[10]" 
+    //CALL moveElevator           result: "elevator B moves from floor 6 to 10"
 
-SEQUENCE requestStop USING requestFloor="3" AND elevator="elevator B"
-    CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
-    CALL checkObstruction                                       result: "lets suppose there is no obstruction"
-    CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[3]" 
-    CALL moveElevator                                           result: "elevator B moves from floor 10 to 3"
-ENDSEQUENCE
+CALL requestStop WITH requestFloor="3" AND elevator="elevator B"
+    //CALL checkWeight WITH maxWeight="1200 kg"                   result: "1 person has less than 1200 kg"
+    //CALL checkObstruction                                       result: "lets suppose there is no obstruction"
+    //CALL addFloorToFloorList WITH elevator AND requestFloor     result: "[3]" 
+    //CALL moveElevator                                           result: "elevator B moves from floor 10 to 3"
