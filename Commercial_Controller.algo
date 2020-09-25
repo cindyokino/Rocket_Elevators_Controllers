@@ -1,3 +1,5 @@
+//******************************************* CLASSIC SOLUTION ********************************************************************
+
 //------------------------------------------- SUMMARY / NOTES ---------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 // SUMMARY:
@@ -263,14 +265,14 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberServedFloors:
                 CALL closeDoors
             ENDIF
             MOVE elevator UP to the next item
+            DISPLAY currentFloorNumber ON internal AND external displays
             CALL updateDisplays
             CALL openDoors
             REMOVE floor
             SET button OF buttonsUpList WITH INDEX EQUAL floorN TO "OFF" //selects the button of corresponding floor from buttonsUpList 
             SET button OF buttonsUpList WITH INDEX EQUAL floorN TO "OFF"
         ENDFOR
-        MOVE TO the NEXT floorN FROM the floorList AND remove floorN FROM floorList UNTIL reach the last element OF the floorList
-                DISPLAY currentFloorNumber ON internal AND external displays
+                
         IF floorList IS EMPTY THEN
             CALL optimizeDisplacement WITH elevatorList
             SET status OF elevator TO "IDLE"
@@ -286,21 +288,20 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberServedFloors:
                 CALL closeDoors
             ENDIF
             MOVE elevator DOWN to the next item
+            DISPLAY currentFloorNumber ON internal AND external displays
             CALL updateDisplays
             CALL openDoors
             REMOVE floor
             SET button OF buttonsDownList WITH INDEX EQUAL floorN TO "OFF" 
             SET button OF floorButtonsList WITH INDEX EQUAL floorN TO "OFF"
         ENDFOR
-        MOVE TO the PREVIOUS floorN FROM the floorList AND remove floorN FROM floorList UNTIL reach the first element OF the floorList
-                DISPLAY currentFloorNumber ON internal AND external displays
-                IF floorList IS EMPTY THEN
-                    CALL optimizeDisplacement WITH elevatorList
-                    SET elevator status TO "IDLE"
-                ELSE 
-                    SET elevator status TO "UP"
-                ENDIF
-            ENDIF    
+                
+        IF floorList IS EMPTY THEN
+            CALL optimizeDisplacement WITH elevatorList
+            SET elevator status TO "IDLE"
+        ELSE 
+            SET elevator status TO "UP"
+        ENDIF
     ENDSEQUENCE
 
     <------------------- LOGIC UPDATE DISPLAYS OF ELEVATOR AND SHOW FLOOR ------------------->
@@ -437,6 +438,12 @@ SET maxWeight                   TO 1200 kg (Supposed)
 SET batery1 INSTANTIATE Battery WITH 1, 4, -6, 60, 3
 
 //SCENARIO 1: -----------------------------------------------------------------------
+● Elevator B1 at floor 20 going to the floor 5
+● Elevator B2 at floor 3 going to the floor 15
+● Elevator B3 at floor 13 going to ground floor
+Someone at ground floor wants to go to the floor 20.
+Elevator B3 is expected to be sent.
+
     CALL requestElevator WITH currentFloor="1" AND requestedDirection="UP"
     CALL requestStop WITH requestFloor="20"
 

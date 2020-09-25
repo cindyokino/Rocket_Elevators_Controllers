@@ -77,7 +77,7 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
 
     <------------------- LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORIZATION LOGIC ------------------->
     // The best option is the nearest and already moving elevator that has the same direction that the current direction
-    // Verify if the request is on the elevators way, if the elevator has already passed the current floor, elevator will just continue its way ignoring this call
+    // Verify if the request is on the elevators way, otherwise the elevator will just continue its way ignoring this call
     // If there is no elevators moving at the same direction as the current direction, the nearest idle elevator is selected
 
     SEQUENCE findElevator USING currentFloor AND currentDirection AND elevatorsList OF columnN
@@ -85,7 +85,7 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
         SET IdleElevatorsList TO EMPTY
 
         FOR EACH elevatorN IN elevatorsList
-            IF (elevatorN IS NOT "IDLE" AND elevatorN status IS EQUAL TO currentDirection) THEN
+            IF (elevatorN IS NOT "IDLE" AND elevatorN status IS EQUAL TO currentDirection) THEN  //if the elevator is active and has the same direction
                 IF (elevatorN status IS "UP" AND elevatorN floor IS < currentFloor OR elevatorN status IS "DOWN" AND elevatorN floor IS > currentFloor) THEN
                     ADD elevatorN TO ActiveElevatorsList
                 ENDIF
@@ -180,8 +180,7 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
             SET button OF buttonsUpList WITH INDEX EQUAL floorN TO "OFF" //selects the button of corresponding floor from buttonsUpList 
             SET button OF buttonsUpList WITH INDEX EQUAL floorN TO "OFF"
         ENDFOR
-        MOVE TO the NEXT floorN FROM the floorList AND remove floorN FROM floorList UNTIL reach the last element OF the floorList
-                DISPLAY currentFloorNumber ON internal AND external displays
+
         IF floorList IS EMPTY THEN
             SET status OF elevator TO "IDLE"
         ELSE 
@@ -196,20 +195,19 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
                 CALL closeDoors
             ENDIF
             MOVE elevator DOWN to the next item
+            DISPLAY currentFloorNumber ON internal AND external displays
             DISPLAY floor ON internal AND external displays
             CALL openDoors
             REMOVE floor
             SET button OF buttonsDownList WITH INDEX EQUAL floorN TO "OFF" 
             SET button OF floorButtonsList WITH INDEX EQUAL floorN TO "OFF"
         ENDFOR
-        MOVE TO the PREVIOUS floorN FROM the floorList AND remove floorN FROM floorList UNTIL reach the first element OF the floorList
-                DISPLAY currentFloorNumber ON internal AND external displays
-                IF floorList IS EMPTY THEN
-                    SET elevator status TO "IDLE"
-                ELSE 
-                    SET elevator status TO "UP"
-                ENDIF
-            ENDIF    
+
+        IF floorList IS EMPTY THEN
+            SET elevator status TO "IDLE"
+        ELSE 
+            SET elevator status TO "UP"
+        ENDIF
     ENDSEQUENCE
 
     <------------------- LOGIC TO OPEN DOORS ------------------->
@@ -338,12 +336,13 @@ CALL initSystem WITH numberOfFloors="10" AND numberOfElevators="2" AND numberOfC
 SET column1 TO INSTANTIATE Column WITH tempID="1" AND "ACTIVE" AND numberOfFloors="10" AND numberOfElevators="2"    
 
 //SCENARIO 1: ----------------------------------------------------------------------------------------------------------------------
-//Elevator A is Idle at floor 2
-//Elevator B is Idle at floor 6
+There is only one column consisting of two elevators and 10 floors.
+● Elevator A is Idle at floor 2
+● Elevator B is Idle at floor 6
 //* Someone is on floor 3 and wants to go to the 7th floor. Elevator A is expected to be sent.
 
     CALL requestElevator WITH currentFloor="3" AND requestedDirection="UP"
-    CALL requestStop WITH requestFloor="7" AND elevator="elevator A"
+    CALL requestStop WITH requestFloor="7"
   
 //SCENARIO 2: ----------------------------------------------------------------------------------------------------------------------
     //person 1 -----------------------------------------------------------
