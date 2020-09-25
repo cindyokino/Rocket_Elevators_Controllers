@@ -59,7 +59,7 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
         FOR EACH numberOfFloors 
             SET tempID = 1
             IF tempID NOT EQUAL TO maximumFloor THEN
-                ADD (INSTANTIATE Button WITH tempID AND numberOfFloors AND "OFF") TO ButtonsUpList
+                ADD (INSTANTIATE Button WITH tempID AND "OFF") TO ButtonsUpList
             ENDIF
             INCREMENT tempID by 1
         ENDFOR
@@ -69,7 +69,7 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
         FOR EACH numberOfFloors 
             SET tempID = 1
             IF tempID IS GREATER THAN TO minimumFloor THEN
-                ADD (INSTANTIATE Button WITH tempID AND numberOfFloors AND "OFF") TO ButtonsDownList
+                ADD (INSTANTIATE Button WITH tempID AND "OFF") TO ButtonsDownList
             ENDIF
             INCREMENT tempID by 1
         ENDFOR
@@ -125,7 +125,7 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
     floor: floor,
     weightSensor: weightSensor,
     obstructionSensor: obstructionSensor,
-    elevatorDoor: (INSTANTIATE Door WITH tempID AND numberOfFloors), //This is the elevator door (each elevator has only on door)
+    elevatorDoor: (INSTANTIATE Door WITH tempID AND "CLOSED"), //This is the elevator door (each elevator has only on door)
     floorDoorsList: SET TO EMPTY,                                    //This is a list containing the doors controled by each elevator in each floor
     floorButtonsList: SET TO EMPTY,                                   //This is a list containing the floor buttons inside each elevator
     floorList: SET TO EMPTY,                                          //This is a list of requested floors to stop for an elevator selected with findElevator logic
@@ -136,7 +136,7 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
     SEQUENCE createFloorDoorsList USING numberOfFloors
         FOR EACH numberOfFloors 
             SET tempID = 1
-            ADD (INSTANTIATE Door WITH tempID AND numberOfFloors) TO floorDoorsList
+            ADD (INSTANTIATE Door WITH tempID AND "CLOSED") TO floorDoorsList
             INCREMENT tempID by 1
         ENDFOR
     ENDSEQUENCE
@@ -144,7 +144,7 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
     SEQUENCE createFloorButtonsList USING numberOfFloors 
         FOR EACH numberOfFloors 
             SET tempID = 1
-            ADD (INSTANTIATE Button WITH tempID AND numberOfFloors AND "OF") TO floorButtonsList
+            ADD (INSTANTIATE Button WITH tempID AND "OFF") TO floorButtonsList
             INCREMENT tempID by 1
         ENDFOR
     ENDSEQUENCE
@@ -253,7 +253,7 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
         IF an obstacle is detected by the door sensor THEN
             SET obstructionSensor TO "ON"
         ELSE 
-            SET obstructionSensor TO "OF"
+            SET obstructionSensor TO "OFF"
     ENDSEQUENCE
 
     <------------------- LOGIC TO STORE FLOOR IN LIST WHEN USER PRESS BUTTON INSIDE OR OUTSIDE ELEVATOR ------------------->
@@ -267,7 +267,7 @@ ENDDEFINE
 
 //------------------------------------------- DOOR OBJECT ---------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------
-DEFINE Door USING id AND numberOfFloors
+DEFINE Door USING id AND status
     ID: id,
     Status: status,
     Floor: floor,
@@ -276,7 +276,7 @@ ENDDEFINE
 
 //------------------------------------------- BUTTON OBJECT -------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------
-DEFINE Button USING id AND numberOfFloors
+DEFINE Button USING id AND status
     ID: id,
     Status: status,
     Floor: floor,
