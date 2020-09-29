@@ -37,8 +37,7 @@ SET maxWeight           //Maximum weight an elevator can carry in KG
 DEFINE Column USING id AND columnStatus AND numberOfElevators AND numberOfFloors:
     ID: id,
     status: columnStatus,
-    minimumfloor: minFloor,          
-    maximumfloor: maxFloor,          
+    numberOfFloors: numberOfFloors,
     elevatorsList: SET TO EMPTY,           
     buttonsUpList: SET TO EMPTY,     //This is a list containing the UP buttons in each floor
     buttonsDownList: SET TO EMPTY,   //This is a list containing the DOWN buttons in each floor

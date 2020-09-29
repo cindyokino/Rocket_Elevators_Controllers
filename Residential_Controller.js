@@ -11,11 +11,12 @@
 // 3- ELEVATOR CLASS
 // 4- DOOR CLASS
 // 5- BUTTON CLASS
-// 6- ENUMS
-// 7- LISTENERS 
-// 8- TESTING PROGRAM
+// 6- DISPLAY CLASS
+// 7- ENUMS
+// 8- LISTENERS 
+// 9- TESTING PROGRAM
 
-//CONTROLED OBJECTS:
+//CONTROLLED OBJECTS:
 // Columns: controls a list of N elevators
 // Elevators: controls doors, buttons, displays
 
@@ -45,23 +46,47 @@ class Column {
         console.log("CREATED COLUMN", this.id);
         console.log("NUMBER OF FLOORS:", this.numberOfFloors);
         console.log("NUMBER OF ELEVATORS:", this.numberOfElevators);
+        console.log("----------------------------------");
 
         this.createElevatorsList();    
+        this.createButtonsUpList();     
+        this.createButtonsDownList();     
+        console.table("ELEVATORS LIST:"); 
         console.table(this.elevatorsList); 
-        // this.createElevatorsList(numberOfElevators);     
-        // this.createElevatorsList(numberOfElevators);     
+        console.table("BUTTONS UP LIST:"); 
+        console.table(this.buttonsUpList); 
+        console.table("BUTTONS DOWN LIST:"); 
+        console.table(this.buttonsDownList); 
     }
     
     createElevatorsList() {
         for (let i = 1; i <= this.numberOfElevators; i++) {
             this.elevatorsList.push(new Elevator(i, this.numberOfFloors, 1, elevatorStatus.IDLE, sensorStatus.OFF, sensorStatus.OFF, doorStatus.CLOSED));
             console.log("CREATED ELEVATOR", i);
+            console.log("----------------------------------");
         }
+    }    
+    
+    createButtonsUpList() {
+        for (let i = 1; i < this.numberOfFloors; i++) {
+                this.buttonsUpList.push(new Button(i, buttonStatus.OFF, i));
+            console.log("CREATED BUTTON UP", i);
+        }
+        console.log("----------------------------------");
+    }    
+    
+    createButtonsDownList() {
+        for (let i = 2; i <= this.numberOfFloors; i++) {
+            this.buttonsDownList.push(new Button(i, buttonStatus.OFF, i));
+            console.log("CREATED BUTTON DOWN", i);
+        }
+        console.log("----------------------------------");
     }    
     
 }
 
-
+//------------------------------------------- ELEVATOR CLASS -----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
 class Elevator {
     constructor(id, numberOfFloors, floor, elevatorStatus, weightSensorStatus, obstructionSensorStatus, elevatorDoorStatus) {
         this.id = id;
@@ -74,8 +99,54 @@ class Elevator {
         this.floorDoorsList = [];
         this.floorButtonsList = [];
         this.floorList = [];
+
+        this.createFloorDoorsList();     
+        // console.table("FLOOR DOORS LIST:"); 
+        // console.table(this.floorDoorsList); 
+
     }
 
+    createFloorDoorsList() {
+        for (let i = 1; i <= this.numberOfFloors; i++) {
+            this.floorDoorsList.push(new Button(i, doorStatus.CLOSED, i));
+            console.log("CREATED DOOR FLOOR", i);
+        }
+        console.log("----------------------------------");
+    }  
+
+}
+
+
+//------------------------------------------- DOOR CLASS -----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+class Door {
+    constructor(id, doorStatus, floor) {
+        this.id = id;
+        this.status = doorStatus;
+        this.floor = floor;
+    }
+}
+
+
+//------------------------------------------- BUTTON CLASS -----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+class Button {
+    constructor(id, buttonStatus, floor) {
+        this.id = id;
+        this.status = buttonStatus;
+        this.floor = floor;
+    }
+}
+
+
+//------------------------------------------- DISPLAY CLASS -----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+class Display {
+    constructor(id, displayStatus, floor) {
+        this.id = id;
+        this.status = displayStatus;
+        this.floor = floor;
+    }
 }
 
 
@@ -84,29 +155,40 @@ class Elevator {
 /* ******* COLUMN STATUS ******* */
 const columnStatus = {
     ACTIVE: 'active',
-    INNACTIVE: 'inactive'
+    INACTIVE: 'inactive'
 };
 
+/* ******* ELEVATOR STATUS ******* */
 const elevatorStatus = {
     IDLE: 'idle',
     UP: 'up',
     DOWN: 'down'
 };
 
+/* ******* BUTTONS STATUS ******* */
 const buttonStatus = {
     ON: 'on',
     OFF: 'off'
 };
 
+/* ******* SENSORS STATUS ******* */
 const sensorStatus = {
     ON: 'on',
     OFF: 'off'
 };
 
+/* ******* DOORS STATUS ******* */
 const doorStatus = {
     OPENED: 'opened',
     CLOSED: 'closed'
 };
+
+/* ******* DISPLAY STATUS ******* */
+const displayStatus = {
+    ON: 'on',
+    OFF: 'off'
+};
+
 
 //------------------------------------------- TESTING PROGRAM ---------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
