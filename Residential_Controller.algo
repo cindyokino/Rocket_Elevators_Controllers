@@ -2,10 +2,10 @@
 //-----------------------------------------------------------------------------------------------------------------------------------
 // SUMMARY:
 1- GLOBAL VARIABLES
-2- COLUMN OBJECT
-3- ELEVATOR OBJECT
-4- DOOR OBJECT
-5- BUTTON OBJECT
+2- COLUMN CLASS
+3- ELEVATOR CLASS
+4- DOOR CLASS
+5- BUTTON CLASS
 6- LISTENERS 
 7- TESTING PROGRAM
 
@@ -32,11 +32,11 @@ SET waitingTime         //How many seconds the door remains open
 SET maxWeight           //Maximum weight an elevator can carry in KG
 
 
-//------------------------------------------- COLUMN OBJECT -----------------------------------------------------------------------
+//------------------------------------------- COLUMN CLASS -----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
-DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
+DEFINE Column USING id AND columnStatus AND numberOfElevators AND numberOfFloors:
     ID: id,
-    status: status,
+    status: columnStatus,
     minimumfloor: minFloor,          
     maximumfloor: maxFloor,          
     elevatorsList: SET TO EMPTY,           
@@ -117,11 +117,11 @@ DEFINE Column USING id AND status AND numberOfElevators AND numberOfFloors:
 ENDDEFINE
 
 
-//------------------------------------------- ELEVATOR OBJECT ---------------------------------------------------------------------
+//------------------------------------------- ELEVATOR CLASS ---------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
-DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
+DEFINE Elevator USING id AND elevatorStatus AND floor AND door AND numberOfFloors:
     ID: id,
-    status: status,
+    status: elevatorStatus,
     floor: floor,
     weightSensor: weightSensor,
     obstructionSensor: obstructionSensor,
@@ -150,10 +150,10 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
     ENDSEQUENCE
 
     <------------------- LOGIC TO MOVE ELEVATOR ------------------->
-    SEQUENCE moveElevator USING elevator AND floorList AND requestFloor
+    SEQUENCE moveElevator USING elevator AND floorList AND requestedFloor
         WHILE floorList OF elevator IS NOT EMPTY DO    
             IF (status OF elevator IS "IDLE") THEN     //In this case the elevator is idle thus the list will have only one element
-                IF (floor OF elevator IS < requestFloor) THEN
+                IF (floor OF elevator IS < requestedFloor) THEN
                     SET status OF elevator TO "UP"
                 ELSE 
                     SET status OF elevator TO "DOWN"
@@ -174,7 +174,8 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
                 CALL closeDoors
             ENDIF
             MOVE elevator UP to the next item
-            DISPLAY floorN ON internal AND external displays
+            SET floor OF elevator TO floorN
+            CALL updateDisplays
             CALL openDoors
             REMOVE floor
             SET button OF buttonsUpList WITH INDEX EQUAL floorN TO "OFF" //selects the button of corresponding floor from buttonsUpList 
@@ -190,13 +191,13 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
 
     <------------------- LOGIC TO MOVE DOWN ------------------->
     SEQUENCE movedown USING elevator     
-        FOR EACH floor IN floorList use a REVERSE ITERATION
+        FOR EACH floorN IN floorList use a REVERSE ITERATION
             IF doors are open THEN
                 CALL closeDoors
             ENDIF
             MOVE elevator DOWN to the next item
-            DISPLAY currentFloorNumber ON internal AND external displays
-            DISPLAY floor ON internal AND external displays
+            SET floor OF elevator TO floorN
+            CALL updateDisplays
             CALL openDoors
             REMOVE floor
             SET button OF buttonsDownList WITH INDEX EQUAL floorN TO "OFF" 
@@ -208,6 +209,14 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
         ELSE 
             SET elevator status TO "UP"
         ENDIF
+    ENDSEQUENCE
+
+    <------------------- LOGIC UPDATE DISPLAYS OF ELEVATOR AND SHOW FLOOR ------------------->
+    SEQUENCE updateDisplays USING floorDisplaysList AND floor
+        DISPLAY floor 
+        FOR EACH display IN floorDisplaysList 
+            DISPLAY floor 
+        ENDFOR
     ENDSEQUENCE
 
     <------------------- LOGIC TO OPEN DOORS ------------------->
@@ -263,7 +272,7 @@ DEFINE Elevator USING id AND status AND floor AND door AND numberOfFloors:
 ENDDEFINE
 
 
-//------------------------------------------- DOOR OBJECT ---------------------------------------------------------------------
+//------------------------------------------- DOOR CLASS ---------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------
 DEFINE Door USING id AND status
     ID: id,
@@ -272,13 +281,22 @@ DEFINE Door USING id AND status
 ENDDEFINE
 
 
-//------------------------------------------- BUTTON OBJECT -------------------------------------------------------------------
+//------------------------------------------- BUTTON CLASS -------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------
 DEFINE Button USING id AND status
     ID: id,
     Status: status,
     Floor: floor,
 ENDDEFINE 
+
+
+//------------------------------------------- DISPLAY CLASS -------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------
+DEFINE Display USING id AND status
+    ID: id,
+    Status: status,
+    Floor: floor,
+ENDDEFINE
 
 
 //------------------------------------------- LISTENERS ----------------------------------------------------------------------
@@ -309,17 +327,17 @@ ENDSEQUENCE
 
 <------------------- BUTTON REQUESTS INSIDE ELEVATOR ------------------->
 // When user press a button inside the elevator requesting for a destination floor we have acces to the destinationFloor 
-SEQUENCE requestStop USING requestFloor
+SEQUENCE requestFloor USING requestedFloor AND elevator
     CALL checkWeight WITH maxWeight
     CALL checkObstruction WITH obstructionSensor
     READ requestedFloor AND requestedDirection
     IF requestedDirection is UP THEN
-        SET button OF ButtonsUpList WITH INDEX EQUAL requestFloor TO "ON"
+        SET button OF ButtonsUpList WITH INDEX EQUAL requestedFloor TO "ON"
     ELSE 
-        SET button OF buttonsDownList WITH INDEX EQUAL requestFloor TO "ON"
+        SET button OF buttonsDownList WITH INDEX EQUAL requestedFloor TO "ON"
     ENDIF
-    CALL addFloorToFloorList WITH elevator AND requestFloor
-    CALL moveElevator WITH elevator AND floorList AND requestFloor
+    CALL addFloorToFloorList WITH elevator AND requestedFloor
+    CALL moveElevator WITH elevator AND floorList AND requestedFloor
 ENDSEQUENCE
 
 
@@ -342,26 +360,26 @@ There is only one column consisting of two elevators and 10 floors.
 //* Someone is on floor 3 and wants to go to the 7th floor. Elevator A is expected to be sent.
 
     CALL requestElevator WITH currentFloor="3" AND requestedDirection="UP"
-    CALL requestStop WITH requestFloor="7"
+    CALL requestFloor WITH requestedFloor="7"
   
 //SCENARIO 2: ----------------------------------------------------------------------------------------------------------------------
     //person 1 -----------------------------------------------------------
     CALL requestElevator WITH currentFloor="1" AND requestedDirection="UP" 
-    CALL requestStop WITH requestFloor="6"
+    CALL requestFloor WITH requestedFloor="6"
     
     //person 2 (after person 1 is finished)--------------------------------
     CALL requestElevator WITH currentFloor="3" AND requestedDirection="UP"
-    CALL requestStop WITH requestFloor="6"
+    CALL requestFloor WITH requestedFloor="6"
 
     //person 3 -----------------------------------------------------------
     CALL requestElevator WITH currentFloor="9" AND requestedDirection="DOWN" 
-    CALL requestStop WITH requestFloor="2"
+    CALL requestFloor WITH requestedFloor="2"
 
 //SCENARIO 3: ----------------------------------------------------------------------------------------------------------------------
     //person 1 -----------------------------------------------------------
     CALL requestElevator WITH currentFloor="3" AND requestedDirection="DOWN"
-    CALL requestStop WITH requestFloor="2"
+    CALL requestFloor WITH requestedFloor="2"
 
     //person 2 (after person 1 is finished)--------------------------------
     CALL requestElevator WITH currentFloor="10" AND requestedDirection="DOWN"
-    CALL requestStop WITH requestFloor="3"
+    CALL requestFloor WITH requestedFloor="3"
