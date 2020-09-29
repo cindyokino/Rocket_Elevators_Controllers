@@ -74,7 +74,7 @@ DEFINE Column USING id AND columnStatus AND numberOfElevators AND numberOfFloors
         ENDFOR
     ENDSEQUENCE
 
-    <------------------- LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORIZATION LOGIC ------------------->
+    <------------------- LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ------------------->
     // The best option is the nearest and already moving elevator that has the same direction that the current direction
     // Verify if the request is on the elevators way, otherwise the elevator will just continue its way ignoring this call
     // If there is no elevators moving at the same direction as the current direction, the nearest idle elevator is selected
@@ -94,9 +94,9 @@ DEFINE Column USING id AND columnStatus AND numberOfElevators AND numberOfFloors
         ENDFOR
 
         IF (ActiveElevatorsList IS not EMPTY) THEN
-            CALL findNearestElevator USING ActiveElevatorsList
+            CALL findNearestElevator USING currentFloor AND ActiveElevatorsList
         ELSE 
-            CALL findNearestElevator USING IdleElevatorsList         
+            CALL findNearestElevator USING currentFloor AND IdleElevatorsList         
 
         RETURN bestElevator 
     ENDSEQUENCE
@@ -319,7 +319,7 @@ SEQUENCE requestElevator USING currentFloor AND requestedDirection
     ELSE 
         SET button OF buttonsDownList WITH INDEX EQUAL currentFloor TO "ON"
     ENDIF
-    CALL findElevator WITH currentFloor AND requestedDirection AND column elevatorsList RETURNING bestElevator
+    CALL findElevator WITH currentFloor AND requestedDirection AND elevatorsList OF column RETURNING bestElevator
     CALL addFloorToFloorList WITH bestElevator AND currentFloor RETURNING floorList
     CALL moveElevator WITH bestElevator AND floorList AND currentFloor
 ENDSEQUENCE

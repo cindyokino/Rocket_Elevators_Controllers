@@ -157,7 +157,7 @@ DEFINE Column USING id AND status AND numberOfElevatorsPerColumn AND minFloor AN
         ENDIF
     ENDSEQUENCE
 
-     <------------------- LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORIZATION LOGIC ------------------->
+     <------------------- LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ------------------->
     // The best option is the nearest and already moving elevator that has the same direction that the current direction
     // Verify if the request is on the elevators way, if the elevator has already passed the current floor, elevator will just continue its way ignoring this call
     // If there is no elevators moving at the same direction as the current direction, the nearest idle elevator is selected
