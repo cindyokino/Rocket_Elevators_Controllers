@@ -28,7 +28,7 @@ Elevator:
 SET numberOfColumns
 SET numberOfFloors       
 SET numberOfElevators
-SET waitingTime         //How many seconds the door remains open
+SET waitingTime         //How many time the door remains open in SECONDS
 SET maxWeight           //Maximum weight an elevator can carry in KG
 
 
@@ -234,7 +234,7 @@ DEFINE Elevator USING id AND elevatorStatus AND floor AND door AND numberOfFloor
 
     <------------------- LOGIC TO CLOSE DOORS ------------------->
     SEQUENCE closeDoors USING elevator AND waitingTime
-            IF weightSensor IS "OFF" OR obstructionSensor IS "OFF"
+            IF weightSensor IS "OFF" AND obstructionSensor IS "OFF"
                 close elevatorDoor OF elevator
                 SET elevatorDoor OF elevator TO "CLOSED"
                 close floorDoor OF floorDoorsList WITH INDEX EQUAL floor

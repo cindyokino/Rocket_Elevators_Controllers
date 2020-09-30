@@ -27,7 +27,7 @@
 let numberOfColumns;
 let numberOfFloors;    
 let numberOfElevators;
-let waitingTime;         //How many time the door remains opened in MILLISECONDS
+let waitingTime;         //How many time the door remains opened in SECONDS
 let maxWeight;          //Maximum weight an elevator can carry in KG
 
 
@@ -47,36 +47,29 @@ class Column {
         this.createButtonsUpList();     
         this.createButtonsDownList();     
 
-        console.log("CREATED COLUMN", this.id);
-        console.log("NUMBER OF FLOORS:", this.numberOfFloors);
-        console.log("NUMBER OF ELEVATORS:", this.numberOfElevators);
+        console.log("Created column", this.id);
+        console.log("Number of floors:", this.numberOfFloors);
+        console.log("Number of elevators:", this.numberOfElevators);
         console.log("----------------------------------");
         // console.log("ELEVATORS LIST:"); 
-        // console.table(this.elevatorsList); 
-        // console.log("BUTTONS UP LIST:"); 
-        // console.table(this.buttonsUpList); 
-        // console.log("BUTTONS DOWN LIST:"); 
-        // console.table(this.buttonsDownList); 
+        // console.table(this.elevatorsList);
     }
     
     createElevatorsList() {
         for (let i = 1; i <= this.numberOfElevators; i++) {
             this.elevatorsList.push(new Elevator(i, this.numberOfFloors, 1, elevatorStatus.IDLE, sensorStatus.OFF, sensorStatus.OFF));
-            // console.log("CREATED ELEVATOR", i);
-        }
+        }        
     }    
     
     createButtonsUpList() {
         for (let i = 1; i < this.numberOfFloors; i++) {
                 this.buttonsUpList.push(new Button(i, buttonStatus.OFF, i));
-            // console.log("CREATED BUTTON UP", i);
         }
     }    
     
     createButtonsDownList() {
         for (let i = 2; i <= this.numberOfFloors; i++) {
             this.buttonsDownList.push(new Button(i, buttonStatus.OFF, i));
-            // console.log("CREATED BUTTON DOWN", i);
         }
     } 
     
@@ -85,10 +78,10 @@ class Column {
         let bestElevator;
         let activeElevatorList = [];
         let idleElevatorList = [];
-        
+        let sameDirectionElevatorList = [];
         this.elevatorsList.forEach(elevator => {
-            // console.log("ELEVATOR " + elevator.id + " STATUS: "+ elevator.status);
-            if (elevator.status == direction && !elevator.status.IDLE) {
+            if (elevator.status != elevatorStatus.IDLE) {
+                //verify if the request is on the elevator way
                 if (elevator.status == elevatorStatus.UP && elevator.floor <= currentFloor || elevator.status == elevatorStatus.DOWN && elevator.floor >= currentFloor) {
                     activeElevatorList.push(elevator);
                 }
@@ -97,8 +90,12 @@ class Column {
             }
         });
         
-        if  (!activeElevatorList.length == 0) {
-            bestElevator = this.findNearestElevator(currentFloor, activeElevatorList);
+        if(activeElevatorList.length > 0){ //Create new list for elevators with same direction that the request
+            sameDirectionElevatorList = activeElevatorList.filter(elevator => elevator.status == direction);
+        }
+
+        if(sameDirectionElevatorList.length > 0) {
+            bestElevator = this.findNearestElevator(currentFloor, sameDirectionElevatorList);
         } else {
             bestElevator = this.findNearestElevator(currentFloor, idleElevatorList);
         }
@@ -115,7 +112,8 @@ class Column {
                 bestElevator = elevator;
             }
         });
-        console.log("   >>> Elevator " + bestElevator.id + " was called <<<");
+        console.log();
+        console.log("   >> >>> ELEVATOR " + bestElevator.id + " WAS CALLED <<< <<");
         
         return bestElevator;
     }
@@ -125,18 +123,17 @@ class Column {
     requestElevator(requestedFloor, direction) {
         if(direction == buttonDirection.UP) {
             this.buttonsUpList[requestedFloor-1].status = buttonStatus.ON;
-            console.log("SOMEONE REQUEST AN ELEVATOR FROM FLOOR :", requestedFloor);
-            console.log("DIRECTIONAL BUTTON PRESSED:", direction);
+            console.log("Someone request an elevator from floor:", requestedFloor);
+            console.log("Requested direction:", direction);
         } else {
             this.buttonsDownList[requestedFloor-2].status = buttonStatus.ON;
-            console.log("SOMEONE REQUEST AN ELEVATOR FROM FLOOR:", requestedFloor);
-            console.log("DIRECTIONAL BUTTON PRESSED:", direction);
+            console.log("Someone request an elevator from floor:", requestedFloor);
+            console.log("Requested direction:", direction);
         }
        let bestElevator = this.findElevator(requestedFloor, direction);
         bestElevator.addFloorToFloorList(requestedFloor);
         bestElevator.moveElevator(requestedFloor, this);
-    }
-    
+    }    
 }
 
 
@@ -160,28 +157,18 @@ class Elevator {
         this.createFloorDoorsList();     
         this.createDisplaysList();  
         this.createFloorButtonsList();  
-
-        // console.log("ELEVATOR DOOR");
-        // console.log(this.elevatorDoor);
-        // console.log("FLOOR DOORS LIST (elevator " + this.id + "):"); 
-        // console.table(this.floorDoorsList); 
-        // console.log("FLOOR BUTTONS LIST (elevator " + this.id + "):"); 
-        // console.table(this.floorButtonsList); 
-
     }
 
     /* ******* CREATE A LIST WITH A DOOR OF EACH FLOOR ******* */
     createFloorDoorsList() {
         for (let i = 1; i <= this.numberOfFloors; i++) {
             this.floorDoorsList.push(new Door(i, doorStatus.CLOSED, i));
-            // console.log("CREATED DOOR AT FLOOR", i);
         }
     }  
     /* ******* CREATE A LIST WITH A DISPLAY OF EACH FLOOR ******* */
     createDisplaysList() {
         for (let i = 1; i <= this.numberOfFloors; i++) {
             this.floorDisplaysList.push(new Display(i, displayStatus.ON, i));
-            // console.log("CREATED DISPLAY AT FLOOR ", i);
         }
     }  
 
@@ -189,7 +176,6 @@ class Elevator {
     createFloorButtonsList() {
         for (let i = 1; i <= this.numberOfFloors; i++) {
             this.floorButtonsList.push(new Button(i, buttonStatus.OFF, i));
-            // console.log("CREATED BUTTON AT FLOOR ", i);
         }
     }  
 
@@ -208,8 +194,8 @@ class Elevator {
                 } else if (this.floor == requestedFloor) {
                     this.openDoors();
                     this.deleteFloorFromList(requestedFloor);
-                    // requestedColumn.buttonsUpList[requestedFloor-1].status = buttonStatus.OFF;
-                    // requestedColumn.buttonsDownList[requestedFloor-1].status = buttonStatus.OFF;
+                    requestedColumn.buttonsUpList[requestedFloor-1].status = buttonStatus.OFF;
+                    requestedColumn.buttonsDownList[requestedFloor-1].status = buttonStatus.OFF;
                     this.floorButtonsList[requestedFloor-1].status = buttonStatus.OFF;
                 } else {
                     this.status = elevatorStatus.DOWN;
@@ -218,9 +204,7 @@ class Elevator {
             if (this.status == elevatorStatus.UP) {
                 this.moveUp(requestedColumn);
             } else {
-                console.log("CALL MOVEDOWN");// this.moveDown();
-                this.deleteFloorFromList(requestedFloor);
-
+                this.moveDown(requestedColumn);
             }
         }
     }
@@ -229,27 +213,55 @@ class Elevator {
     moveUp(requestedColumn) {
         let tempArray = this.floorList;
         for (let i = this.floor; i < tempArray[tempArray.length - 1]; i++) {
-            console.log(`Moving elevator ${this.id} UP from floor ${i} to floor ${i + 1}`);
+            if (this.floorDoorsList[i].status == doorStatus.OPENED || this.elevatorDoor.status == doorStatus.OPENED) {
+                console.log("   Doors are open, closing doors before move up");
+                this.closeDoors();
+            }
+            console.log(`Moving elevator ${this.id} <up> from floor ${i} to floor ${i + 1}`);
             let nextFloor = (i+1);
             this.floor = nextFloor;
             this.updateDisplays(this.floor);
-            if(tempArray.includes(nextFloor)) {
-                if (this.floorDoorsList[i].status.OPENED || this.elevatorDoor.status.OPENED) {
-                    console.log("DOORS ARE OPEN, CLOSING DOORS BEFORE MOVE UP");
-                    this.closeDoors();
-                }
+            if(tempArray.includes(nextFloor)) {                
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
-                requestedColumn.buttonsUpList[i].status = buttonStatus.OFF;
+                requestedColumn.buttonsUpList[i - 1].status = buttonStatus.OFF;
                 this.floorButtonsList[i].status = buttonStatus.OFF;
             }
         }
         if (this.floorList.length == 0) {
             this.status = elevatorStatus.IDLE;
-            console.log(`   >>> Elevator ${this.id} is now ${this.status} <<<`);
+            // console.log(`       Elevator ${this.id} is now ${this.status}`);
         } else {
             this.status = elevatorStatus.DOWN;
-            console.log(`   >>> Elevator ${this.id} is now going ${this.status} <<<`);
+            console.log(`       Elevator ${this.id} is now going ${this.status}`);
+        }
+    }
+
+    /* ******* LOGIC TO MOVE DOWN ******* */
+    moveDown(requestedColumn) {
+        let tempArray = this.floorList;
+        for (let i = this.floor; i > tempArray[tempArray.length - 1]; i--) {
+            if (this.floorDoorsList[i - 1].status == doorStatus.OPENED || this.elevatorDoor.status == doorStatus.OPENED) {
+                console.log("       Doors are open, closing doors before move down");
+                this.closeDoors();
+            }
+            console.log(`Moving elevator ${this.id} <down> from floor ${i} to floor ${i - 1}`);
+            let nextFloor = (i-1);
+            this.floor = nextFloor;
+            this.updateDisplays(this.floor);
+            if(tempArray.includes(nextFloor)) {                
+                this.openDoors();
+                this.deleteFloorFromList(nextFloor);
+                requestedColumn.buttonsDownList[i - 2].status = buttonStatus.OFF;
+                this.floorButtonsList[i - 1].status = buttonStatus.OFF;
+            }
+        }
+        if (this.floorList.length == 0) {
+            this.status = elevatorStatus.IDLE;
+            // console.log(`       Elevator ${this.id} is now ${this.status}`);
+        } else {
+            this.status = elevatorStatus.UP;
+            console.log(`       Elevator ${this.id} is now going ${this.status}`);
         }
     }
 
@@ -258,36 +270,55 @@ class Elevator {
         this.floorDisplaysList.forEach(display => {
             display.floor = elevatorFloor;
         });
-        console.log(`   All displays of elevator ${this.id} show the floor number ${elevatorFloor}`);
+        console.log(`Displays show ${elevatorFloor}`);
     }
     
     /* ******* LOGIC TO OPEN DOORS ******* */
     openDoors() {
-
         let threeSecondsFromNow = new Date();
         threeSecondsFromNow.setSeconds(threeSecondsFromNow.getSeconds() + 3);
-        console.log(`Elevator ${this.id} doors are opened`);
-        while (new Date() < threeSecondsFromNow || this.weightSensor.status == sensorStatus.ON || this.obstructionSensor.status == sensorStatus.ON) {
+        console.log("       Opening doors...");
+        console.log(`       Elevator ${this.id} doors are opened`);
+        while (new Date() < threeSecondsFromNow || this.weightSensor == sensorStatus.ON || this.obstructionSensor == sensorStatus.ON) {
             this.elevatorDoor.status.OPENED;
             this.floorDoorsList[this.floor-1].status = doorStatus.OPENED;
         }
-
-        console.log("Closing doors...");
-        console.log(`Elevator ${this.id} doors are closed`);
-        this.floorDoorsList[this.floor-1].status = doorStatus.CLOSED;
+        this.closeDoors();
     }
     
     /* ******* LOGIC TO CLOSE DOORS ******* */
-    // closeDoors(waitingTime) {        
-    // }
+    closeDoors(waitingTime) {   
+        if (this.weightSensor == sensorStatus.OFF && this.obstructionSensor == sensorStatus.OFF) {
+            console.log("       Closing doors...");
+            console.log(`       Elevator ${this.id} doors are closed`);
+            this.floorDoorsList[this.floor-1].status = doorStatus.CLOSED;     
+        }
+    }
 
     /* ******* LOGIC FOR WEIGHT SENSOR ******* */
-    // checkWeight(maxWeight) {        
-    // }
+    checkWeight(maxWeight) { 
+        let weight = Math.floor((Math.random() * 600) + 1); //This random simulates the weight from a weight sensor
+        while (weight > maxWeight) {
+            this.weightSensor = sensorStatus.ON;
+            console.log("       Elevator capacity reached, waiting until the weight is lower before continue...");
+            weight -= 100; //I'm supposing the random number is 600, I'll subtract 100 so it will be less than 500 (the max weight I proposed) for the second time it runs
+        }  
+        this.weightSensor = sensorStatus.OFF;
+        console.log("       Elevator capacity is OK");   
+    }
 
     /* ******* LOGIC FOR OBSTRUCTION SENSOR ******* */
-    // checkObstruction() {        
-    // }
+    checkObstruction() { 
+        let probabilityNotBlocked = 70;
+        let number = Math.floor((Math.random() * 100) + 1); //This random simulates the probability of an obstruction (I supposed 30% of chance something is blocking the door)
+        while (number > probabilityNotBlocked) {
+            this.obstructionSensor = sensorStatus.ON;
+            console.log("       Elevator door is blocked by something, waiting until door is free before continue...");
+            number -= 30; //I'm supposing the random number is 100, I'll subtract 30 so it will be less than 70 (30% probability), so the second time it runs theres no one blocking the door
+        }  
+        this.obstructionSensor = sensorStatus.OFF;
+        console.log("       Elevator door is FREE");           
+    }
 
     /* ******* LOGIC TO DELETE ITEM FROM FLOORS LIST ******* */
     deleteFloorFromList(stopFloor) {
@@ -296,10 +327,19 @@ class Elevator {
             this.floorList.splice(index, 1);
         }
     }
-    
 
+     /* ******* ENTRY METHOD ******* */
+    /* ******* REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR ******* */
+    requestFloor(requestedFloor, requestedColumn) {
+        console.log();
+        console.log(`Someone inside the elevator ${this.id} wants to go to floor: ${requestedFloor}`);
+        this.checkWeight(maxWeight);
+        this.checkObstruction();
+        this.addFloorToFloorList(requestedFloor);
+        this.moveElevator(requestedFloor, requestedColumn);
+    }    
 }
-
+   
 
 //------------------------------------------- DOOR CLASS -----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -382,54 +422,65 @@ const displayStatus = {
 
 //------------------------------------------- TESTING PROGRAM ---------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
-waitingTime = 3; 
+waitingTime = 1; //I'm using 1 second so the test will run faster
 maxWeight = 500; 
 
 function scenario1() {
+    console.log();
+    console.log("****************************** SCENARIO 1: ******************************");
     let columnScenario1 = new Column(1, columnStatus.ACTIVE, 10, 2); //parameters (id, columnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
-    console.log("SCENARIO 1:");
     columnScenario1.elevatorsList[0].floor = 2; //floor where the elevator is
     columnScenario1.elevatorsList[1].floor = 6; //floor where the elevator is
     
     columnScenario1.requestElevator(3, buttonDirection.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
-    // columnScenario1.requestFloor(7, elevator);
+    columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1);
     console.log("==================================");
 }
 
 function scenario2() {
+    console.log();
+    console.log("****************************** SCENARIO 2: ******************************");
     let columnScenario2 = new Column(1, columnStatus.ACTIVE, 10, 2);     
-    console.log("SCENARIO 2:");
     columnScenario2.elevatorsList[0].floor = 10;
     columnScenario2.elevatorsList[1].floor = 3;
 
+    console.log();
     console.log("Person 1:"); //elevator 2 is expected
     columnScenario2.requestElevator(1, buttonDirection.UP);
-    // columnScenario2.requestFloor(6, elevator);
+    columnScenario2.elevatorsList[1].requestFloor(6, columnScenario2);
     console.log("----------------------------------");
+    console.log();
     console.log("Person 2:"); //elevator 2 is expected
     columnScenario2.requestElevator(3, buttonDirection.UP);
-    // columnScenario2.requestFloor(5, elevator);
+    columnScenario2.elevatorsList[1].requestFloor(5, columnScenario2);
     console.log("----------------------------------");
+    console.log();
     console.log("Person 3:"); //elevator 1 is expected
     columnScenario2.requestElevator(9, buttonDirection.DOWN);
-    // columnScenario2.requestFloor(2, elevator);
+    columnScenario2.elevatorsList[0].requestFloor(2, columnScenario2);
     console.log("==================================");
 }
 
 function scenario3() {
+    console.log();
+    console.log("****************************** SCENARIO 3: ******************************");
     let columnScenario3 = new Column(1, columnStatus.ACTIVE, 10, 2);     
-    console.log("SCENARIO 3:");
     columnScenario3.elevatorsList[0].floor = 10;
     columnScenario3.elevatorsList[1].floor = 6;
     columnScenario3.elevatorsList[1].status = elevatorStatus.UP;
 
+    console.log();
     console.log("Person 1:"); //elevator 1 is expected
     columnScenario3.requestElevator(3, buttonDirection.DOWN);
-    // columnScenario3.requestFloor(6, elevator);
+    columnScenario3.elevatorsList[0].requestFloor(2, columnScenario3);
     console.log("----------------------------------");
+    console.log();
+
+    //2 minutes later elevator 1(B) finished its trip to 6th floor
+    columnScenario3.elevatorsList[1].status = elevatorStatus.IDLE;
     console.log("Person 2:"); //elevator 2 is expected
     columnScenario3.requestElevator(10, buttonDirection.DOWN);
-    // columnScenario3.requestFloor(3, elevator);
+    columnScenario3.elevatorsList[1].requestFloor(3, columnScenario3);
     console.log("==================================");
 }
 
