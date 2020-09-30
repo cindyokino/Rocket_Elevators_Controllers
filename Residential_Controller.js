@@ -13,7 +13,8 @@
 // 5- BUTTON CLASS
 // 6- DISPLAY CLASS
 // 7- ENUMS
-// 8- TESTING PROGRAM
+// 8- GLOBAL FUNCTIONS 
+// 9- TESTING PROGRAM
 
 //CONTROLLED OBJECTS:
 // Columns: controls a list of N elevators
@@ -27,7 +28,7 @@
 let numberOfColumns;
 let numberOfFloors;    
 let numberOfElevators;
-let waitingTime;         //How many seconds the door remains open
+let waitingTime;         //How many time the door remains opened in MILLISECONDS
 let maxWeight;          //Maximum weight an elevator can carry in KG
 
 
@@ -115,25 +116,26 @@ class Column {
                 bestElevator = elevator;
             }
         });
-        console.log("   >>> elevator " + bestElevator.id + " was called <<<");
+        console.log("   >>> Elevator " + bestElevator.id + " was called <<<");
         
         return bestElevator;
     }
 
-    /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON ******* */
+    /* ******* ENTRY METHOD ******* */
+    /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
     requestElevator(requestedFloor, direction) {
         if(direction == buttonDirection.UP) {
             this.buttonsUpList[requestedFloor-1].status = buttonStatus.ON;
-            console.log("SOMEONE WANTS TO GO TO FLOOR:", requestedFloor);
+            console.log("SOMEONE REQUEST AN ELEVATOR FROM FLOOR :", requestedFloor);
             console.log("DIRECTIONAL BUTTON PRESSED:", direction);
         } else {
-            this.buttonsUpList[requestedFloor-2].status = buttonStatus.OFF;
-            console.log("SOMEONE WANTS TO GO TO FLOOR:", requestedFloor);
+            this.buttonsUpList[requestedFloor-2].status = buttonStatus.ON;
+            console.log("SOMEONE REQUEST AN ELEVATOR FROM FLOOR:", requestedFloor);
             console.log("DIRECTIONAL BUTTON PRESSED:", direction);
         }
        let bestElevator = this.findElevator(requestedFloor, direction);
         bestElevator.addFloorToFloorList(requestedFloor);
-        bestElevator.moveElevator(requestedFloor);
+        bestElevator.moveElevator(requestedFloor, this);
     }
     
 }
@@ -200,7 +202,7 @@ class Elevator {
     }
 
     /* ******* LOGIC TO MOVE ELEVATOR ******* */
-    moveElevator(requestedFloor) {
+    /*async*/ moveElevator(requestedFloor, requestedColumn) {
         while (!this.floorList.length == 0) {
             if (this.status == elevatorStatus.IDLE) {
                 if (this.floor < requestedFloor) {
@@ -210,7 +212,7 @@ class Elevator {
                 }
             }
             if (this.status == elevatorStatus.UP) {
-                this.moveUp();
+                /*await*/ this.moveUp(requestedColumn);
             } else {
                 // this.moveDown();
             }
@@ -218,9 +220,8 @@ class Elevator {
     }
 
     /* ******* LOGIC TO MOVE UP ******* */
-    moveUp() {
+    /*async*/ moveUp(requestedColumn) {
         let tempArray = this.floorList;
-        // this.updateDisplays(this.floor);
         for (let i = this.floor; i < tempArray[tempArray.length - 1]; i++) {
             console.log(`Moving elevator ${this.id} UP from floor ${i} to floor ${i + 1}`);
             let nextFloor = (i+1);
@@ -229,21 +230,74 @@ class Elevator {
             if(tempArray.includes(nextFloor)) {
                 if (this.floorDoorsList[i].status.OPENED || this.elevatorDoor.status.OPENED) {
                     console.log("DOORS ARE OPEN, CLOSING DOORS BEFORE MOVE UP");
-                    closeDoors();
+                    /*await*/ this.closeDoors();
                 }
+                /*await*/ this.openDoors();
                 this.deleteFloorFromList(nextFloor);
+                requestedColumn.buttonsUpList[i].status = buttonStatus.OFF;
+                this.floorButtonsList[i].status = buttonStatus.OFF;
             }
-
-
-
-
+        }
+        if (this.floorList.length == 0) {
+            this.status = elevatorStatus.IDLE;
+            console.log(`   >>> Elevator ${this.id} is now ${this.status} <<<`);
+        } else {
+            this.status = elevatorStatus.DOWN;
+            console.log(`   >>> Elevator ${this.id} is now going ${this.status} <<<`);
         }
     }
 
     /* ******* LOGIC TO UPDATE DISPLAYS OF ELEVATOR AND SHOW FLOOR ******* */
-    updateDisplays(stopFloor) {
-        console.log(`   All displays of elevator ${this.id} show the floor number ${stopFloor}`);
+    updateDisplays(elevatorFloor) {
+        this.floorDisplaysList.forEach(display => {
+            display.floor = elevatorFloor;
+        });
+        console.log(`   All displays of elevator ${this.id} show the floor number ${elevatorFloor}`);
     }
+    
+    /* ******* LOGIC TO OPEN DOORS ******* */
+    /*async*/ openDoors() {
+
+        //SOLUTION 1 - SIMPLE BUT NOT GOOD, it runs X times until reach waitingTime (not in seconds or milliseconds)
+        // let timer = 0;
+        // console.log(`Elevator ${this.id} doors are opened`);
+        // while (timer < waitingTime || this.weightSensor.status == sensorStatus.ON || this.obstructionSensor.status == sensorStatus.ON) {
+        //     this.elevatorDoor.status.OPENED;
+        //     this.floorDoorsList[this.floor-1].status = doorStatus.OPENED;
+        //     timer++;
+        // }
+
+
+        //SOLUTION 2 - GOOD
+        let threeSecondsFromNow = new Date();
+        threeSecondsFromNow.setSeconds(threeSecondsFromNow.getSeconds() + 3);
+        console.log(`Elevator ${this.id} doors are opened`);
+        while (new Date() < threeSecondsFromNow || this.weightSensor.status == sensorStatus.ON || this.obstructionSensor.status == sensorStatus.ON) {
+            this.elevatorDoor.status.OPENED;
+            this.floorDoorsList[this.floor-1].status = doorStatus.OPENED;
+            // timer++;
+        }
+
+
+        //SOLUTION 3 - TOO COMPLICATED I'M LOST HERE (async and await everywhere)
+        // await sleep(2000);
+        console.log("Closing doors...");
+        // await sleep(2000);
+        console.log(`Elevator ${this.id} doors are closed`);
+        this.floorDoorsList[this.floor-1].status = doorStatus.CLOSED;
+    }
+    
+    /* ******* LOGIC TO CLOSE DOORS ******* */
+    // closeDoors(waitingTime) {        
+    // }
+
+    /* ******* LOGIC FOR WEIGHT SENSOR ******* */
+    // checkWeight(maxWeight) {        
+    // }
+
+    /* ******* LOGIC FOR OBSTRUCTION SENSOR ******* */
+    // checkObstruction() {        
+    // }
 
     /* ******* LOGIC TO DELETE ITEM FROM FLOORS LIST ******* */
     deleteFloorFromList(stopFloor) {
@@ -336,8 +390,17 @@ const displayStatus = {
 };
 
 
+//------------------------------------------- GLOBAL FUNCTIONS ---------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+
 //------------------------------------------- TESTING PROGRAM ---------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
+waitingTime = 3000; 
+maxWeight = 500; 
 
 function scenario1() {
     let columnScenario1 = new Column(1, columnStatus.ACTIVE, 10, 2); //parameters (id, columnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
@@ -345,7 +408,10 @@ function scenario1() {
     columnScenario1.elevatorsList[0].floor = 2; //floor where the elevator is
     columnScenario1.elevatorsList[1].floor = 6; //floor where the elevator is
     
-    columnScenario1.requestElevator(4, buttonDirection.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
+    columnScenario1.requestElevator(3, buttonDirection.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
+    // columnScenario1.requestFloor(7, elevator);
+    console.log("==================================");
+    columnScenario1.requestElevator(9, buttonDirection.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
     // columnScenario1.requestFloor(7, elevator);
     console.log("==================================");
 }

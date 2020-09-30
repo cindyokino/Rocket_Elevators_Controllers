@@ -178,7 +178,7 @@ DEFINE Elevator USING id AND elevatorStatus AND floor AND door AND numberOfFloor
             CALL openDoors
             REMOVE floor
             SET button OF buttonsUpList WITH INDEX EQUAL floorN TO "OFF" //selects the button of corresponding floor from buttonsUpList 
-            SET button OF buttonsUpList WITH INDEX EQUAL floorN TO "OFF"
+            SET button OF floorButtonsList WITH INDEX EQUAL floorN TO "OFF"
         ENDFOR
 
         IF floorList IS EMPTY THEN
@@ -219,7 +219,7 @@ DEFINE Elevator USING id AND elevatorStatus AND floor AND door AND numberOfFloor
     ENDSEQUENCE
 
     <------------------- LOGIC TO OPEN DOORS ------------------->
-    SEQUENCE openDoors USING elevator AND floor AND waitingTime AND obstruction
+    SEQUENCE openDoors USING elevator AND floor AND waitingTime
         IF elevator floor IS EQUAL TO floor THEN
         SET timer TO 0 seconds
             WHILE timer < waitingTime OR weightSensor IS "ON" OR obstructionSensor IS "ON"
