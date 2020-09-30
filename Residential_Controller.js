@@ -422,8 +422,8 @@ const displayStatus = {
 
 //------------------------------------------- TESTING PROGRAM ---------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
-waitingTime = 1; //I'm using 1 second so the test will run faster
-maxWeight = 500; 
+waitingTime = 1; //How many time the door remains opened in SECONDS - I'm using 1 second so the test will run faster
+maxWeight = 500; //Maximum weight an elevator can carry in KG
 
 function scenario1() {
     console.log();
@@ -433,7 +433,7 @@ function scenario1() {
     columnScenario1.elevatorsList[1].floor = 6; //floor where the elevator is
     
     columnScenario1.requestElevator(3, buttonDirection.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
-    columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1);
+    columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1); //parameters (requestedFloor, requestedColumn)
     console.log("==================================");
 }
 
@@ -466,9 +466,9 @@ function scenario3() {
     console.log("****************************** SCENARIO 3: ******************************");
     let columnScenario3 = new Column(1, columnStatus.ACTIVE, 10, 2);     
     columnScenario3.elevatorsList[0].floor = 10;
-    columnScenario3.elevatorsList[1].floor = 6;
+    columnScenario3.elevatorsList[1].floor = 3;
     columnScenario3.elevatorsList[1].status = elevatorStatus.UP;
-
+    
     console.log();
     console.log("Person 1:"); //elevator 1 is expected
     columnScenario3.requestElevator(3, buttonDirection.DOWN);
@@ -477,7 +477,9 @@ function scenario3() {
     console.log();
 
     //2 minutes later elevator 1(B) finished its trip to 6th floor
+    columnScenario3.elevatorsList[1].floor = 6;
     columnScenario3.elevatorsList[1].status = elevatorStatus.IDLE;
+
     console.log("Person 2:"); //elevator 2 is expected
     columnScenario3.requestElevator(10, buttonDirection.DOWN);
     columnScenario3.elevatorsList[1].requestFloor(3, columnScenario3);
