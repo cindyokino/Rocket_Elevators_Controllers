@@ -149,7 +149,7 @@ DEFINE Elevator USING id AND elevatorStatus AND floor AND door AND numberOfFloor
     ENDSEQUENCE
 
     <------------------- LOGIC TO MOVE ELEVATOR ------------------->
-    SEQUENCE moveElevator USING elevator AND floorList AND requestedFloor
+    SEQUENCE moveElevator USING elevator AND requestedFloor
         WHILE floorList OF elevator IS NOT EMPTY DO    
             IF (status OF elevator IS "IDLE") THEN     //In this case the elevator is idle thus the list will have only one element
                 IF (floor OF elevator IS < requestedFloor) THEN
