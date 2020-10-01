@@ -8,7 +8,15 @@
 SUMMARY:
 1- GLOBAL VARIABLES
 2- COLUMN CLASS
+    2a- Constructor and its attributes
+    2b- Methods to create a list: createElevatorsList, createButtonsUpList, createButtonsDownList
+    2c- Methods for logic: findElevator, findNearestElevator
+    2d- Entry method: requestElevator
 3- ELEVATOR CLASS
+    3a- Constructor and its attributes
+    3b- Methods to create a list: createFloorDoorsList, createDisplaysList, createFloorButtonsList, addFloorToFloorList
+    3c- Methods for logic: moveElevator, moveUp, moveDown, updateDisplays, openDoors, closeDoors, checkWeight, checkObstruction, deleteFloorFromList
+    3d- Entry method: requestFloor
 4- DOOR CLASS
 5- BUTTON CLASS
 6- DISPLAY CLASS
@@ -34,6 +42,7 @@ let maxWeight;          //Maximum weight an elevator can carry in KG
 //------------------------------------------- COLUMN CLASS -----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 class Column {
+    //----------------- Constructor and its attributes -----------------//
     constructor(id, columnStatus, numberOfFloors, numberOfElevators) {
         this.id = id;
         this.status = columnStatus;
@@ -54,25 +63,30 @@ class Column {
         // console.log("ELEVATORS LIST:"); 
         // console.table(this.elevatorsList);
     }
-    
+
+    //----------------- Methods to create a list -----------------// 
+    /* ******* CREATE A LIST OF ELEVATORS FOR THE COLUMN ******* */
     createElevatorsList() {
         for (let i = 1; i <= this.numberOfElevators; i++) {
             this.elevatorsList.push(new Elevator(i, this.numberOfFloors, 1, elevatorStatus.IDLE, sensorStatus.OFF, sensorStatus.OFF));
         }        
     }    
-    
+ 
+    /* ******* CREATE A LIST WITH UP BUTTONS FROM THE FIRST FLOOR TO THE LAST LAST BUT ONE FLOOR ******* */ 
     createButtonsUpList() {
         for (let i = 1; i < this.numberOfFloors; i++) {
                 this.buttonsUpList.push(new Button(i, buttonStatus.OFF, i));
         }
     }    
-    
+
+    /* ******* CREATE A LIST WITH DOWN BUTTONS FROM THE SECOND FLOOR TO THE LAST FLOOR ******* */    
     createButtonsDownList() {
         for (let i = 2; i <= this.numberOfFloors; i++) {
             this.buttonsDownList.push(new Button(i, buttonStatus.OFF, i));
         }
     } 
     
+    //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ******* */
     findElevator(currentFloor, direction) {
         let bestElevator;
@@ -118,6 +132,7 @@ class Column {
         return bestElevator;
     }
 
+    //----------------- Entry method -----------------//
     /* ******* ENTRY METHOD ******* */
     /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
     requestElevator(requestedFloor, direction) {
@@ -140,6 +155,7 @@ class Column {
 //------------------------------------------- ELEVATOR CLASS -----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 class Elevator {
+    //----------------- Constructor and its attributes -----------------//
     constructor(id, numberOfFloors, floor, elevatorStatus, weightSensorStatus, obstructionSensorStatus) {
         this.id = id;
         this.numberOfFloors = numberOfFloors;
@@ -159,6 +175,7 @@ class Elevator {
         this.createFloorButtonsList();  
     }
 
+    //----------------- Methods to create a list -----------------//
     /* ******* CREATE A LIST WITH A DOOR OF EACH FLOOR ******* */
     createFloorDoorsList() {
         for (let i = 1; i <= this.numberOfFloors; i++) {
@@ -185,6 +202,7 @@ class Elevator {
         this.floorList.sort(function(a, b){return a-b});
     }
 
+    //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO MOVE ELEVATOR ******* */
     moveElevator(requestedFloor, requestedColumn) {
         while (!this.floorList.length == 0) {
@@ -328,7 +346,8 @@ class Elevator {
         }
     }
 
-     /* ******* ENTRY METHOD ******* */
+    //----------------- Entry method -----------------//
+    /* ******* ENTRY METHOD ******* */
     /* ******* REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR ******* */
     requestFloor(requestedFloor, requestedColumn) {
         console.log();
