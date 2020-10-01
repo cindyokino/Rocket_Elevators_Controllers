@@ -425,18 +425,20 @@ const displayStatus = {
 waitingTime = 1; //How many time the door remains opened in SECONDS - I'm using 1 second so the test will run faster
 maxWeight = 500; //Maximum weight an elevator can carry in KG
 
+/* ******* CREATE SCENARIO 1 ******* */
 function scenario1() {
     console.log();
     console.log("****************************** SCENARIO 1: ******************************");
     let columnScenario1 = new Column(1, columnStatus.ACTIVE, 10, 2); //parameters (id, columnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
-    columnScenario1.elevatorsList[0].floor = 2; //floor where the elevator is
-    columnScenario1.elevatorsList[1].floor = 6; //floor where the elevator is
+    columnScenario1.elevatorsList[0].floor = 2; //floor where the elevator 1 is
+    columnScenario1.elevatorsList[1].floor = 6; //floor where the elevator 2 is
     
     columnScenario1.requestElevator(3, buttonDirection.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
     columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1); //parameters (requestedFloor, requestedColumn)
     console.log("==================================");
 }
 
+/* ******* CREATE SCENARIO 2 ******* */
 function scenario2() {
     console.log();
     console.log("****************************** SCENARIO 2: ******************************");
@@ -461,6 +463,7 @@ function scenario2() {
     console.log("==================================");
 }
 
+/* ******* CREATE SCENARIO 3 ******* */
 function scenario3() {
     console.log();
     console.log("****************************** SCENARIO 3: ******************************");
@@ -486,6 +489,8 @@ function scenario3() {
     console.log("==================================");
 }
 
+
+/* ******* CALL SCENARIOS ******* */
 // scenario1();
 // scenario2();
 scenario3();

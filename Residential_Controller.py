@@ -45,28 +45,30 @@ class Column:
         self.buttonsDownList = []
 
         self.createElevatorsList()
-        #self.buttonsUpList()
-        #self.buttonsDownList()
+        self.createButtonsUpList()
+        self.createButtonsDownList()
 
-    '''def display(self):
-        print("Created column" + str(self.id))
-        print("Number of floors:" + str(self.numberOfFloors))
-        print("Created Number of elevators:" + str(self.numberOfElevators))
-        print("----------------------------------")'''
-        
-    print("Created column " + str(id))
-    print("Number of floors: " + str(numberOfFloors))
-    print("Created Number of elevators: " + str(numberOfElevators))
-    print("----------------------------------")
+    def display(self):
+        print("Created column " + str(self.id))
+        print("Number of floors: " + str(self.numberOfFloors))
+        print("Created Number of elevators: " + str(self.numberOfElevators))
+        print("----------------------------------")
 
     def createElevatorsList(self):
         for x in range(self.numberOfElevators):
-            self.elevatorsList.insert(elevator = Elevator(x, self.numberOfFloors, 1, ElevatorStatus.IDLE, SensorStatus.OFF, SensorStatus.OFF))
+            self.elevatorsList.append(Elevator(x + 1, self.numberOfFloors, 1, ElevatorStatus.IDLE, SensorStatus.OFF, SensorStatus.OFF))
+            # print("elevator " + str(self.elevatorsList[x].id) + " created")
 
+    def createButtonsUpList(self):
+        for x in range(self.numberOfFloors - 1):
+            self.buttonsUpList.append(Button(x + 1, ButtonStatus.OFF, x))
+            # print("button up " + str(self.buttonsUpList[x].id) + " created")
 
+    def createButtonsDownList(self):
+        for x in range(self.numberOfFloors - 1):
+            self.buttonsDownList.append(Button(x + 2, ButtonStatus.OFF, x))
+            # print("button down " + str(self.buttonsDownList[x].id) + " created")
 
-# col = Column(1, 2,3,4)
-# col.display()
 
 
 ''' ------------------------------------------- ELEVATOR CLASS ----------------------------------------------------------------------
@@ -89,6 +91,10 @@ class Elevator:
         # self.createFloorDoorsList()   
         # self.createDisplaysList()
         # self.createFloorButtonsList()
+
+    # To print the object
+    def __str__(self):
+        return str(self.__class__) + ": " + str(self.__dict__)
 
 ''' ------------------------------------------- DOOR CLASS --------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------- '''
@@ -158,3 +164,24 @@ class DisplayStatus(Enum):
 
 ''' ------------------------------------------- TESTING PROGRAM -------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------- '''
+waitingTime = 1 #How many time the door remains opened in SECONDS - I'm using 1 second so the test will run faster
+maxWeight = 500 #Maximum weight an elevator can carry in KG
+
+''' ******* CREATE SCENARIO 1 ******* '''
+def scenario1(): 
+    print()
+    print("****************************** SCENARIO 1: ******************************")
+    columnScenario1 = Column(1, ColumnStatus.ACTIVE, 10, 2) #parameters (id, columnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
+    columnScenario1.elevatorsList[0].floor = 2 #floor where the elevator 1 is
+    columnScenario1.elevatorsList[1].floor = 6 #floor where the elevator 2 is
+    
+    # columnScenario1.requestElevator(3, ButtonDirection.UP); #parameters (requestedFloor, buttonDirection.UP/DOWN)
+    # columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1); #parameters (requestedFloor, requestedColumn)
+
+    columnScenario1.display()  
+
+    print("==================================")
+
+
+''' ******* CALL SCENARIOS ******* '''
+scenario1()
