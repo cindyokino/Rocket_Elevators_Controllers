@@ -30,6 +30,8 @@ Elevators: controls doors, buttons, displays
 *************************************************** '''
 
 from enum import Enum
+import math
+import random
 
 ''' ------------------------------------------- GLOBAL VARIABLES ---------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------- '''
@@ -200,7 +202,7 @@ class Elevator:
                      self.status = ElevatorStatus.UP
                 elif self.floor == requestedFloor:
                     # self.openDoors() #TODO
-                    # self.deleteFloorFromList(requestedFloor) 
+                    self.deleteFloorFromList(requestedFloor) 
                     requestedColumn.buttonsUpList[requestedFloor-1].status = ButtonStatus.OFF
                     requestedColumn.buttonsDownList[requestedFloor-1].status = ButtonStatus.OFF
                     self.floorButtonsList[requestedFloor-1].status = ButtonStatus.OFF
@@ -210,7 +212,7 @@ class Elevator:
             if self.status == ElevatorStatus.UP:
                 self.moveUp(requestedColumn)
             else:
-                 self.moveDown(requestedColumn)
+                 self.moveDown(requestedColumn)                 
 
     ''' LOGIC TO MOVE UP '''
     def moveUp(self, requestedColumn):
@@ -227,7 +229,7 @@ class Elevator:
 
             if nextFloor in tempArray:
                 # self.openDoors() #TODO
-                # self.deleteFloorFromList(nextFloor)
+                self.deleteFloorFromList(nextFloor)
                 requestedColumn.buttonsUpList[x - 1].status = ButtonStatus.OFF
                 self.floorButtonsList[x].status = ButtonStatus.OFF
         
@@ -253,7 +255,7 @@ class Elevator:
 
             if nextFloor in tempArray:
                 # self.openDoors() #TODO
-                # self.deleteFloorFromList(nextFloor)
+                self.deleteFloorFromList(nextFloor)
                 requestedColumn.buttonsDownList[x - 2].status = ButtonStatus.OFF
                 self.floorButtonsList[x - 1].status = ButtonStatus.OFF
         
@@ -264,6 +266,39 @@ class Elevator:
             self.status = ElevatorStatus.UP
             print("       Elevator"+ str(self.id) + " is now going " + str(self.status))
 
+
+
+
+
+    ''' LOGIC FOR WEIGHT SENSOR '''
+    def  checkWeight(self, maxWeight):
+        weight = math.floor((random.random() * 600) + 1) #This random simulates the weight from a weight sensor
+        while weight > maxWeight:
+            self.weightSensor = SensorStatus.ON
+            print("       ! Elevator capacity reached, waiting until the weight is lower before continue...")
+            weight -= 100; #I'm supposing the random number is 600, I'll subtract 100 so it will be less than 500 (the max weight I proposed) for the second time it runs
+        
+        self.weightSensor = SensorStatus.OFF
+        print("       Elevator capacity is FREE")
+
+    ''' LOGIC FOR OBSTRUCTION SENSOR '''
+    def checkObstruction(self):
+        probabilityNotBlocked = 70
+        number = math.floor((random.random() * 100) + 1) #This random simulates the probability of an obstruction (I supposed 30% of chance something is blocking the door)
+
+        while number > probabilityNotBlocked:
+            self.obstructionSensor = SensorStatus.ON
+            print("       ! Elevator door is blocked by something, waiting until door is free before continue...")
+            number -= 30  #I'm supposing the random number is 100, I'll subtract 30 so it will be less than 70 (30% probability), so the second time it runs theres no one blocking the door
+
+        self.obstructionSensor = SensorStatus.OFF
+        print("       Elevator door is FREE")
+
+    ''' LOGIC TO DELETE ITEM FROM FLOORS LIST '''
+    def deleteFloorFromList(self, stopFloor):
+        index = self.floorList.index(stopFloor)
+        if index > -1:
+            del self.floorList[index]
 
 
     ''' ------------------ Entry method ------------------ '''
