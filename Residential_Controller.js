@@ -210,7 +210,7 @@ class Elevator {
     //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO MOVE ELEVATOR ******* */
     moveElevator(requestedFloor, requestedColumn) {
-        while (!this.floorList.length == 0) {
+        while (this.floorList.length != 0) {
             if (this.status == elevatorStatus.IDLE) {
                 if (this.floor < requestedFloor) {
                     this.status = elevatorStatus.UP;
@@ -241,9 +241,10 @@ class Elevator {
                 this.closeDoors();
             }
             console.log(`Moving elevator${this.id} <up> from floor ${i} to floor ${i + 1}`);
-            let nextFloor = (i+1);
+            let nextFloor = (i + 1);
             this.floor = nextFloor;
             this.updateDisplays(this.floor);
+            
             if(tempArray.includes(nextFloor)) {                
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
@@ -272,6 +273,7 @@ class Elevator {
             let nextFloor = (i-1);
             this.floor = nextFloor;
             this.updateDisplays(this.floor);
+
             if(tempArray.includes(nextFloor)) {                
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
@@ -351,7 +353,7 @@ class Elevator {
         }
     }
 
-    
+
     //----------------- Entry method -----------------//
     /* ******* ENTRY METHOD ******* */
     /* ******* REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR ******* */

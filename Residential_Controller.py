@@ -84,7 +84,7 @@ class Column:
             # print("button down " + str(self.buttonsDownList[x].id) + " created")
 
 
-    ''' ------------------ Methods to create a logic ------------------ '''
+    ''' ------------------ Methods for logic ------------------ '''
     ''' LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC '''
     def findElevator(self, currentFloor, direction):
         activeElevatorList = []
@@ -131,13 +131,13 @@ class Column:
         else:
             self.buttonsDownList[requestedFloor-1].status = ButtonStatus.ON
 
-        print(">> Someone request an elevator from floor <" + str(requestedFloor) + "> and direction <" + str(direction) + "> <<")
+        print(">> Someone request an elevator from floor <" + str(requestedFloor) + "> and direction <" + str(direction.value) + "> <<")
         for x in (self.elevatorsList):
             print("Elevator" + str(x.id) + " | " + "Floor: " + str(x.floor) + " | " + "Status: " + str(x.status.value))
        
         bestElevator = self.findElevator(requestedFloor, direction)
-        # bestElevator.addFloorToFloorList(requestedFloor) #TODO
-        # bestElevator.moveElevator(requestedFloor, self) #TODO
+        bestElevator.addFloorToFloorList(requestedFloor) 
+        bestElevator.moveElevator(requestedFloor, self)
 
 
 ''' ------------------------------------------- ELEVATOR CLASS ----------------------------------------------------------------------
@@ -162,9 +162,11 @@ class Elevator:
         self.createFloorButtonsList()
 
     # To print the object:
-    def __str__(self):
-        return str(self.__class__) + ": " + str(self.__dict__)
+    # def __str__(self):
+    #     return str(self.__class__) + ": " + str(self.__dict__)
 
+
+    ''' ------------------ Methods to create a list ------------------ '''
     ''' CREATE A LIST WITH A DOOR OF EACH FLOOR '''
     def createFloorDoorsList(self):
         for x in range(self.numberOfFloors):
@@ -183,10 +185,97 @@ class Elevator:
             self.floorButtonsList.append(Button(x + 1, ButtonStatus.ON, x + 1))
             # print("Elevator" + str(self.id) + " button " + str(self.floorButtonsList[x].id) + " created")
 
-    ''' LOGIC TO ADD A FLOOR TO THE FLOOR LIST ''' #TODO TEST THIS FUNCTION!!!
+    ''' LOGIC TO ADD A FLOOR TO THE FLOOR LIST ''' 
     def addFloorToFloorList(self, floor):
         self.floorList.append(floor)
         print("Elevator" + str(self.id) + " - floor " + str(floor) + " added to floorList")
+
+
+    ''' ------------------ Methods for logic ------------------ '''
+    ''' LOGIC TO MOVE ELEVATOR '''
+    def moveElevator(self, requestedFloor, requestedColumn):
+        while len(self.floorList) != 0:
+            if self.status == ElevatorStatus.IDLE:
+                if self.floor < requestedFloor:
+                     self.status = ElevatorStatus.UP
+                elif self.floor == requestedFloor:
+                    # self.openDoors() #TODO
+                    # self.deleteFloorFromList(requestedFloor) 
+                    requestedColumn.buttonsUpList[requestedFloor-1].status = ButtonStatus.OFF
+                    requestedColumn.buttonsDownList[requestedFloor-1].status = ButtonStatus.OFF
+                    self.floorButtonsList[requestedFloor-1].status = ButtonStatus.OFF
+                else:
+                    self.status = ElevatorStatus.DOWN
+
+            if self.status == ElevatorStatus.UP:
+                self.moveUp(requestedColumn)
+            else:
+                 self.moveDown(requestedColumn)
+
+    ''' LOGIC TO MOVE UP '''
+    def moveUp(self, requestedColumn):
+        tempArray = self.floorList
+        for x in range(self.floor, tempArray[len(tempArray) - 1]):
+            if self.floorDoorsList[x].status == DoorStatus.OPENED or self.elevatorDoor.status == DoorStatus.OPENED:
+                print("   Doors are open, closing doors before move up")
+                self.closeDoors()
+
+            print("Moving elevator" + str(self.id) + "<up> from floor " + str(x) + " to floor " + str(x + 1)) 
+            nextFloor = (x + 1)
+            self.floor = nextFloor
+            # self.UpdateDisplays(self.floor) #TODO
+
+            if nextFloor in tempArray:
+                # self.openDoors() #TODO
+                # self.deleteFloorFromList(nextFloor)
+                requestedColumn.buttonsUpList[x - 1].status = ButtonStatus.OFF
+                self.floorButtonsList[x].status = ButtonStatus.OFF
+        
+        if len(self.floorList) == 0:
+            self.status = ElevatorStatus.IDLE
+            # print("       Elevator"+ str(self.id) + " is now " + str(self.status))
+        else:
+            self.status = ElevatorStatus.DOWN
+            # print("       Elevator"+ str(self.id) + " is now going " + str(self.status))
+
+    ''' LOGIC TO MOVE DOWN '''
+    def moveDown(self, requestedColumn):
+        tempArray = self.floorList
+        for x in range(tempArray[len(tempArray) - 1], self.floor, -1):
+            if self.floorDoorsList[x].status == DoorStatus.OPENED or self.elevatorDoor.status == DoorStatus.OPENED:
+                print("   Doors are open, closing doors before move down")
+                self.closeDoors()
+
+            print("Moving elevator" + str(self.id) + "<down> from floor " + str(x) + " to floor " + str(x - 1)) 
+            nextFloor = (x - 1)
+            self.floor = nextFloor
+            self.updateDisplays(self.floor)
+
+            if nextFloor in tempArray:
+                # self.openDoors() #TODO
+                # self.deleteFloorFromList(nextFloor)
+                requestedColumn.buttonsDownList[x - 2].status = ButtonStatus.OFF
+                self.floorButtonsList[x - 1].status = ButtonStatus.OFF
+        
+        if len(self.floorList) == 0:
+            self.status = ElevatorStatus.IDLE
+            # print("       Elevator"+ str(self.id) + " is now " + str(self.status))
+        else:
+            self.status = ElevatorStatus.UP
+            print("       Elevator"+ str(self.id) + " is now going " + str(self.status))
+
+
+
+    ''' ------------------ Entry method ------------------ '''
+    ''' ENTRY METHOD '''
+    ''' REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR '''
+    def requestFloor(self, requestedFloor, requestedColumn):
+        print()
+        print(">> Someone inside the elevator" + str(self.id) + " wants to go to floor <" + str(requestedFloor) + "> <<")
+        # self.checkWeight(maxWeight)
+        # self.checkObstruction()
+        self.addFloorToFloorList(requestedFloor)
+        self.moveElevator(requestedFloor, requestedColumn)
 
 
 ''' ------------------------------------------- DOOR CLASS --------------------------------------------------------------------------
@@ -272,9 +361,9 @@ def scenario1():
     print()
     print("Person 1: (elevator 1 is expected)")
     columnScenario1.requestElevator(3, ButtonDirection.UP) #parameters (requestedFloor, buttonDirection.UP/DOWN)
-    # columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1) #parameters (requestedFloor, requestedColumn)
+    columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1) #parameters (requestedFloor, requestedColumn)
 
-
+    # columnScenario1.elevatorsList[0].moveElevator(7, columnScenario1)
     print("==================================")
 
 
