@@ -8,7 +8,15 @@
 SUMMARY:
 1- GLOBAL VARIABLES
 2- COLUMN CLASS
+    2a- Constructor and its attributes
+    2b- Methods to create a list: createElevatorsList, createButtonsUpList, createButtonsDownList
+    2c- Methods for logic: findElevator, findNearestElevator
+    2d- Entry method: requestElevator
 3- ELEVATOR CLASS
+    3a- Constructor and its attributes
+    3b- Methods to create a list: createFloorDoorsList, createDisplaysList, createFloorButtonsList, addFloorToFloorList
+    3c- Methods for logic: moveElevator, moveUp, moveDown, updateDisplays, openDoors, closeDoors, checkWeight, checkObstruction, deleteFloorFromList
+    3d- Entry method: requestFloor
 4- DOOR CLASS
 5- BUTTON CLASS
 6- DISPLAY CLASS
@@ -35,6 +43,7 @@ maxWeight = 0           #Maximum weight an elevator can carry in KG
 ''' ------------------------------------------- COLUMN CLASS ------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------- '''
 class Column:
+    ''' ------------------ Constructor and its attributes ------------------ '''
     def __init__(self, id, columnStatus, numberOfFloors, numberOfElevators):
         self.id = id
         self.status = columnStatus
@@ -54,21 +63,44 @@ class Column:
         print("Created Number of elevators: " + str(self.numberOfElevators))
         print("----------------------------------")
 
+
+    ''' ------------------ Methods to create a list ------------------ '''
+    ''' CREATE A LIST OF ELEVATORS FOR THE COLUMN '''
     def createElevatorsList(self):
         for x in range(self.numberOfElevators):
             self.elevatorsList.append(Elevator(x + 1, self.numberOfFloors, 1, ElevatorStatus.IDLE, SensorStatus.OFF, SensorStatus.OFF))
             # print("elevator " + str(self.elevatorsList[x].id) + " created")
 
+    ''' CREATE A LIST WITH UP BUTTONS FROM THE FIRST FLOOR TO THE LAST LAST BUT ONE FLOOR '''
     def createButtonsUpList(self):
         for x in range(self.numberOfFloors - 1):
-            self.buttonsUpList.append(Button(x + 1, ButtonStatus.OFF, x))
+            self.buttonsUpList.append(Button(x + 1, ButtonStatus.OFF, x + 1))
             # print("button up " + str(self.buttonsUpList[x].id) + " created")
 
+    ''' CREATE A LIST WITH DOWN BUTTONS FROM THE SECOND FLOOR TO THE LAST FLOOR '''
     def createButtonsDownList(self):
         for x in range(self.numberOfFloors - 1):
-            self.buttonsDownList.append(Button(x + 2, ButtonStatus.OFF, x))
+            self.buttonsDownList.append(Button(x + 2, ButtonStatus.OFF, x + 2))
             # print("button down " + str(self.buttonsDownList[x].id) + " created")
 
+
+    ''' ------------------ Methods to create a logic ------------------ '''
+   
+
+    ''' ------------------ Entry method ------------------ '''
+    ''' ENTRY METHOD '''
+    ''' REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR '''
+    def requestElevator(self, requestedFloor, direction):
+        if direction == ButtonDirection.UP:
+            self.buttonsUpList[requestedFloor-1].status = ButtonStatus.ON
+        else:
+            self.buttonsDownList[requestedFloor-1].status = ButtonStatus.ON
+        print(">> Someone request an elevator from floor <" + str(requestedFloor) + "> and direction <" + str(direction) + "> <<")
+        for x in (self.elevatorsList):
+            print("Elevator" + str(x.id) + " | " + "Floor: " + str(x.floor) + " | " + "Status: " + str(x.status.value))
+        bestElevator = self.findElevator(requestedFloor, direction)
+        # bestElevator.addFloorToFloorList(requestedFloor) #TODO
+        # bestElevator.moveElevator(requestedFloor, self) #TODO
 
 
 ''' ------------------------------------------- ELEVATOR CLASS ----------------------------------------------------------------------
@@ -88,13 +120,37 @@ class Elevator:
         self.floorButtonsList = []
         self.floorList = []
 
-        # self.createFloorDoorsList()   
-        # self.createDisplaysList()
-        # self.createFloorButtonsList()
+        self.createFloorDoorsList()   
+        self.createDisplaysList()
+        self.createFloorButtonsList()
 
-    # To print the object
+    # To print the object:
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
+
+    ''' CREATE A LIST WITH A DOOR OF EACH FLOOR '''
+    def createFloorDoorsList(self):
+        for x in range(self.numberOfFloors):
+            self.floorDoorsList.append(Door(x + 1, DoorStatus.CLOSED, x + 1))
+            # print("Elevator" + str(self.id) + " door " + str(self.floorDoorsList[x].id) + " created")
+
+    ''' CREATE A LIST WITH A DISPLAY OF EACH FLOOR '''
+    def createDisplaysList(self):
+        for x in range(self.numberOfFloors):
+            self.floorDisplaysList.append(Display(x + 1, DisplayStatus.ON, x + 1))
+            # print("Elevator" + str(self.id) + " display " + str(self.floorDisplaysList[x].id) + " created")
+
+    ''' CREATE A LIST WITH A BUTTON OF EACH FLOOR '''
+    def createFloorButtonsList(self):
+        for x in range(self.numberOfFloors):
+            self.floorButtonsList.append(Button(x + 1, ButtonStatus.ON, x + 1))
+            # print("Elevator" + str(self.id) + " button " + str(self.floorButtonsList[x].id) + " created")
+
+    ''' LOGIC TO ADD A FLOOR TO THE FLOOR LIST ''' #TODO TEST THIS FUNCTION!!!
+    def addFloorToFloorList(self, floor):
+        self.floorList.append(floor)
+        print("Elevator" + str(self.id) + " - floor " + str(floor) + " added to floorList")
+
 
 ''' ------------------------------------------- DOOR CLASS --------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------- '''
@@ -172,13 +228,15 @@ def scenario1():
     print()
     print("****************************** SCENARIO 1: ******************************")
     columnScenario1 = Column(1, ColumnStatus.ACTIVE, 10, 2) #parameters (id, columnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
+    columnScenario1.display()  
     columnScenario1.elevatorsList[0].floor = 2 #floor where the elevator 1 is
     columnScenario1.elevatorsList[1].floor = 6 #floor where the elevator 2 is
     
-    # columnScenario1.requestElevator(3, ButtonDirection.UP); #parameters (requestedFloor, buttonDirection.UP/DOWN)
-    # columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1); #parameters (requestedFloor, requestedColumn)
+    print()
+    print("Person 1: (elevator 1 is expected)")
+    columnScenario1.requestElevator(3, ButtonDirection.UP) #parameters (requestedFloor, buttonDirection.UP/DOWN)
+    # columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1) #parameters (requestedFloor, requestedColumn)
 
-    columnScenario1.display()  
 
     print("==================================")
 

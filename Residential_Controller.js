@@ -64,6 +64,7 @@ class Column {
         // console.table(this.elevatorsList);
     }
 
+
     //----------------- Methods to create a list -----------------// 
     /* ******* CREATE A LIST OF ELEVATORS FOR THE COLUMN ******* */
     createElevatorsList() {
@@ -86,6 +87,7 @@ class Column {
         }
     } 
     
+
     //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ******* */
     findElevator(currentFloor, direction) {
@@ -132,6 +134,7 @@ class Column {
         return bestElevator;
     }
 
+
     //----------------- Entry method -----------------//
     /* ******* ENTRY METHOD ******* */
     /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
@@ -175,6 +178,7 @@ class Elevator {
         this.createFloorButtonsList();  
     }
 
+
     //----------------- Methods to create a list -----------------//
     /* ******* CREATE A LIST WITH A DOOR OF EACH FLOOR ******* */
     createFloorDoorsList() {
@@ -201,6 +205,7 @@ class Elevator {
         this.floorList.push(floor);
         this.floorList.sort(function(a, b){return a-b});
     }
+
 
     //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO MOVE ELEVATOR ******* */
@@ -346,6 +351,7 @@ class Elevator {
         }
     }
 
+    
     //----------------- Entry method -----------------//
     /* ******* ENTRY METHOD ******* */
     /* ******* REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR ******* */
