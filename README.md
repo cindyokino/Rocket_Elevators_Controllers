@@ -7,6 +7,13 @@ You can run the code with node at the terminal of your preference by typing **no
 
 If you want to test a new scenario, go to the **testing program** section at the end of the file for more information.
 
+## 🏘️Residential_Controller.py 
+You can run the code with node at the terminal of your preference by typing **py Residential_Controller.py**
+
+If you want to test a new scenario, go to the **testing program** section at the end of the file for more information.
+
+## 🏘️Residential_Controller.rb
+
 
 
 
@@ -14,3 +21,4 @@ If you want to test a new scenario, go to the **testing program** section at the
 
 
 ## 🏢Commercial_Controller
+#top
