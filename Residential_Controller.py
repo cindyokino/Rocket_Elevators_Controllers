@@ -85,7 +85,42 @@ class Column:
 
 
     ''' ------------------ Methods to create a logic ------------------ '''
-   
+    ''' LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC '''
+    def findElevator(self, currentFloor, direction):
+        activeElevatorList = []
+        idleElevatorList = []
+        sameDirectionElevatorList = []
+        for x in (self.elevatorsList):
+            if x.status != ElevatorStatus.IDLE:
+                #verify if the request is on the elevator way
+                if x.status == ElevatorStatus.UP and x.floor <= currentFloor or x.status == ElevatorStatus.DOWN and x.floor >= currentFloor:
+                    activeElevatorList.append(x)
+            else:
+                idleElevatorList.append(x)
+        
+        if len(activeElevatorList) > 0: #Create new list for elevators with same direction that the request
+            sameDirectionElevatorList = [elevator for elevator in activeElevatorList if elevator.status == direction]
+        
+        if len(sameDirectionElevatorList) > 0:
+            bestElevator = self.findNearestElevator(currentFloor, sameDirectionElevatorList)
+        else:
+            bestElevator = self.findNearestElevator(currentFloor, idleElevatorList)
+            
+        return bestElevator
+
+    ''' LOGIC TO FIND THE NEAREST ELEVATOR '''
+    def findNearestElevator(self, currentFloor, selectedList):
+        bestElevator = selectedList[0]
+        bestDistance = abs(selectedList[0].floor - currentFloor) #abs() returns the absolute value of a number (always positive).
+    
+        for elevator in selectedList:
+            if abs(elevator.floor - currentFloor) < bestDistance:
+                bestElevator = elevator
+        
+        print()
+        print("   >> >>> ELEVATOR " + str(bestElevator.id) + " WAS CALLED <<< <<")            
+        return bestElevator
+
 
     ''' ------------------ Entry method ------------------ '''
     ''' ENTRY METHOD '''
@@ -95,9 +130,11 @@ class Column:
             self.buttonsUpList[requestedFloor-1].status = ButtonStatus.ON
         else:
             self.buttonsDownList[requestedFloor-1].status = ButtonStatus.ON
+
         print(">> Someone request an elevator from floor <" + str(requestedFloor) + "> and direction <" + str(direction) + "> <<")
         for x in (self.elevatorsList):
             print("Elevator" + str(x.id) + " | " + "Floor: " + str(x.floor) + " | " + "Status: " + str(x.status.value))
+       
         bestElevator = self.findElevator(requestedFloor, direction)
         # bestElevator.addFloorToFloorList(requestedFloor) #TODO
         # bestElevator.moveElevator(requestedFloor, self) #TODO
