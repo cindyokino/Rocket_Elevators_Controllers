@@ -30,7 +30,7 @@ Elevators: controls doors, buttons, displays
 
 *************************************************** '''
 
-''' ------------------------------------------- IMPORTS ---------------------------------------------------------------------
+''' ------------------------------------------- IMPORTS ------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------- '''
 from enum import Enum
 import math
@@ -168,34 +168,22 @@ class Elevator:
         self.createDisplaysList()
         self.createFloorButtonsList()
 
-    # To print the object:
-    # def __str__(self):
-    #     return str(self.__class__) + ": " + str(self.__dict__)
-
 
     ''' ------------------ Methods to create a list ------------------ '''
     ''' CREATE A LIST WITH A DOOR OF EACH FLOOR '''
     def createFloorDoorsList(self):
         for x in range(self.numberOfFloors):
             self.floorDoorsList.append(Door(x + 1, DoorStatus.CLOSED, x + 1))
-            # print("Elevator" + str(self.id) + " door " + str(self.floorDoorsList[x].id) + " created")
 
     ''' CREATE A LIST WITH A DISPLAY OF EACH FLOOR '''
     def createDisplaysList(self):
         for x in range(self.numberOfFloors):
             self.floorDisplaysList.append(Display(x + 1, DisplayStatus.ON, x + 1))
-            # print("Elevator" + str(self.id) + " display " + str(self.floorDisplaysList[x].id) + " created")
 
     ''' CREATE A LIST WITH A BUTTON OF EACH FLOOR '''
     def createFloorButtonsList(self):
         for x in range(self.numberOfFloors):
             self.floorButtonsList.append(Button(x + 1, ButtonStatus.ON, x + 1))
-            # print("Elevator" + str(self.id) + " button " + str(self.floorButtonsList[x].id) + " created")
-
-    ''' LOGIC TO ADD A FLOOR TO THE FLOOR LIST ''' 
-    def addFloorToFloorList(self, floor):
-        self.floorList.append(floor)
-        print("Elevator" + str(self.id) + " - floor " + str(floor) + " added to floorList")
 
 
     ''' ------------------ Methods for logic ------------------ '''
@@ -318,6 +306,11 @@ class Elevator:
         self.obstructionSensor = SensorStatus.OFF
         print("       Elevator door is FREE")
 
+    ''' LOGIC TO ADD A FLOOR TO THE FLOOR LIST ''' 
+    def addFloorToFloorList(self, floor):
+        self.floorList.append(floor)
+        print("Elevator" + str(self.id) + " - floor " + str(floor) + " added to floorList")
+
     ''' LOGIC TO DELETE ITEM FROM FLOORS LIST '''
     def deleteFloorFromList(self, stopFloor):
         index = self.floorList.index(stopFloor)
@@ -355,7 +348,7 @@ class Button:
         self.floor = floor
 
 
-''' ------------------------------------------- DISPLAY CLASS --------------------------------------------------------------------------
+''' ------------------------------------------- DISPLAY CLASS -----------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------- '''
 class Display:
     def __init__(self, id, displayStatus, floor):
@@ -403,7 +396,7 @@ class DisplayStatus(Enum):
     OFF = 'off'
 
 
-''' ------------------------------------------- TESTING PROGRAM -------------------------------------------------------------------------------
+''' ------------------------------------------- TESTING PROGRAM ---------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------- '''
 waitingTime = 1 #How many time the door remains opened in SECONDS - I'm using 1 second so the test will run faster
 maxWeight = 500 #Maximum weight an elevator can carry in KG
@@ -476,33 +469,34 @@ def scenario3():
     print("==================================")
 
 
-''' ******* CALL SCENARIOS ******* '''
+''' -------- CALL SCENARIOS -------- '''
 scenario1()
-scenario2()
-scenario3()
+# scenario2()
+# scenario3()
 
 
 ''' ---------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------- TEST YOUR SCENARIO ----------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------- '''
 # Instruction for your test: 
-# 1- Change the 'X' for a value (see the notes to fill correctly at the comments at right of each line)
-# 2- Uncomment the 'scenarioX()' at the last line of code
-# 3- Run the code using a terminal of your preference by typing: Residential_Controller.py 
+# 1- Uncomment the scenarioX() function
+# 2- Change the 'X' for a value (see the notes to fill correctly at the comments at right of each line)
+# 3- Uncomment the 'scenarioX()' at the last line of code
+# 4- Run the code using a terminal of your preference by typing: Residential_Controller.py 
 
-def scenarioX():  
-    print()
-    print("****************************** SCENARIO X: ******************************")
-    columnX = Column(X, ColumnStatus.X, X, X) #set parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
-    columnX.display()  
-    columnX.elevatorsList[0].floor = X #floor where the elevator 1 is
-    columnX.elevatorsList[1].floor = X #floor where the elevator 2 is
-    # If you have more than 2 elevators, make a copy of the line above and put the corresponding index inside the brackets [X]
+# def scenarioX():  
+#     print()
+#     print("****************************** SCENARIO X: ******************************")
+#     columnX = Column(X, ColumnStatus.X, X, X) #set parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
+#     columnX.display()  
+#     columnX.elevatorsList[0].floor = X #floor where the elevator 1 is
+#     columnX.elevatorsList[1].floor = X #floor where the elevator 2 is
+#     # If you have more than 2 elevators, make a copy of the line above and put the corresponding index inside the brackets [X]
 
-    print()
-    print("Person x: (elevator x is expected)")
-    columnX.requestElevator(X, ButtonDirection.X) #set parameters (requestedFloor, buttonDirection.UP/DOWN)
-    columnX.elevatorsList[X].requestFloor(X, columnX) # choose elevator by index and set parameters (requestedFloor, requestedColumn)
-    print("==================================")
+#     print()
+#     print("Person x: (elevator x is expected)")
+#     columnX.requestElevator(X, ButtonDirection.X) #set parameters (requestedFloor, buttonDirection.UP/DOWN)
+#     columnX.elevatorsList[X].requestFloor(X, columnX) # choose elevator by index and set parameters (requestedFloor, requestedColumn)
+#     print("==================================")
 
 # scenarioX()
