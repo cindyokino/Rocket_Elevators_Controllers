@@ -55,8 +55,8 @@ class Column
         @buttonsDownList = []
 
         createElevatorsList
-        # createButtonsUpList
-        # createButtonsDownList    
+        createButtonsUpList
+        createButtonsDownList    
     end
 
     def display
@@ -70,8 +70,24 @@ class Column
     # CREATE A LIST OF ELEVATORS FOR THE COLUMN
     def createElevatorsList
         for x in 1..@numberOfElevators do
-            # @elevatorsList.append(Elevator.new(x + 1, @numberOfFloors, 1, ElevatorStatus::IDLE, SensorStatus::OFF, SensorStatus::OFF))
-            puts "created elevator #{x}"
+            @elevatorsList.append(Elevator.new(x + 1, @numberOfFloors, 1, ElevatorStatus::IDLE, SensorStatus::OFF, SensorStatus::OFF))
+            # puts "elevator#{@id} created"
+        end
+    end
+
+    # CREATE A LIST WITH UP BUTTONS FROM THE FIRST FLOOR TO THE LAST LAST BUT ONE FLOOR
+    def createButtonsUpList
+        for x in 1..(@numberOfFloors - 1) do
+            @buttonsUpList.append(Button.new(x, ButtonStatus::OFF, x))
+            # puts "button up #{@buttonsUpList[x - 1].id} created"
+        end
+    end
+
+    # CREATE A LIST WITH DOWN BUTTONS FROM THE SECOND FLOOR TO THE LAST FLOOR
+    def createButtonsDownList
+        for x in 2..@numberOfFloors do
+            @buttonsDownList.append(Button.new(x, ButtonStatus::OFF, x))
+            puts "button down #{@buttonsDownList[x - 2].id} created"
         end
     end
 
@@ -90,8 +106,8 @@ class Elevator
         @status = elevatorStatus
         @weightSensor = weightSensorStatus
         @obstructionSensor = obstructionSensorStatus
-        @elevatorDoor = Door(0, DoorStatus::CLOSED, 0)
-        @elevatorDisplay = Display(0, DisplayStatus.ON, 0)
+        @elevatorDoor = Door.new(0, DoorStatus::CLOSED, 0)
+        @elevatorDisplay = Display.new(0, DisplayStatus::ON, 0)
         @floorDoorsList = []
         @floorDisplaysList = []
         @floorButtonsList = []
