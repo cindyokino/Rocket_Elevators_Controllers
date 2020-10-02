@@ -92,6 +92,52 @@ class Column
     end
 
 
+    #  ------------------ Methods for logic ------------------
+    # LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC 
+    def findElevator(currentFloor, direction)
+        activeElevatorList = []
+        idleElevatorList = []
+        sameDirectionElevatorList = []
+        for x in @elevatorsList
+            if x.status != ElevatorStatus::IDLE #verify if elevator is active and if the request is on the elevator way
+                if x.status == ElevatorStatus::UP and x.floor <= currentFloor or x.status == ElevatorStatus::DOWN and x.floor >= currentFloor
+                    activeElevatorList.append(x)
+                end
+            else
+                idleElevatorList.append(x)
+            end
+        end
+
+        if activeElevatorList.length > 0 #Create new list for elevators with same direction that the request
+            sameDirectionElevatorList = activeElevatorList.select {|elevator| elevator.status == direction}
+        end
+        
+        if sameDirectionElevatorList.length > 0
+            bestElevator = findNearestElevator(currentFloor, sameDirectionElevatorList)
+        else
+            bestElevator = findNearestElevator(currentFloor, idleElevatorList)
+        end
+            
+    return bestElevator
+    end
+
+    # LOGIC TO FIND THE NEAREST ELEVATOR
+    def findNearestElevator(currentFloor, selectedList)
+        bestElevator = selectedList[0]
+        bestDistance = (selectedList[0].floor - currentFloor).abs #abs() returns the absolute value of a number (always positive).
+    
+        for elevator in selectedList
+            if (elevator.floor - currentFloor).abs < bestDistance
+                bestElevator = elevator
+            end
+        end
+        
+        puts ""
+        puts "   >> >>> ELEVATOR #{bestElevator.id} WAS CALLED <<< <<"
+    return bestElevator
+    end
+
+
     #  ------------------ Entry method ------------------
     # CREATE A LIST WITH A BUTTON OF EACH FLOOR
     # REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR
@@ -314,7 +360,7 @@ class Elevator
     # LOGIC TO ADD A FLOOR TO THE FLOOR LIST 
     def addFloorToFloorList(floor)
         @floorList.append(floor)
-        puts "Elevator#{self.id} - floor #{floor} added to floorList"
+        puts "Elevator#{@id} - floor #{floor} added to floorList"
     end
 
     # LOGIC TO DELETE ITEM FROM FLOORS LIST
