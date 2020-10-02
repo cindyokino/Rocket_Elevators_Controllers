@@ -200,12 +200,6 @@ class Elevator {
         }
     }  
 
-    /* ******* LOGIC TO ADD A FLOOR TO THE FLOOR LIST ******* */
-    addFloorToFloorList(floor) {
-        this.floorList.push(floor);
-        this.floorList.sort(function(a, b){return a-b});
-    }
-
 
     //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO MOVE ELEVATOR ******* */
@@ -343,6 +337,12 @@ class Elevator {
         }  
         this.obstructionSensor = sensorStatus.OFF;
         console.log("       Elevator door is FREE");           
+    }
+    
+    /* ******* LOGIC TO ADD A FLOOR TO THE FLOOR LIST ******* */
+    addFloorToFloorList(floor) {
+        this.floorList.push(floor);
+        this.floorList.sort(function(a, b){return a-b});
     }
 
     /* ******* LOGIC TO DELETE ITEM FROM FLOORS LIST ******* */
@@ -521,8 +521,8 @@ function scenario3() {
 
 /* ******* CALL SCENARIOS ******* */
 scenario1();
-scenario2();
-scenario3();
+// scenario2();
+// scenario3();
 
 
 //---------------------------------------------------------------------------------------------------------------------------------
