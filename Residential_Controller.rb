@@ -105,6 +105,41 @@ class Elevator
 end
 
 
+# ------------------------------------------- DOOR CLASS ------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+class Door
+    attr_accessor :id, :columnStatus, :numberOfFloors, :numberOfElevators
+    def initialize(id, doorStatus, floor)
+        @id = id
+        @status = doorStatus
+        @floor = floor
+    end
+end
+
+
+# ------------------------------------------- BUTTON CLASS ------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+class Button
+    attr_accessor :id, :columnStatus, :numberOfFloors, :numberOfElevators
+    def initialize(id, buttonStatus, floor)
+        @id = id
+        @status = buttonStatus
+        @floor = floor
+    end
+end
+
+
+# ------------------------------------------- DISPLAY CLASS ------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+class Display
+    attr_accessor :id, :columnStatus, :numberOfFloors, :numberOfElevators
+    def initialize(id, displayStatus, floor)
+        @id = id
+        @status = displayStatus
+        @floor = floor
+    end
+end
+
 
 # ------------------------------------------- ENUMS ------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------
@@ -149,18 +184,6 @@ end
 module DisplayStatus
     ON = 'on'
     OFF = 'off'
-end
-
-
-# ------------------------------------------- DOOR CLASS ------------------------------------------------------------------------
-# ---------------------------------------------------------------------------------------------------------------------------------
-class Door
-    attr_accessor :id, :columnStatus, :numberOfFloors, :numberOfElevators
-    def initialize(id, doorStatus, floor)
-        @id = id
-        @status = doorStatus
-        @floor = floor
-    end
 end
 
 
