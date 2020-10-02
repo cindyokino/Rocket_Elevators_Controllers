@@ -35,7 +35,6 @@ Elevators: controls doors, buttons, displays
 let numberOfColumns;
 let numberOfFloors;    
 let numberOfElevators;
-let waitingTime;         //How many time the door remains opened in SECONDS
 let maxWeight;          //Maximum weight an elevator can carry in KG
 
 
@@ -293,13 +292,13 @@ class Elevator {
     }
     
     /* ******* LOGIC TO OPEN DOORS ******* */
-    openDoors(waitingTime) {
+    openDoors() {
         let threeSecondsFromNow = new Date();
-        threeSecondsFromNow.setSeconds(threeSecondsFromNow.getSeconds() + waitingTime);
+        threeSecondsFromNow.setSeconds(threeSecondsFromNow.getSeconds() + 1);
         console.log("       Opening doors...");
         console.log(`       Elevator${this.id} doors are opened`);
         while (new Date() < threeSecondsFromNow || this.weightSensor == sensorStatus.ON || this.obstructionSensor == sensorStatus.ON) {
-            this.elevatorDoor.status.OPENED;
+            this.elevatorDoor.status = doorStatus.OPENED;
             this.floorDoorsList[this.floor-1].status = doorStatus.OPENED;
         }
         this.closeDoors();
@@ -311,6 +310,7 @@ class Elevator {
             console.log("       Closing doors...");
             console.log(`       Elevator${this.id} doors are closed`);
             this.floorDoorsList[this.floor-1].status = doorStatus.CLOSED;     
+            this.elevatorDoor.status = doorStatus.CLOSED;
         }
     }
 
@@ -449,7 +449,6 @@ const displayStatus = {
 
 //------------------------------------------- TESTING PROGRAM ---------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
-waitingTime = 1; //How many time the door remains opened in SECONDS - I'm using 1 second so the test will run faster
 maxWeight = 500; //Maximum weight an elevator can carry in KG
 
 /* ******* CREATE SCENARIO 1 ******* */
@@ -521,8 +520,8 @@ function scenario3() {
 
 /* ******* CALL SCENARIOS ******* */
 scenario1();
-// scenario2();
-// scenario3();
+scenario2();
+scenario3();
 
 
 //---------------------------------------------------------------------------------------------------------------------------------
