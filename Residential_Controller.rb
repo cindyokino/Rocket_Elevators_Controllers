@@ -44,7 +44,7 @@ $maxWeight = 0           # Maximum weight an elevator can carry in KG
 # ---------------------------------------------------------------------------------------------------------------------------------
 class Column
     #  ------------------ Constructor and its attributes ------------------
-    attr_accessor :id, :columnStatus, :numberOfFloors, :numberOfElevators
+    attr_accessor :id, :columnStatus, :numberOfFloors, :numberOfElevators, :elevatorsList, :buttonsUpList
     def initialize(id, columnStatus, numberOfFloors, numberOfElevators)
         @id = id
         @status = columnStatus
@@ -89,7 +89,30 @@ class Column
             @buttonsDownList.append(Button.new(x, ButtonStatus::OFF, x))
             # puts "button down #{@buttonsDownList[x - 2].id} created"
         end
-    end   
+    end
+
+
+    #  ------------------ Entry method ------------------
+    # CREATE A LIST WITH A BUTTON OF EACH FLOOR
+    # REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR
+    def requestElevator(requestedFloor, direction)
+        if direction == ButtonDirection::UP
+            @buttonsUpList[requestedFloor-1].status = ButtonStatus::ON
+        else
+            @buttonsDownList[requestedFloor-2].status = ButtonStatus::ON
+        end
+
+        puts ">> Someone request an elevator from floor <#{requestedFloor}> and direction <#{direction}> <<"
+        for x in @elevatorsList do
+            # puts "Elevator#{@elevatorsList[x - 1].id} | Floor: #{@elevatorsList[x - 1].floor | Status: #{@elevatorsList[x - 1].status}"
+        end
+
+        bestElevator = findElevator(requestedFloor, direction)
+        bestElevator.addFloorToFloorList(requestedFloor) 
+        bestElevator.moveElevator(requestedFloor, self)
+    end
+
+
 
 end
 
@@ -137,18 +160,182 @@ class Elevator
     # CREATE A LIST WITH A BUTTON OF EACH FLOOR
     def createFloorButtonsList
         for x in 1..@numberOfFloors do
-            @floorButtonsList.append(Door.new(x, ButtonStatus::ON, x))
+            @floorButtonsList.append(Button.new(x, ButtonStatus::ON, x))
             # puts "elevator#{@id} button floor #{@floorButtonsList[x - 1].id} created"
         end
     end
+
+
+    #  ------------------ Methods for logic ------------------
+    # LOGIC TO MOVE ELEVATOR
+    def moveElevator(requestedFloor, requestedColumn)
+        while @floorList.length() != 0
+            if @status == ElevatorStatus::IDLE
+                if @floor < requestedFloor
+                    @status = ElevatorStatus::UP
+                elsif @floor == requestedFloor
+                    openDoors(waitingTime)
+                    deleteFloorFromList(requestedFloor)
+                    requestedColumn.buttonsUpList[requestedFloor-1].status = ButtonStatus::OFF
+                    requestedColumn.buttonsDownList[requestedFloor-1].status = ButtonStatus::OFF
+                    @floorButtonsList[requestedFloor-1].status = ButtonStatus::OFF
+                else
+                    @status = ElevatorStatus::DOWN
+                end
+            end
+
+            if @status == ElevatorStatus::UP
+                moveUp(requestedColumn)
+            else
+                moveDown(requestedColumn)
+            end
+
+        end
+    end
+
+    # LOGIC TO MOVE UP
+    def moveUp(requestedColumn)
+        tempArray = @floorList.dup
+        for x in @floor..(tempArray[len(tempArray) - 1])
+            if @floorDoorsList[x].status == DoorStatus::OPENED or @elevatorDoor.status == DoorStatus::OPENED
+                puts "   Doors are open, closing doors before move up"
+                closeDoors
+            end
+            
+            puts "Moving elevator#{(@id)} <up> from floor #{x} to floor #{x + 1}"
+            nextFloor = (x + 1)
+            @floor = nextFloor
+            updateDisplays(@floor)
+            
+            if tempArray.include? nextFloor
+                openDoors(waitingTime)
+                deleteFloorFromList(nextFloor)
+                requestedColumn.buttonsUpList[x - 1].status = ButtonStatus::OFF
+                floorButtonsList[x].status = ButtonStatus::OFF
+            end
+        end
+            
+        if @floorList.length() == 0
+            @status = ElevatorStatus::IDLE
+            # puts "       Elevator#{@id} is now #{@status.value}"
+        else
+            @status = ElevatorStatus::DOWN
+            puts "       Elevator#{@id} is now going #{@status.value}"
+        end
+    end
+
+    # LOGIC TO MOVE DOWN
+    def moveDown(requestedColumn)
+        tempArray = @floorList.dup
+        for x in @floor.downto(tempArray[len(tempArray) - 1])
+            if @floorDoorsList[x - 1].status == DoorStatus::OPENED or @elevatorDoor.status == DoorStatus::OPENED
+                puts "   Doors are open, closing doors before move down"
+                closeDoors
+            end
+            
+            puts "Moving elevator#{(@id)} <down> from floor #{x} to floor #{x - 1}"
+            nextFloor = (x - 1)
+            @floor = nextFloor
+            updateDisplays(@floor)
+            
+            if tempArray.include? nextFloor
+                openDoors(waitingTime)
+                deleteFloorFromList(nextFloor)
+                requestedColumn.buttonsUpList[x - 2].status = ButtonStatus::OFF
+                floorButtonsList[x - 1].status = ButtonStatus::OFF
+            end
+        end
+            
+        if @floorList.length() == 0
+            @status = ElevatorStatus::IDLE
+            # puts "       Elevator#{@id} is now #{@status.value}"
+        else
+            @status = ElevatorStatus::UP
+            puts "       Elevator#{@id} is now going #{@status.value}"
+        end
+    end
+
+    # LOGIC TO UPDATE DISPLAYS OF ELEVATOR AND SHOW FLOOR
+    def updateDisplays(elevatorFloor)
+        for display in @floorDisplaysList
+            display.floor = elevatorFloor
+        end
+        
+        puts "Displays show ##{elevatorFloor}"
+    end
+
+    # LOGIC TO OPEN DOORS
+    def openDoors(waitingTime)
+        puts "       Opening doors..."
+        puts "       Elevator#{@id} doors are opened"
+        @elevatorDoor.status.OPENED
+        @floorDoorsList[@floor-1].status = DoorStatus::OPENED
+        sleep(waitingTime)
+        closeDoors
+    end
+
+    # LOGIC TO CLOSE DOORS
+    def closeDoors
+        if @weightSensor == SensorStatus::OFF and @obstructionSensor == SensorStatus::OFF
+            puts "       Closing doors..."
+            puts "       Elevator#{@id} doors are closed"
+            @floorDoorsList[@floor-1].status = DoorStatus::CLOSED
+        end
+    end
+
+    # LOGIC FOR WEIGHT SENSOR
+    def checkWeight(maxWeight)
+        weight = rand(1..600) #This random simulates the weight from a weight sensor
+        while weight > maxWeight
+            @weightSensor = SensorStatus::ON
+            puts "       ! Elevator capacity reached, waiting until the weight is lower before continue..."
+            weight -= 100 #I'm supposing the random number is 600, I'll subtract 100 so it will be less than 500 (the max weight I proposed) for the second time it runs
+        end
+
+        @weightSensor = SensorStatus::OFF
+        puts "       Elevator capacity is OK"
+    end
+
+    # LOGIC FOR OBSTRUCTION SENSOR
+    def checkObstruction
+        probabilityNotBlocked = 70
+        number = rand(1..100) #This random simulates the probability of an obstruction (I supposed 30% of chance something is blocking the door)
+
+        while number > probabilityNotBlocked
+            @obstructionSensor = SensorStatus::ON
+            puts "       ! Elevator door is blocked by something, waiting until door is free before continue..."
+            number -= 30  #I'm supposing the random number is 100, I'll subtract 30 so it will be less than 70 (30% probability), so the second time it runs theres no one blocking the door
+        end
+
+        @obstructionSensor = SensorStatus::OFF
+        puts "       Elevator door is FREE"
+    end
+
+    # LOGIC TO ADD A FLOOR TO THE FLOOR LIST 
+    def addFloorToFloorList(floor)
+        @floorList.append(floor)
+        puts "Elevator#{self.id} - floor #{floor} added to floorList"
+    end
+
+    # LOGIC TO DELETE ITEM FROM FLOORS LIST
+    def deleteFloorFromList(stopFloor)
+        index = @floorList.find_index(stopFloor)
+        if index > -1
+            @floorList.delete(index)
+        end
+    end
+
 
     #  ------------------ Entry method ------------------
     # CREATE A LIST WITH A BUTTON OF EACH FLOOR
     # REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR
     def requestFloor(requestedFloor, requestedColumn)
-        
-
+        puts ""          
         puts ">> Someone inside the elevator#{@id} wants to go to floor <#{requestedFloor}> <<"
+        checkWeight(maxWeight)
+        checkObstruction()
+        addFloorToFloorList(requestedFloor)
+        moveElevator(requestedFloor, requestedColumn)
     end
 
 end
@@ -169,7 +356,7 @@ end
 # ------------------------------------------- BUTTON CLASS ------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------
 class Button
-    attr_accessor :id, :columnStatus, :numberOfFloors, :numberOfElevators
+    attr_accessor :id, :status, :floor
     def initialize(id, buttonStatus, floor)
         @id = id
         @status = buttonStatus
@@ -257,5 +444,8 @@ def scenario1()
     puts "=================================="
 end
 
+
 ''' -------- CALL SCENARIOS -------- '''
 scenario1
+# scenario2
+# scenario3
