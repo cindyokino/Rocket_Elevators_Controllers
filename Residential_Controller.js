@@ -1,4 +1,3 @@
-
 /** ********************************************** **
 	@Author			Cindy Okino
 	@Website		https://github.com/cindyokino
@@ -22,6 +21,7 @@ SUMMARY:
 6- DISPLAY CLASS
 7- ENUMS
 8- TESTING PROGRAM
+9- TEST YOUR SCENARIO
 
 CONTROLLED OBJECTS:
 Columns: controls a list of N elevators
@@ -299,9 +299,9 @@ class Elevator {
     }
     
     /* ******* LOGIC TO OPEN DOORS ******* */
-    openDoors() {
+    openDoors(waitingTime) {
         let threeSecondsFromNow = new Date();
-        threeSecondsFromNow.setSeconds(threeSecondsFromNow.getSeconds() + 3);
+        threeSecondsFromNow.setSeconds(threeSecondsFromNow.getSeconds() + waitingTime);
         console.log("       Opening doors...");
         console.log(`       Elevator${this.id} doors are opened`);
         while (new Date() < threeSecondsFromNow || this.weightSensor == sensorStatus.ON || this.obstructionSensor == sensorStatus.ON) {
@@ -312,7 +312,7 @@ class Elevator {
     }
     
     /* ******* LOGIC TO CLOSE DOORS ******* */
-    closeDoors(waitingTime) {   
+    closeDoors() {   
         if (this.weightSensor == sensorStatus.OFF && this.obstructionSensor == sensorStatus.OFF) {
             console.log("       Closing doors...");
             console.log(`       Elevator${this.id} doors are closed`);
@@ -461,7 +461,7 @@ function scenario1() {
     columnScenario1.elevatorsList[1].floor = 6; //floor where the elevator 2 is
     
     console.log();
-    console.log("Person 1: (elevator 1 is expected)"); //elevator 1 is expected
+    console.log("Person 1: (elevator 1 is expected)"); //elevator expected
     columnScenario1.requestElevator(3, buttonDirection.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
     columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1); //parameters (requestedFloor, requestedColumn)
     console.log("==================================");
@@ -476,17 +476,17 @@ function scenario2() {
     columnScenario2.elevatorsList[1].floor = 3;
 
     console.log();
-    console.log("Person 1: (elevator 2 is expected)"); //elevator 2 is expected
+    console.log("Person 1: (elevator 2 is expected)");
     columnScenario2.requestElevator(1, buttonDirection.UP);
     columnScenario2.elevatorsList[1].requestFloor(6, columnScenario2);
     console.log("----------------------------------");
     console.log();
-    console.log("Person 2: (elevator 2 is expected)"); //elevator 2 is expected
+    console.log("Person 2: (elevator 2 is expected)");
     columnScenario2.requestElevator(3, buttonDirection.UP);
     columnScenario2.elevatorsList[1].requestFloor(5, columnScenario2);
     console.log("----------------------------------");
     console.log();
-    console.log("Person 3: (elevator 1 is expected)"); //elevator 1 is expected
+    console.log("Person 3: (elevator 1 is expected)");
     columnScenario2.requestElevator(9, buttonDirection.DOWN);
     columnScenario2.elevatorsList[0].requestFloor(2, columnScenario2);
     console.log("==================================");
@@ -502,7 +502,7 @@ function scenario3() {
     columnScenario3.elevatorsList[1].status = elevatorStatus.UP;
     
     console.log();
-    console.log("Person 1: (elevator 1 is expected)"); //elevator 1 is expected
+    console.log("Person 1: (elevator 1 is expected)");
     columnScenario3.requestElevator(3, buttonDirection.DOWN);
     columnScenario3.elevatorsList[0].requestFloor(2, columnScenario3);
     console.log("----------------------------------");
@@ -512,7 +512,7 @@ function scenario3() {
     columnScenario3.elevatorsList[1].floor = 6;
     columnScenario3.elevatorsList[1].status = elevatorStatus.IDLE;
 
-    console.log("Person 2: (elevator 2 is expected)"); //elevator 2 is expected
+    console.log("Person 2: (elevator 2 is expected)");
     columnScenario3.requestElevator(10, buttonDirection.DOWN);
     columnScenario3.elevatorsList[1].requestFloor(3, columnScenario3);
     console.log("==================================");
@@ -523,3 +523,29 @@ function scenario3() {
 scenario1();
 scenario2();
 scenario3();
+
+
+//---------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------- TEST YOUR SCENARIO ---------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+//  Instruction for your test: 
+//  1- Change the 'X' for a value (see the notes to fill correctly at the comments at right of each line)
+//  2- Uncomment the 'scenarioX()' at the last line of code
+//  3- Run the code using a terminal of your preference by typing: Residential_Controller.js
+
+function scenarioX() {
+    console.log();
+    console.log("****************************** SCENARIO X: ******************************");
+    let columnX = new Column(X, columnStatus.X, X, X); //set parameters (id, columnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
+    columnX.elevatorsList[0].floor = X; //floor where the elevator 1 is 
+    columnX.elevatorsList[1].floor = X; //floor where the elevator 2 is
+    // If you have more than 2 elevators, make a copy of the line above and put the corresponding index inside the brackets [X]
+    
+    console.log();
+    console.log("Person X: (elevator X is expected)"); //elevator expected
+    columnX.requestElevator(X, buttonDirection.X); //set parameters (requestedFloor, buttonDirection.UP/DOWN)
+    columnX.elevatorsList[X].requestFloor(X, columnX); //choose elevator by index and set parameters (requestedFloor, requestedColumn)
+    console.log("==================================");
+}
+
+// scenarioX()
