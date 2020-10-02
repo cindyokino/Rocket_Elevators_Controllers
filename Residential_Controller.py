@@ -269,7 +269,7 @@ class Elevator:
     def openDoors(self, waitingTime):
         print("       Opening doors...")
         print("       Elevator" + str(self.id) + " doors are opened")
-        self.elevatorDoor.status.OPENED
+        self.elevatorDoor.status = DoorStatus.OPENED
         self.floorDoorsList[self.floor-1].status = DoorStatus.OPENED
         time.sleep(waitingTime)
         self.closeDoors()
@@ -280,6 +280,7 @@ class Elevator:
             print("       Closing doors...")
             print("       Elevator" + str(self.id) + " doors are closed")
             self.floorDoorsList[self.floor-1].status = DoorStatus.CLOSED 
+            self.elevatorDoor.status = DoorStatus.CLOSED
 
     ''' LOGIC FOR WEIGHT SENSOR '''
     def checkWeight(self, maxWeight):
@@ -308,6 +309,7 @@ class Elevator:
     ''' LOGIC TO ADD A FLOOR TO THE FLOOR LIST ''' 
     def addFloorToFloorList(self, floor):
         self.floorList.append(floor)
+        self.floorList.sort()
         print("Elevator" + str(self.id) + " - floor " + str(floor) + " added to floorList")
 
     ''' LOGIC TO DELETE ITEM FROM FLOORS LIST '''
@@ -470,8 +472,8 @@ def scenario3():
 
 ''' -------- CALL SCENARIOS -------- '''
 scenario1()
-# scenario2()
-# scenario3()
+scenario2()
+scenario3()
 
 
 ''' ---------------------------------------------------------------------------------------------------------------------------------
