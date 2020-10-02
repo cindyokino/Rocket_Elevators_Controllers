@@ -40,5 +40,46 @@ $waitingTime         # How many time the door remains opened in SECONDS
 $maxWeight           # Maximum weight an elevator can carry in KG
 
 
-# ------------------------------------------- COLUMN CLASS -----------------------------------------------------------------------
+# ------------------------------------------- COLUMN CLASS ------------------------------------------------------------------------
 # ---------------------------------------------------------------------------------------------------------------------------------
+class Column
+    #  ------------------ Constructor and its attributes ------------------
+    attr_accessor :id, :columnStatus, :numberOfFloors, :numberOfElevators
+    def initialize(id, columnStatus, numberOfFloors, numberOfElevators)
+        @id = id
+        @status = columnStatus
+        @numberOfFloors = numberOfFloors
+        @numberOfElevators = numberOfElevators
+        @elevatorsList = []
+        @buttonsUpList = []
+        @buttonsDownList = []
+
+        createElevatorsList
+        createButtonsUpList
+        createButtonsDownList
+    end
+
+
+end
+
+
+
+# ------------------------------------------- TESTING PROGRAM ------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+waitingTime = 1 #How many time the door remains opened in SECONDS - I'm using 1 second so the test will run faster
+maxWeight = 500 #Maximum weight an elevator can carry in KG
+
+''' ******* CREATE SCENARIO 1 ******* '''
+def scenario1(): 
+    print()
+    print("****************************** SCENARIO 1: ******************************")
+    columnScenario1 = Column.new(1, ColumnStatus.ACTIVE, 10, 2) #parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
+    columnScenario1.display()  
+    columnScenario1.elevatorsList[0].floor = 2 #floor where the elevator 1 is
+    columnScenario1.elevatorsList[1].floor = 6 #floor where the elevator 2 is
+    
+    print()
+    print("Person 1: (elevator 1 is expected)")
+    columnScenario1.requestElevator(3, ButtonDirection.UP) #parameters (requestedFloor, buttonDirection.UP/DOWN)
+    columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1) #parameters (requestedFloor, requestedColumn)
+    print("==================================")

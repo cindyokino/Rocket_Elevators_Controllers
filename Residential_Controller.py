@@ -98,8 +98,7 @@ class Column:
         idleElevatorList = []
         sameDirectionElevatorList = []
         for x in (self.elevatorsList):
-            if x.status != ElevatorStatus.IDLE:
-                #verify if the request is on the elevator way
+            if x.status != ElevatorStatus.IDLE: #verify if elevator is active and if the request is on the elevator way
                 if x.status == ElevatorStatus.UP and x.floor <= currentFloor or x.status == ElevatorStatus.DOWN and x.floor >= currentFloor:
                     activeElevatorList.append(x)
             else:
@@ -270,9 +269,9 @@ class Elevator:
     def openDoors(self, waitingTime):
         print("       Opening doors...")
         print("       Elevator" + str(self.id) + " doors are opened")
-        time.sleep(waitingTime)
         self.elevatorDoor.status.OPENED
         self.floorDoorsList[self.floor-1].status = DoorStatus.OPENED
+        time.sleep(waitingTime)
         self.closeDoors()
 
     ''' LOGIC TO CLOSE DOORS '''
@@ -484,10 +483,10 @@ scenario1()
 # 3- Uncomment the 'scenarioX()' at the last line of code
 # 4- Run the code using a terminal of your preference by typing: Residential_Controller.py 
 
-# def scenarioX():  
+# def scenarioX(columnX):  
 #     print()
 #     print("****************************** SCENARIO X: ******************************")
-#     columnX = Column(X, ColumnStatus.X, X, X) #set parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
+#     columnX = Column(X, ColumnStatus.ACTIVE, X, X) #set parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
 #     columnX.display()  
 #     columnX.elevatorsList[0].floor = X #floor where the elevator 1 is
 #     columnX.elevatorsList[1].floor = X #floor where the elevator 2 is
@@ -499,4 +498,4 @@ scenario1()
 #     columnX.elevatorsList[X].requestFloor(X, columnX) # choose elevator by index and set parameters (requestedFloor, requestedColumn)
 #     print("==================================")
 
-# scenarioX()
+# scenarioX(columnTest)
