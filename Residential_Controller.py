@@ -358,38 +358,38 @@ class Display:
 
 ''' ------------------------------------------- ENUMS -------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------- '''
-''' ******* COLUMN STATUS ******* '''
+''' COLUMN STATUS '''
 class ColumnStatus(Enum):
     ACTIVE = 'active'
     INACTIVE = 'inactive'
 
-''' ******* ELEVATOR STATUS ******* '''
+''' ELEVATOR STATUS '''
 class ElevatorStatus(Enum):
     IDLE = 'idle'
     UP = 'up'
     DOWN = 'down'
 
-''' ******* BUTTON DIRECTION ******* '''
+''' BUTTON DIRECTION '''
 class ButtonDirection(Enum):
     UP = 'up'
     DOWN = 'down'
 
-''' ******* BUTTON STATUS ******* '''
+''' BUTTON STATUS '''
 class ButtonStatus(Enum):
     ON = 'on'
     OFF = 'off'
 
-''' ******* SENSOR STATUS ******* '''
+''' SENSOR STATUS '''
 class SensorStatus(Enum):
     ON = 'on'
     OFF = 'off'
 
-''' ******* DOORS STATUS ******* '''
+''' DOORS STATUS '''
 class DoorStatus(Enum):
     OPENED = 'opened'
     CLOSED = 'closed'
 
-''' ******* DISPLAY STATUS ******* '''
+''' DISPLAY STATUS '''
 class DisplayStatus(Enum):
     ON = 'on'
     OFF = 'off'

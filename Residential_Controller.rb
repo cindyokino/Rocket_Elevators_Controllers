@@ -33,11 +33,11 @@ Elevators: controls doors, buttons, displays
 
 # ------------------------------------------- GLOBAL VARIABLES ---------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------------------
-$numberOfColumns
-$numberOfFloors    
-$numberOfElevators
-$waitingTime         # How many time the door remains opened in SECONDS
-$maxWeight           # Maximum weight an elevator can carry in KG
+$numberOfColumns = 0
+$numberOfFloors = 0 
+$numberOfElevators = 0
+$waitingTime = 0         # How many time the door remains opened in SECONDS
+$maxWeight = 0           # Maximum weight an elevator can carry in KG
 
 
 # ------------------------------------------- COLUMN CLASS ------------------------------------------------------------------------
@@ -55,13 +55,113 @@ class Column
         @buttonsDownList = []
 
         createElevatorsList
-        createButtonsUpList
-        createButtonsDownList
+        # createButtonsUpList
+        # createButtonsDownList    
     end
 
+    def display
+        puts "Created column #{@id}"
+        puts "Number of floors: #{@numberOfFloors}"
+        puts "Created Number of elevators: #{@numberOfElevators}"
+        puts "----------------------------------"
+    end
+
+    #  ------------------ Methods to create a list ------------------
+    # CREATE A LIST OF ELEVATORS FOR THE COLUMN
+    def createElevatorsList
+        for x in 1..@numberOfElevators do
+            # @elevatorsList.append(Elevator.new(x + 1, @numberOfFloors, 1, ElevatorStatus::IDLE, SensorStatus::OFF, SensorStatus::OFF))
+            puts "created elevator #{x}"
+        end
+    end
 
 end
 
+
+# ------------------------------------------- ELEVATOR CLASS ------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+class Elevator
+    #  ------------------ Constructor and its attributes ------------------
+    attr_accessor :id, :numberOfFloors, :floor, :elevatorStatus, :weightSensorStatus, :obstructionSensorStatus
+    def initialize(id, numberOfFloors, floor, elevatorStatus, weightSensorStatus, obstructionSensorStatus)
+        @id = id
+        @numberOfFloors = numberOfFloors
+        @floor = floor
+        @status = elevatorStatus
+        @weightSensor = weightSensorStatus
+        @obstructionSensor = obstructionSensorStatus
+        @elevatorDoor = Door(0, DoorStatus::CLOSED, 0)
+        @elevatorDisplay = Display(0, DisplayStatus.ON, 0)
+        @floorDoorsList = []
+        @floorDisplaysList = []
+        @floorButtonsList = []
+        @floorList = []
+
+        # @createFloorDoorsList
+        # @createDisplaysList
+        # @createFloorButtonsList
+    end
+
+end
+
+
+
+# ------------------------------------------- ENUMS ------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+# --COLUMN STATUS -- 
+module ColumnStatus
+    ACTIVE = "active"
+    INACTIVE = 'inactive'
+end
+
+# -- ELEVATOR STATUS --
+module ElevatorStatus
+    IDLE = 'idle'
+    UP = 'up'
+    DOWN = 'down'
+end
+
+# -- BUTTON DIRECTION --
+module ButtonDirection
+    UP = 'up'
+    DOWN = 'down'
+end
+
+# -- BUTTON STATUS --
+module ButtonStatus
+    ON = 'on'
+    OFF = 'off'
+end
+
+# -- SENSOR STATUS --
+module SensorStatus
+    ON = 'on'
+    OFF = 'off'
+end
+
+# -- DOORS STATUS --
+module DoorStatus
+    OPENED = 'opened'
+    CLOSED = 'closed'
+end
+
+# -- DISPLAY STATUS --
+module DisplayStatus
+    ON = 'on'
+    OFF = 'off'
+end
+
+
+# ------------------------------------------- DOOR CLASS ------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------
+class Door
+    attr_accessor :id, :columnStatus, :numberOfFloors, :numberOfElevators
+    def initialize(id, doorStatus, floor)
+        @id = id
+        @status = doorStatus
+        @floor = floor
+    end
+end
 
 
 # ------------------------------------------- TESTING PROGRAM ------------------------------------------------------------------------
@@ -69,17 +169,21 @@ end
 waitingTime = 1 #How many time the door remains opened in SECONDS - I'm using 1 second so the test will run faster
 maxWeight = 500 #Maximum weight an elevator can carry in KG
 
-''' ******* CREATE SCENARIO 1 ******* '''
-def scenario1(): 
-    print()
-    print("****************************** SCENARIO 1: ******************************")
-    columnScenario1 = Column.new(1, ColumnStatus.ACTIVE, 10, 2) #parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
+# ******* CREATE SCENARIO 1 ******* 
+def scenario1()
+    puts ""
+    puts "****************************** SCENARIO 1: ******************************"
+    columnScenario1 = Column.new(1, ColumnStatus::ACTIVE, 10, 2) #parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
     columnScenario1.display()  
-    columnScenario1.elevatorsList[0].floor = 2 #floor where the elevator 1 is
-    columnScenario1.elevatorsList[1].floor = 6 #floor where the elevator 2 is
+#     columnScenario1.elevatorsList[0].floor = 2 #floor where the elevator 1 is
+#     columnScenario1.elevatorsList[1].floor = 6 #floor where the elevator 2 is
     
-    print()
-    print("Person 1: (elevator 1 is expected)")
-    columnScenario1.requestElevator(3, ButtonDirection.UP) #parameters (requestedFloor, buttonDirection.UP/DOWN)
-    columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1) #parameters (requestedFloor, requestedColumn)
-    print("==================================")
+    puts ""
+    puts "Person 1: (elevator 1 is expected)"
+#     columnScenario1.requestElevator(3, ButtonDirection.UP) #parameters (requestedFloor, buttonDirection.UP/DOWN)
+#     columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1) #parameters (requestedFloor, requestedColumn)
+    puts "=================================="
+end
+
+''' -------- CALL SCENARIOS -------- '''
+scenario1
