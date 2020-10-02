@@ -70,7 +70,7 @@ class Column
     # CREATE A LIST OF ELEVATORS FOR THE COLUMN
     def createElevatorsList
         for x in 1..@numberOfElevators do
-            @elevatorsList.append(Elevator.new(x + 1, @numberOfFloors, 1, ElevatorStatus::IDLE, SensorStatus::OFF, SensorStatus::OFF))
+            @elevatorsList.append(Elevator.new(x, @numberOfFloors, 1, ElevatorStatus::IDLE, SensorStatus::OFF, SensorStatus::OFF))
             # puts "elevator#{@id} created"
         end
     end
@@ -87,9 +87,9 @@ class Column
     def createButtonsDownList
         for x in 2..@numberOfFloors do
             @buttonsDownList.append(Button.new(x, ButtonStatus::OFF, x))
-            puts "button down #{@buttonsDownList[x - 2].id} created"
+            # puts "button down #{@buttonsDownList[x - 2].id} created"
         end
-    end
+    end   
 
 end
 
@@ -113,9 +113,42 @@ class Elevator
         @floorButtonsList = []
         @floorList = []
 
-        # @createFloorDoorsList
-        # @createDisplaysList
-        # @createFloorButtonsList
+        createFloorDoorsList
+        createDisplaysList
+        createFloorButtonsList
+    end
+
+    # CREATE A LIST WITH A DOOR OF EACH FLOOR
+    def createFloorDoorsList
+        for x in 1..@numberOfFloors do
+            @floorDoorsList.append(Door.new(x, DoorStatus::CLOSED, x))
+            # puts "elevator#{@id} door floor #{@floorDoorsList[x - 1].id} created"
+        end
+    end
+
+    # CREATE A LIST WITH A DISPLAY OF EACH FLOOR
+    def createDisplaysList
+        for x in 1..@numberOfFloors do
+            @floorDisplaysList.append(Display.new(x, DisplayStatus::ON, x))
+            # puts "elevator#{@id} display floor #{@floorDisplaysList[x - 1].id} created"
+        end
+    end
+
+    # CREATE A LIST WITH A BUTTON OF EACH FLOOR
+    def createFloorButtonsList
+        for x in 1..@numberOfFloors do
+            @floorButtonsList.append(Door.new(x, ButtonStatus::ON, x))
+            # puts "elevator#{@id} button floor #{@floorButtonsList[x - 1].id} created"
+        end
+    end
+
+    #  ------------------ Entry method ------------------
+    # CREATE A LIST WITH A BUTTON OF EACH FLOOR
+    # REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR
+    def requestFloor(requestedFloor, requestedColumn)
+        
+
+        puts ">> Someone inside the elevator#{@id} wants to go to floor <#{requestedFloor}> <<"
     end
 
 end
@@ -214,12 +247,12 @@ def scenario1()
     puts "****************************** SCENARIO 1: ******************************"
     columnScenario1 = Column.new(1, ColumnStatus::ACTIVE, 10, 2) #parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
     columnScenario1.display()  
-#     columnScenario1.elevatorsList[0].floor = 2 #floor where the elevator 1 is
-#     columnScenario1.elevatorsList[1].floor = 6 #floor where the elevator 2 is
+    columnScenario1.elevatorsList[0].floor = 2 #floor where the elevator 1 is
+    columnScenario1.elevatorsList[1].floor = 6 #floor where the elevator 2 is
     
     puts ""
     puts "Person 1: (elevator 1 is expected)"
-#     columnScenario1.requestElevator(3, ButtonDirection.UP) #parameters (requestedFloor, buttonDirection.UP/DOWN)
+    columnScenario1.requestElevator(3, ButtonDirection::UP) #parameters (requestedFloor, buttonDirection.UP/DOWN)
 #     columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1) #parameters (requestedFloor, requestedColumn)
     puts "=================================="
 end
