@@ -1,4 +1,3 @@
-
 ''' ***************************************************
 	@Author			Cindy Okino
 	@Website		https://github.com/cindyokino
@@ -6,6 +5,7 @@
     
     
 SUMMARY:
+0- IMPORTS
 1- GLOBAL VARIABLES
 2- COLUMN CLASS
     2a- Constructor and its attributes
@@ -22,6 +22,7 @@ SUMMARY:
 6- DISPLAY CLASS
 7- ENUMS
 8- TESTING PROGRAM
+9- TEST YOUR SCENARIO
 
 CONTROLLED OBJECTS:
 Columns: controls a list of N elevators
@@ -29,9 +30,13 @@ Elevators: controls doors, buttons, displays
 
 *************************************************** '''
 
+''' ------------------------------------------- IMPORTS ---------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------- '''
 from enum import Enum
 import math
 import random
+import time
+
 
 ''' ------------------------------------------- GLOBAL VARIABLES ---------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------- '''
@@ -131,7 +136,7 @@ class Column:
         if direction == ButtonDirection.UP:
             self.buttonsUpList[requestedFloor-1].status = ButtonStatus.ON
         else:
-            self.buttonsDownList[requestedFloor-1].status = ButtonStatus.ON
+            self.buttonsDownList[requestedFloor-2].status = ButtonStatus.ON
 
         print(">> Someone request an elevator from floor <" + str(requestedFloor) + "> and direction <" + str(direction.value) + "> <<")
         for x in (self.elevatorsList):
@@ -201,7 +206,7 @@ class Elevator:
                 if self.floor < requestedFloor:
                      self.status = ElevatorStatus.UP
                 elif self.floor == requestedFloor:
-                    # self.openDoors() #TODO
+                    self.openDoors(waitingTime)
                     self.deleteFloorFromList(requestedFloor) 
                     requestedColumn.buttonsUpList[requestedFloor-1].status = ButtonStatus.OFF
                     requestedColumn.buttonsDownList[requestedFloor-1].status = ButtonStatus.OFF
@@ -216,70 +221,89 @@ class Elevator:
 
     ''' LOGIC TO MOVE UP '''
     def moveUp(self, requestedColumn):
-        tempArray = self.floorList
+        tempArray = self.floorList.copy()
         for x in range(self.floor, tempArray[len(tempArray) - 1]):
             if self.floorDoorsList[x].status == DoorStatus.OPENED or self.elevatorDoor.status == DoorStatus.OPENED:
                 print("   Doors are open, closing doors before move up")
                 self.closeDoors()
 
-            print("Moving elevator" + str(self.id) + "<up> from floor " + str(x) + " to floor " + str(x + 1)) 
+            print("Moving elevator" + str(self.id) + " <up> from floor " + str(x) + " to floor " + str(x + 1)) 
             nextFloor = (x + 1)
             self.floor = nextFloor
-            # self.UpdateDisplays(self.floor) #TODO
+            self.updateDisplays(self.floor)
 
             if nextFloor in tempArray:
-                # self.openDoors() #TODO
+                self.openDoors(waitingTime)
                 self.deleteFloorFromList(nextFloor)
                 requestedColumn.buttonsUpList[x - 1].status = ButtonStatus.OFF
                 self.floorButtonsList[x].status = ButtonStatus.OFF
         
         if len(self.floorList) == 0:
             self.status = ElevatorStatus.IDLE
-            # print("       Elevator"+ str(self.id) + " is now " + str(self.status))
+            # print("       Elevator"+ str(self.id) + " is now " + str(self.status.value))
         else:
             self.status = ElevatorStatus.DOWN
-            # print("       Elevator"+ str(self.id) + " is now going " + str(self.status))
+            print("       Elevator"+ str(self.id) + " is now going " + str(self.status.value))
 
     ''' LOGIC TO MOVE DOWN '''
     def moveDown(self, requestedColumn):
-        tempArray = self.floorList
-        for x in range(tempArray[len(tempArray) - 1], self.floor, -1):
-            if self.floorDoorsList[x].status == DoorStatus.OPENED or self.elevatorDoor.status == DoorStatus.OPENED:
+        tempArray = self.floorList.copy()
+        for x in range(self.floor, (tempArray[len(tempArray) - 1]), -1):
+            if self.floorDoorsList[x - 1].status == DoorStatus.OPENED or self.elevatorDoor.status == DoorStatus.OPENED:
                 print("   Doors are open, closing doors before move down")
                 self.closeDoors()
 
-            print("Moving elevator" + str(self.id) + "<down> from floor " + str(x) + " to floor " + str(x - 1)) 
+            print("Moving elevator" + str(self.id) + " <down> from floor " + str(x) + " to floor " + str(x - 1)) 
             nextFloor = (x - 1)
             self.floor = nextFloor
             self.updateDisplays(self.floor)
 
             if nextFloor in tempArray:
-                # self.openDoors() #TODO
+                self.openDoors(waitingTime)
                 self.deleteFloorFromList(nextFloor)
                 requestedColumn.buttonsDownList[x - 2].status = ButtonStatus.OFF
                 self.floorButtonsList[x - 1].status = ButtonStatus.OFF
         
         if len(self.floorList) == 0:
             self.status = ElevatorStatus.IDLE
-            # print("       Elevator"+ str(self.id) + " is now " + str(self.status))
+            # print("       Elevator"+ str(self.id) + " is now " + str(self.status.value))
         else:
             self.status = ElevatorStatus.UP
-            print("       Elevator"+ str(self.id) + " is now going " + str(self.status))
+            print("       Elevator"+ str(self.id) + " is now going " + str(self.status.value))
 
+    ''' LOGIC TO UPDATE DISPLAYS OF ELEVATOR AND SHOW FLOOR '''
+    def updateDisplays(self, elevatorFloor):
+        for display in self.floorDisplaysList:
+            display.floor = elevatorFloor
+            
+        print("Displays show #" + str(elevatorFloor))
 
+    ''' LOGIC TO OPEN DOORS '''
+    def openDoors(self, waitingTime):
+        print("       Opening doors...")
+        print("       Elevator" + str(self.id) + " doors are opened")
+        time.sleep(waitingTime)
+        self.elevatorDoor.status.OPENED
+        self.floorDoorsList[self.floor-1].status = DoorStatus.OPENED
+        self.closeDoors()
 
-
+    ''' LOGIC TO CLOSE DOORS '''
+    def closeDoors(self):
+        if self.weightSensor == SensorStatus.OFF and self.obstructionSensor == SensorStatus.OFF:
+            print("       Closing doors...")
+            print("       Elevator" + str(self.id) + " doors are closed")
+            self.floorDoorsList[self.floor-1].status = DoorStatus.CLOSED 
 
     ''' LOGIC FOR WEIGHT SENSOR '''
-    def  checkWeight(self, maxWeight):
+    def checkWeight(self, maxWeight):
         weight = math.floor((random.random() * 600) + 1) #This random simulates the weight from a weight sensor
         while weight > maxWeight:
             self.weightSensor = SensorStatus.ON
             print("       ! Elevator capacity reached, waiting until the weight is lower before continue...")
-            weight -= 100; #I'm supposing the random number is 600, I'll subtract 100 so it will be less than 500 (the max weight I proposed) for the second time it runs
+            weight -= 100 #I'm supposing the random number is 600, I'll subtract 100 so it will be less than 500 (the max weight I proposed) for the second time it runs
         
         self.weightSensor = SensorStatus.OFF
-        print("       Elevator capacity is FREE")
+        print("       Elevator capacity is OK")
 
     ''' LOGIC FOR OBSTRUCTION SENSOR '''
     def checkObstruction(self):
@@ -298,7 +322,7 @@ class Elevator:
     def deleteFloorFromList(self, stopFloor):
         index = self.floorList.index(stopFloor)
         if index > -1:
-            del self.floorList[index]
+            self.floorList.pop(index)
 
 
     ''' ------------------ Entry method ------------------ '''
@@ -307,8 +331,8 @@ class Elevator:
     def requestFloor(self, requestedFloor, requestedColumn):
         print()
         print(">> Someone inside the elevator" + str(self.id) + " wants to go to floor <" + str(requestedFloor) + "> <<")
-        # self.checkWeight(maxWeight)
-        # self.checkObstruction()
+        self.checkWeight(maxWeight)
+        self.checkObstruction()
         self.addFloorToFloorList(requestedFloor)
         self.moveElevator(requestedFloor, requestedColumn)
 
@@ -388,7 +412,7 @@ maxWeight = 500 #Maximum weight an elevator can carry in KG
 def scenario1(): 
     print()
     print("****************************** SCENARIO 1: ******************************")
-    columnScenario1 = Column(1, ColumnStatus.ACTIVE, 10, 2) #parameters (id, columnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
+    columnScenario1 = Column(1, ColumnStatus.ACTIVE, 10, 2) #parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
     columnScenario1.display()  
     columnScenario1.elevatorsList[0].floor = 2 #floor where the elevator 1 is
     columnScenario1.elevatorsList[1].floor = 6 #floor where the elevator 2 is
@@ -397,10 +421,88 @@ def scenario1():
     print("Person 1: (elevator 1 is expected)")
     columnScenario1.requestElevator(3, ButtonDirection.UP) #parameters (requestedFloor, buttonDirection.UP/DOWN)
     columnScenario1.elevatorsList[0].requestFloor(7, columnScenario1) #parameters (requestedFloor, requestedColumn)
+    print("==================================")
 
-    # columnScenario1.elevatorsList[0].moveElevator(7, columnScenario1)
+''' ******* CREATE SCENARIO 2 ******* '''
+def scenario2(): 
+    print()
+    print("****************************** SCENARIO 2: ******************************")
+    columnScenario2 = Column(1, ColumnStatus.ACTIVE, 10, 2)
+    columnScenario2.display()  
+    columnScenario2.elevatorsList[0].floor = 10
+    columnScenario2.elevatorsList[1].floor = 3
+    
+    print()
+    print("Person 1: (elevator 2 is expected)")
+    columnScenario2.requestElevator(1, ButtonDirection.UP)
+    columnScenario2.elevatorsList[1].requestFloor(6, columnScenario2)
+    print("----------------------------------")
+    print()
+    print("Person 2: (elevator 2 is expected)")
+    columnScenario2.requestElevator(3, ButtonDirection.UP)
+    columnScenario2.elevatorsList[1].requestFloor(5, columnScenario2)
+    print("----------------------------------")
+    print()
+    print("Person 3: (elevator 1 is expected)")
+    columnScenario2.requestElevator(9, ButtonDirection.DOWN)
+    columnScenario2.elevatorsList[0].requestFloor(2, columnScenario2)
+    print("==================================")
+
+''' ******* CREATE SCENARIO 3 ******* '''
+def scenario3(): 
+    print()
+    print("****************************** SCENARIO 3: ******************************")
+    columnScenario3 = Column(1, ColumnStatus.ACTIVE, 10, 2)
+    columnScenario3.display()  
+    columnScenario3.elevatorsList[0].floor = 10
+    columnScenario3.elevatorsList[1].floor = 3
+    columnScenario3.elevatorsList[1].status = ElevatorStatus.UP
+
+    
+    print()
+    print("Person 1: (elevator 1 is expected)")
+    columnScenario3.requestElevator(3, ButtonDirection.DOWN)
+    columnScenario3.elevatorsList[0].requestFloor(2, columnScenario3)
+    print("----------------------------------")    
+    print()
+
+    # 2 minutes later elevator 1(B) finished its trip to 6th floor
+    columnScenario3.elevatorsList[1].floor = 6
+    columnScenario3.elevatorsList[1].status = ElevatorStatus.IDLE
+
+    print("Person 2: (elevator 2 is expected)")
+    columnScenario3.requestElevator(10, ButtonDirection.DOWN)
+    columnScenario3.elevatorsList[1].requestFloor(3, columnScenario3)
     print("==================================")
 
 
 ''' ******* CALL SCENARIOS ******* '''
 scenario1()
+scenario2()
+scenario3()
+
+
+''' ---------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------- TEST YOUR SCENARIO ----------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------- '''
+# Instruction for your test: 
+# 1- Change the 'X' for a value (see the notes to fill correctly at the comments at right of each line)
+# 2- Uncomment the 'scenarioX()' at the last line of code
+# 3- Run the code using a terminal of your preference by typing: Residential_Controller.py 
+
+def scenarioX():  
+    print()
+    print("****************************** SCENARIO X: ******************************")
+    columnX = Column(X, ColumnStatus.X, X, X) #set parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
+    columnX.display()  
+    columnX.elevatorsList[0].floor = X #floor where the elevator 1 is
+    columnX.elevatorsList[1].floor = X #floor where the elevator 2 is
+    # If you have more than 2 elevators, make a copy of the line above and put the corresponding index inside the brackets [X]
+
+    print()
+    print("Person x: (elevator x is expected)")
+    columnX.requestElevator(X, ButtonDirection.X) #set parameters (requestedFloor, buttonDirection.UP/DOWN)
+    columnX.elevatorsList[X].requestFloor(X, columnX) # choose elevator by index and set parameters (requestedFloor, requestedColumn)
+    print("==================================")
+
+# scenarioX()
