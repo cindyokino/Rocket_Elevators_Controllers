@@ -97,9 +97,9 @@ class Column {
     /* ******* LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ******* */
     public Elevator findElevator(int currentFloor, Direction direction) {
         Elevator bestElevator;
-        List activeElevatorList = new ArrayList();
-        List idleElevatorList = new ArrayList();
-        List sameDirectionElevatorList = new ArrayList();
+        List<Elevator> activeElevatorList = new ArrayList<>();
+        List<Elevator> idleElevatorList = new ArrayList<>();
+        List<Elevator> sameDirectionElevatorList = new ArrayList<>();
         this.elevatorsList.forEach(elevator -> {
             if (elevator.status != ElevatorStatus.IDLE) {
                 //verify if the request is on the elevator way
@@ -163,20 +163,33 @@ class Column {
 //------------------------------------------- ELEVATOR CLASS -----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 class Elevator {
+    int id;
+    int numberOfFloors;
+    int floor;
+    ElevatorStatus elevatorStatus;
+    WeightSensorStatus weightSensorStatus;
+    ObstructionSensorStatus obstructionSensorStatus;
+    Door elevatorDoor;
+    Display elevatorDisplay;
+    List<Door> floorDoorsList;
+    List<Display> floorDisplaysList;
+    List<Button> floorButtonsList;
+    List<Integer> floorList;
+
     //----------------- Constructor and its attributes -----------------//
-    constructor(id, numberOfFloors, floor, elevatorStatus, weightSensorStatus, obstructionSensorStatus) {
+    public Elevator (int id, int numberOfFloors, int floor, ElevatorStatus elevatorStatus, WeightSensorStatus weightSensorStatus, ObstructionSensorStatus obstructionSensorStatus) {
         this.id = id;
         this.numberOfFloors = numberOfFloors;
         this.floor = floor;
         this.status = elevatorStatus;
         this.weightSensor = weightSensorStatus;
         this.obstructionSensor = obstructionSensorStatus;
-        this.elevatorDoor = new Door(0, doorStatus.CLOSED, 0);
-        this.elevatorDisplay = new Display(0, displayStatus.ON, 0);
-        this.floorDoorsList = [];
-        this.floorDisplaysList = [];
-        this.floorButtonsList = [];
-        this.floorList = [];
+        this.elevatorDoor = new Door(0, DoorStatus.CLOSED, 0);
+        this.elevatorDisplay = new Display(0, DisplayStatus.ON, 0);
+        this.floorDoorsList = new ArrayList<>();
+        this.floorDisplaysList = new ArrayList<>();
+        this.floorButtonsList = new ArrayList<>();
+        this.floorList = new ArrayList<>();
 
         this.createFloorDoorsList();
         this.createDisplaysList();
@@ -186,45 +199,45 @@ class Elevator {
 
     //----------------- Methods to create a list -----------------//
     /* ******* CREATE A LIST WITH A DOOR OF EACH FLOOR ******* */
-    createFloorDoorsList() {
-        for (let i = 1; i <= this.numberOfFloors; i++) {
-            this.floorDoorsList.push(new Door(i, doorStatus.CLOSED, i));
+    public void createFloorDoorsList() {
+        for (int i = 1; i <= this.numberOfFloors; i++) {
+            this.floorDoorsList.add(new Door(i, DoorStatus.CLOSED, i));
         }
     }
 
     /* ******* CREATE A LIST WITH A DISPLAY OF EACH FLOOR ******* */
-    createDisplaysList() {
-        for (let i = 1; i <= this.numberOfFloors; i++) {
-            this.floorDisplaysList.push(new Display(i, displayStatus.ON, i));
+    public void createDisplaysList() {
+        for (int i = 1; i <= this.numberOfFloors; i++) {
+            this.floorDisplaysList.add(new Display(i, DisplayStatus.ON, i));
         }
     }
 
     /* ******* CREATE A LIST WITH A BUTTON OF EACH FLOOR ******* */
-    createFloorButtonsList() {
-        for (let i = 1; i <= this.numberOfFloors; i++) {
-            this.floorButtonsList.push(new Button(i, buttonStatus.OFF, i));
+    public void createFloorButtonsList() {
+        for (int i = 1; i <= this.numberOfFloors; i++) {
+            this.floorButtonsList.add(new Button(i, ButtonStatus.OFF, i));
         }
     }
 
 
     //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO MOVE ELEVATOR ******* */
-    moveElevator(requestedFloor, requestedColumn) {
-        while (this.floorList.length != 0) {
-            if (this.status == elevatorStatus.IDLE) {
+    public void moveElevator(requestedFloor, requestedColumn) {
+        while (this.floorList.size() != 0) {
+            if (this.status == ElevatorStatus.IDLE) {
                 if (this.floor < requestedFloor) {
-                    this.status = elevatorStatus.UP;
+                    this.status = ElevatorStatus.UP;
                 } else if (this.floor == requestedFloor) {
                     this.openDoors();
                     this.deleteFloorFromList(requestedFloor);
-                    requestedColumn.buttonsUpList[requestedFloor - 1].status = buttonStatus.OFF;
-                    requestedColumn.buttonsDownList[requestedFloor - 1].status = buttonStatus.OFF;
-                    this.floorButtonsList[requestedFloor - 1].status = buttonStatus.OFF;
+                    requestedColumn.buttonsUpList.get(requestedFloor - 1).status = ButtonStatus.OFF;
+                    requestedColumn.buttonsDownList.get(requestedFloor - 1).status = ButtonStatus.OFF;
+                    this.floorButtonsList.get(requestedFloor - 1).status = ButtonStatus.OFF;
                 } else {
-                    this.status = elevatorStatus.DOWN;
+                    this.status = ElevatorStatus.DOWN;
                 }
             }
-            if (this.status == elevatorStatus.UP) {
+            if (this.status == ElevatorStatus.UP) {
                 this.moveUp(requestedColumn);
             } else {
                 this.moveDown(requestedColumn);
@@ -233,80 +246,60 @@ class Elevator {
     }
 
     /* ******* LOGIC TO MOVE UP ******* */
-    moveUp(requestedColumn) {
-        let tempArray = this.floorList;
-        for (let i = this.floor; i < tempArray[tempArray.length - 1]; i++) {
-            if (this.floorDoorsList[i].status == doorStatus.OPENED || this.elevatorDoor.status == doorStatus.OPENED) {
-                console.log("   Doors are open, closing doors before move up");
+    public void moveUp(requestedColumn) {
+        List<Integer> tempArray = this.floorList;
+        for (int i = this.floor; i < tempArray.get(tempArray.size() - 1); i++) {
+            if (this.floorDoorsList.get(i).status == DoorStatus.OPENED || this.elevatorDoor.status == DoorStatus.OPENED) {
+                System.out.println("   Doors are open, closing doors before move up");
                 this.closeDoors();
             }
-            console.log(`Moving elevator$ {
-                this.id
-            } <up > from floor $ {
-                i
-            } to floor $ {
-                i + 1
-            }`);
-            let nextFloor = (i + 1);
+            console.log("Moving elevator" + this.id + " <up> from floor " + i + " to floor " + i + 1);
+            int nextFloor = (i + 1);
             this.floor = nextFloor;
             this.updateDisplays(this.floor);
 
-            if (tempArray.includes(nextFloor)) {
+            if (tempArray.contains(nextFloor)) {
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
-                requestedColumn.buttonsUpList[i - 1].status = buttonStatus.OFF;
-                this.floorButtonsList[i].status = buttonStatus.OFF;
+                requestedColumn.buttonsUpList.get(i - 1).status = ButtonStatus.OFF;
+                this.floorButtonsList.get(i).status = ButtonStatus.OFF;
             }
         }
-        if (this.floorList.length == 0) {
-            this.status = elevatorStatus.IDLE;
-            // console.log(`       Elevator${this.id} is now ${this.status}`);
+        if (this.floorList.size() == 0) {
+            this.status = ElevatorStatus.IDLE;
+//            System.out.println("       Elevator"+ this.id + " is now " + this.status);
         } else {
             this.status = elevatorStatus.DOWN;
-            console.log(`       Elevator$ {
-                this.id
-            } is now going $ {
-                this.status
-            }`);
+            console.log("       Elevator" + this.id + " is now going " + this.status);
         }
     }
 
     /* ******* LOGIC TO MOVE DOWN ******* */
-    moveDown(requestedColumn) {
-        let tempArray = this.floorList;
-        for (let i = this.floor; i > tempArray[tempArray.length - 1]; i--) {
-            if (this.floorDoorsList[i - 1].status == doorStatus.OPENED || this.elevatorDoor.status == doorStatus.OPENED) {
-                console.log("       Doors are open, closing doors before move down");
+    public void moveDown(requestedColumn) {
+        List<Integer> tempArray = this.floorList;
+        for (int i = this.floor; i > tempArray.get(tempArray.size() - 1); i--) {
+            if (this.floorDoorsList.get(i - 1).status == DoorStatus.OPENED || this.ElevatorDoor.status == DoorStatus.OPENED) {
+                System.out.println("       Doors are open, closing doors before move down");
                 this.closeDoors();
             }
-            console.log(`Moving elevator$ {
-                this.id
-            } <down > from floor $ {
-                i
-            } to floor $ {
-                i - 1
-            }`);
-            let nextFloor = (i - 1);
+            System.out.println("Moving elevator" + this.id + " <down> from floor " + i + " to floor " + i - 1);
+            int nextFloor = (i - 1);
             this.floor = nextFloor;
             this.updateDisplays(this.floor);
 
-            if (tempArray.includes(nextFloor)) {
+            if (tempArray.contains(nextFloor)) {
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
-                requestedColumn.buttonsDownList[i - 2].status = buttonStatus.OFF;
-                this.floorButtonsList[i - 1].status = buttonStatus.OFF;
+                requestedColumn.buttonsDownList.get(i - 2).status = ButtonStatus.OFF;
+                this.floorButtonsList.get(i - 1).status = ButtonStatus.OFF;
             }
         }
-        if (this.floorList.length == 0) {
-            this.status = elevatorStatus.IDLE;
-            // console.log(`       Elevator${this.id} is now ${this.status}`);
+        if (this.floorList.size() == 0) {
+            this.status = ElevatorStatus.IDLE;
+//            System.out.println("       Elevator" + this.id + " is now " + this.status);
         } else {
-            this.status = elevatorStatus.UP;
-            console.log(`       Elevator$ {
-                this.id
-            } is now going $ {
-                this.status
-            }`);
+            this.status = ElevatorStatus.UP;
+            System.out.println("       Elevator" + this.id + " is now going " + this.status);
         }
     }
 
