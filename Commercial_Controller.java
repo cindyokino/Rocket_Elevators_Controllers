@@ -179,13 +179,13 @@ class Elevator {
     List<Integer> floorList;
 
     //----------------- Constructor and its attributes -----------------//
-    public Elevator (int id, int numberOfFloors, int floor, ElevatorStatus elevatorStatus, WeightSensorStatus weightSensorStatus, ObstructionSensorStatus obstructionSensorStatus) {
+    public Elevator(int id, int numberOfFloors, int floor, ElevatorStatus elevatorStatus, WeightSensorStatus weightSensorStatus, ObstructionSensorStatus obstructionSensorStatus) {
         this.id = id;
         this.numberOfFloors = numberOfFloors;
         this.floor = floor;
-        this.status = elevatorStatus;
-        this.weightSensor = weightSensorStatus;
-        this.obstructionSensor = obstructionSensorStatus;
+        this.elevatorStatus = elevatorStatus;
+        this.weightSensorStatus = weightSensorStatus;
+        this.obstructionSensorStatus = obstructionSensorStatus;
         this.elevatorDoor = new Door(0, DoorStatus.CLOSED, 0);
         this.elevatorDisplay = new Display(0, DisplayStatus.ON, 0);
         this.floorDoorsList = new ArrayList<>();
@@ -248,7 +248,7 @@ class Elevator {
     }
 
     /* ******* LOGIC TO MOVE UP ******* */
-    public void moveUp(int requestedColumn) {
+    public void moveUp(int requestedColumn, int waitingTime) {
         List<Integer> tempArray = this.floorList;
         for (int i = this.floor; i < tempArray.get(tempArray.size() - 1); i++) {
             if (this.floorDoorsList.get(i).status == DoorStatus.OPENED || this.elevatorDoor.status == DoorStatus.OPENED) {
@@ -261,7 +261,7 @@ class Elevator {
             this.updateDisplays(this.floor);
 
             if (tempArray.contains(nextFloor)) {
-                this.openDoors(int waitingTime);
+                this.openDoors(waitingTime);
                 this.deleteFloorFromList(nextFloor);
                 requestedColumn.buttonsUpList.get(i - 1).status = ButtonStatus.OFF;
                 this.floorButtonsList.get(i).status = ButtonStatus.OFF;
@@ -277,7 +277,7 @@ class Elevator {
     }
 
     /* ******* LOGIC TO MOVE DOWN ******* */
-    public void moveDown(int requestedColumn) {
+    public void moveDown(int requestedColumn, int waitingTime) {
         List<Integer> tempArray = this.floorList;
         for (int i = this.floor; i > tempArray.get(tempArray.size() - 1); i--) {
             if (this.floorDoorsList.get(i - 1).status == DoorStatus.OPENED || this.ElevatorDoor.status == DoorStatus.OPENED) {
@@ -290,7 +290,7 @@ class Elevator {
             this.updateDisplays(this.floor);
 
             if (tempArray.contains(nextFloor)) {
-                this.openDoors(int waitingTime);
+                this.openDoors(waitingTime);
                 this.deleteFloorFromList(nextFloor);
                 requestedColumn.buttonsDownList.get(i - 2).status = ButtonStatus.OFF;
                 this.floorButtonsList.get(i - 1).status = ButtonStatus.OFF;
@@ -308,7 +308,7 @@ class Elevator {
     /* ******* LOGIC TO UPDATE DISPLAYS OF ELEVATOR AND SHOW FLOOR ******* */
     public void updateDisplays(int elevatorFloor) {
         this.floorDisplaysList.forEach(display -> {
-                display.floor = elevatorFloor;
+            display.floor = elevatorFloor;
         });
         System.out.println("Displays show #" + elevatorFloor);
     }
@@ -318,7 +318,7 @@ class Elevator {
         System.out.println("       Opening doors...");
         System.out.println("      Elevator" + this.id + " doors are opened");
         this.elevatorDoor.status = DoorStatus.OPENED;
-        this.floorDoorsList.get(this.floor-1).status = DoorStatus.OPENED;
+        this.floorDoorsList.get(this.floor - 1).status = DoorStatus.OPENED;
         try {
             Thread.sleep(waitingTime);
         } catch (InterruptedException e) {
@@ -340,7 +340,7 @@ class Elevator {
     /* ******* LOGIC FOR WEIGHT SENSOR ******* */
     public void checkWeight(int maxWeight) {
         Random random = new Random();
-        int randomWeight = random.nextInt(maxWeight+100); //This random simulates the weight from a weight sensor
+        int randomWeight = random.nextInt(maxWeight + 100); //This random simulates the weight from a weight sensor
         while (randomWeight > maxWeight) {
             this.weightSensor = SensorStatus.ON;
             System.out.println("       ! Elevator capacity reached, waiting until the weight is lower before continue...");
@@ -396,7 +396,11 @@ class Elevator {
 //------------------------------------------- DOOR CLASS -----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 class Door {
-    constructor(id, doorStatus, floor) {
+    int id;
+    DoorStatus status;
+    int floor;
+
+    public Door(int id, DoorStatus doorStatus, int floor) {
         this.id = id;
         this.status = doorStatus;
         this.floor = floor;
@@ -407,7 +411,11 @@ class Door {
 //------------------------------------------- BUTTON CLASS -----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 class Button {
-    constructor(id, buttonStatus, floor) {
+    int id;
+    ButtonStatus status;
+    int floor;
+
+    public Button(int id, ButtonStatus buttonStatus, int floor) {
         this.id = id;
         this.status = buttonStatus;
         this.floor = floor;
@@ -418,7 +426,11 @@ class Button {
 //------------------------------------------- DISPLAY CLASS -----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 class Display {
-    constructor(id, displayStatus, floor) {
+    int id;
+    DisplayStatus status;
+    int floor;
+
+    public Display(int id, DisplayStatus displayStatus, int floor) {
         this.id = id;
         this.status = displayStatus;
         this.floor = floor;
@@ -482,15 +494,14 @@ public class Commercial_Controller {
     //------------------------------------------- GLOBAL VARIABLES ---------------------------------------------------------------------
     //----------------------------------------------------------------------------------------------------------------------------------
     int numberOfColumns;
-    let numberOfFloors;
-    let numberOfElevators;
-    let maxWeight;          //Maximum weight an elevator can carry in KG
-    int waitingTime = 1;    // How many time the door remains opened in SECONDS
+    int numberOfFloors;
+    int numberOfElevators;
+    int maxWeight = 500;     //Maximum weight an elevator can carry in KG
+    int waitingTime = 1;     // How many time the door remains opened in SECONDS
 
 
     //------------------------------------------- TESTING PROGRAM ---------------------------------------------------------------------
     //---------------------------------------------------------------------------------------------------------------------------------
-    maxWeight =500; //Maximum weight an elevator can carry in KG
 
     /* ******* CREATE SCENARIO 1 ******* */
     function scenario1() {
