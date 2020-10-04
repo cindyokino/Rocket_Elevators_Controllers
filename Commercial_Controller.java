@@ -33,8 +33,8 @@
   ** ************************************************** */
 
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 //------------------------------------------- COLUMN CLASS -----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ class Elevator {
 
     //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO MOVE ELEVATOR ******* */
-    public void moveElevator(requestedFloor, requestedColumn) {
+    public void moveElevator(int requestedFloor, int requestedColumn) {
         while (this.floorList.size() != 0) {
             if (this.status == ElevatorStatus.IDLE) {
                 if (this.floor < requestedFloor) {
@@ -246,7 +246,7 @@ class Elevator {
     }
 
     /* ******* LOGIC TO MOVE UP ******* */
-    public void moveUp(requestedColumn) {
+    public void moveUp(int requestedColumn) {
         List<Integer> tempArray = this.floorList;
         for (int i = this.floor; i < tempArray.get(tempArray.size() - 1); i++) {
             if (this.floorDoorsList.get(i).status == DoorStatus.OPENED || this.elevatorDoor.status == DoorStatus.OPENED) {
@@ -259,7 +259,7 @@ class Elevator {
             this.updateDisplays(this.floor);
 
             if (tempArray.contains(nextFloor)) {
-                this.openDoors();
+                this.openDoors(int waitingTime);
                 this.deleteFloorFromList(nextFloor);
                 requestedColumn.buttonsUpList.get(i - 1).status = ButtonStatus.OFF;
                 this.floorButtonsList.get(i).status = ButtonStatus.OFF;
@@ -275,7 +275,7 @@ class Elevator {
     }
 
     /* ******* LOGIC TO MOVE DOWN ******* */
-    public void moveDown(requestedColumn) {
+    public void moveDown(int requestedColumn) {
         List<Integer> tempArray = this.floorList;
         for (int i = this.floor; i > tempArray.get(tempArray.size() - 1); i--) {
             if (this.floorDoorsList.get(i - 1).status == DoorStatus.OPENED || this.ElevatorDoor.status == DoorStatus.OPENED) {
@@ -288,7 +288,7 @@ class Elevator {
             this.updateDisplays(this.floor);
 
             if (tempArray.contains(nextFloor)) {
-                this.openDoors();
+                this.openDoors(int waitingTime);
                 this.deleteFloorFromList(nextFloor);
                 requestedColumn.buttonsDownList.get(i - 2).status = ButtonStatus.OFF;
                 this.floorButtonsList.get(i - 1).status = ButtonStatus.OFF;
@@ -304,65 +304,99 @@ class Elevator {
     }
 
     /* ******* LOGIC TO UPDATE DISPLAYS OF ELEVATOR AND SHOW FLOOR ******* */
-    updateDisplays(elevatorFloor) {
-        this.floorDisplaysList.forEach(display = > {
+    public void updateDisplays(int elevatorFloor) {
+        this.floorDisplaysList.forEach(display -> {
                 display.floor = elevatorFloor;
         });
-        console.log(`Displays show #$ {
-            elevatorFloor
-        }`);
+        System.out.println("Displays show #" + elevatorFloor);
     }
 
     /* ******* LOGIC TO OPEN DOORS ******* */
-    openDoors() {
-        let threeSecondsFromNow = new Date();
-        threeSecondsFromNow.setSeconds(threeSecondsFromNow.getSeconds() + 1);
-        console.log("       Opening doors...");
-        console.log(`       Elevator$ {
-            this.id
-        } doors are opened`);
-        while (new Date() < threeSecondsFromNow || this.weightSensor == sensorStatus.ON || this.obstructionSensor == sensorStatus.ON) {
-            this.elevatorDoor.status = doorStatus.OPENED;
-            this.floorDoorsList[this.floor - 1].status = doorStatus.OPENED;
+    public void openDoors(int waitingTime) {
+        System.out.println("       Opening doors...");
+        System.out.println("      Elevator" + this.id + " doors are opened");
+
+        timer = new Timer();
+        timer.schedule(new RemindTask(), waitingTime, TimeUnit.SECONDS);
+
+        class RemindTask extends TimerTask {
+            public void run() {
+                while (this.weightSensor == SensorStatus.ON || this.obstructionSensor == SensorStatus.ON) {
+                    this.elevatorDoor.status = DoorStatus.OPENED;
+                    this.floorDoorsList[this.floor - 1].status = DoorStatus.OPENED;
+                }
+                timer.cancel(); //Terminate the timer thread
+            }
         }
         this.closeDoors();
     }
 
+    //**************************************************************************************************************
+//        System.out.println("       Opening doors...");
+//        System.out.println("      Elevator" + this.id + " doors are opened");
+//
+//        new java.util.Timer().schedule(
+//            new java.util.TimerTask() {
+//                public void run() {
+//                    while (this.weightSensor == SensorStatus.ON || this.obstructionSensor == SensorStatus.ON) {
+//                    this.elevatorDoor.status = DoorStatus.OPENED;
+//                    this.floorDoorsList[this.floor - 1].status = DoorStatus.OPENED;
+//                    }
+//                }
+//            }, waitingTime*1000
+//        );
+//        this.closeDoors();
+//    }
+    //**************************************************************************************************************
+
+    //**************************************************************************************************************
+//        int threeSecondsFromNow = new Date();
+//        threeSecondsFromNow.setSeconds(threeSecondsFromNow.getSeconds() + 1);
+//        console.log("       Opening doors...");
+//        console.log(`       Elevator$ {this.id} doors are opened`);
+//        while (new Date() < threeSecondsFromNow || this.weightSensor == sensorStatus.ON || this.obstructionSensor == sensorStatus.ON) {
+//            this.elevatorDoor.status = doorStatus.OPENED;
+//            this.floorDoorsList[this.floor - 1].status = doorStatus.OPENED;
+//        }
+//        this.closeDoors();
+//    }
+    //**************************************************************************************************************
+
     /* ******* LOGIC TO CLOSE DOORS ******* */
-    closeDoors() {
-        if (this.weightSensor == sensorStatus.OFF && this.obstructionSensor == sensorStatus.OFF) {
-            console.log("       Closing doors...");
-            console.log(`       Elevator$ {
-                this.id
-            } doors are closed`);
-            this.floorDoorsList[this.floor - 1].status = doorStatus.CLOSED;
-            this.elevatorDoor.status = doorStatus.CLOSED;
+    public void closeDoors() {
+        if (this.weightSensor == SensorStatus.OFF && this.ObstructionSensor == SensorStatus.OFF) {
+            System.out.println("       Closing doors...");
+            System.out.println("       Elevator" + this.id + " doors are closed");
+            this.floorDoorsList.get(this.floor - 1).status = DoorStatus.CLOSED;
+            this.elevatorDoor.status = DoorStatus.CLOSED;
         }
     }
 
     /* ******* LOGIC FOR WEIGHT SENSOR ******* */
-    checkWeight(maxWeight) {
-        let weight = Math.floor((Math.random() * 600) + 1); //This random simulates the weight from a weight sensor
-        while (weight > maxWeight) {
-            this.weightSensor = sensorStatus.ON;
-            console.log("       ! Elevator capacity reached, waiting until the weight is lower before continue...");
-            weight -= 100; //I'm supposing the random number is 600, I'll subtract 100 so it will be less than 500 (the max weight I proposed) for the second time it runs
+    public void checkWeight(int maxWeight) {
+        Random random = new Random();
+        int randomWeight = random.nextInt(maxWeight+100); //This random simulates the weight from a weight sensor
+        while (randomWeight > maxWeight) {
+            this.weightSensor = SensorStatus.ON;
+            System.out.println("       ! Elevator capacity reached, waiting until the weight is lower before continue...");
+            randomWeight -= 100; //I'm supposing the random number is 600, I'll subtract 101 so it will be less than 500 (the max weight I proposed) for the second time it runs
         }
-        this.weightSensor = sensorStatus.OFF;
-        console.log("       Elevator capacity is OK");
+        this.weightSensor = SensorStatus.OFF;
+        System.out.println("       Elevator capacity is OK");
     }
 
     /* ******* LOGIC FOR OBSTRUCTION SENSOR ******* */
-    checkObstruction() {
-        let probabilityNotBlocked = 70;
-        let number = Math.floor((Math.random() * 100) + 1); //This random simulates the probability of an obstruction (I supposed 30% of chance something is blocking the door)
+    public void checkObstruction() {
+        int probabilityNotBlocked = 70;
+        Random random = new Random();
+        int number = random.nextInt(100); //This random simulates the probability of an obstruction (I supposed 30% of chance something is blocking the door)
         while (number > probabilityNotBlocked) {
-            this.obstructionSensor = sensorStatus.ON;
-            console.log("       ! Elevator door is blocked by something, waiting until door is free before continue...");
+            this.obstructionSensor = SensorStatus.ON;
+            System.out.println("       ! Elevator door is blocked by something, waiting until door is free before continue...");
             number -= 30; //I'm supposing the random number is 100, I'll subtract 30 so it will be less than 70 (30% probability), so the second time it runs theres no one blocking the door
         }
-        this.obstructionSensor = sensorStatus.OFF;
-        console.log("       Elevator door is FREE");
+        this.obstructionSensor = SensorStatus.OFF;
+        System.out.println("       Elevator door is FREE");
     }
 
     /* ******* LOGIC TO ADD A FLOOR TO THE FLOOR LIST ******* */
@@ -492,6 +526,7 @@ public class Commercial_Controller {
     let numberOfFloors;
     let numberOfElevators;
     let maxWeight;          //Maximum weight an elevator can carry in KG
+    int waitingTime = 1;    // How many time the door remains opened in SECONDS
 
 
     //------------------------------------------- TESTING PROGRAM ---------------------------------------------------------------------
