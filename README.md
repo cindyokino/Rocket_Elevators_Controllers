@@ -21,11 +21,11 @@ Here are the steps if you want to run the code in each version of the elevator c
 
     Note that you have to be in the script folder for it to run correctly.
 
-* If you want to test a new scenario, go to the **TEST YOUR SCENARIO** section at the end of the file for more information
+* If you want to test a new scenario, go to the **TESTING PROGRAM** section at the end of the file for more information
 
 ## 🏢Commercial_Controller.java
 * You can run the code with at the terminal of your preference. Before you need to compile the file by typing: **javac Residential_Controller.java**
 
-    Then it will generate a new file and you can run called **Residential_Controller.class** now you can run the program by typing: **java Residential_Controller**
+    Then it will generate a new file and you can run called **Residential_Controller.class** and now you can run the program by typing: **java Residential_Controller**
 
     Note that you have to be in the script folder for it to run correctly.
