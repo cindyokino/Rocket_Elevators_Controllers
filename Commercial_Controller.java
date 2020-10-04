@@ -33,8 +33,10 @@
   ** ************************************************** */
 
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 //------------------------------------------- COLUMN CLASS -----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -315,52 +317,15 @@ class Elevator {
     public void openDoors(int waitingTime) {
         System.out.println("       Opening doors...");
         System.out.println("      Elevator" + this.id + " doors are opened");
-
-        timer = new Timer();
-        timer.schedule(new RemindTask(), waitingTime, TimeUnit.SECONDS);
-
-        class RemindTask extends TimerTask {
-            public void run() {
-                while (this.weightSensor == SensorStatus.ON || this.obstructionSensor == SensorStatus.ON) {
-                    this.elevatorDoor.status = DoorStatus.OPENED;
-                    this.floorDoorsList[this.floor - 1].status = DoorStatus.OPENED;
-                }
-                timer.cancel(); //Terminate the timer thread
-            }
+        this.elevatorDoor.status = DoorStatus.OPENED;
+        this.floorDoorsList.get(this.floor-1).status = DoorStatus.OPENED;
+        try {
+            Thread.sleep(waitingTime);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         this.closeDoors();
     }
-
-    //**************************************************************************************************************
-//        System.out.println("       Opening doors...");
-//        System.out.println("      Elevator" + this.id + " doors are opened");
-//
-//        new java.util.Timer().schedule(
-//            new java.util.TimerTask() {
-//                public void run() {
-//                    while (this.weightSensor == SensorStatus.ON || this.obstructionSensor == SensorStatus.ON) {
-//                    this.elevatorDoor.status = DoorStatus.OPENED;
-//                    this.floorDoorsList[this.floor - 1].status = DoorStatus.OPENED;
-//                    }
-//                }
-//            }, waitingTime*1000
-//        );
-//        this.closeDoors();
-//    }
-    //**************************************************************************************************************
-
-    //**************************************************************************************************************
-//        int threeSecondsFromNow = new Date();
-//        threeSecondsFromNow.setSeconds(threeSecondsFromNow.getSeconds() + 1);
-//        console.log("       Opening doors...");
-//        console.log(`       Elevator$ {this.id} doors are opened`);
-//        while (new Date() < threeSecondsFromNow || this.weightSensor == sensorStatus.ON || this.obstructionSensor == sensorStatus.ON) {
-//            this.elevatorDoor.status = doorStatus.OPENED;
-//            this.floorDoorsList[this.floor - 1].status = doorStatus.OPENED;
-//        }
-//        this.closeDoors();
-//    }
-    //**************************************************************************************************************
 
     /* ******* LOGIC TO CLOSE DOORS ******* */
     public void closeDoors() {
@@ -400,18 +365,16 @@ class Elevator {
     }
 
     /* ******* LOGIC TO ADD A FLOOR TO THE FLOOR LIST ******* */
-    addFloorToFloorList(floor) {
-        this.floorList.push(floor);
-        this.floorList.sort(function(a, b) {
-            return a - b
-        });
+    public void addFloorToFloorList(int floor) {
+        this.floorList.add(floor);
+        Collections.sort(this.floorList);
     }
 
     /* ******* LOGIC TO DELETE ITEM FROM FLOORS LIST ******* */
-    deleteFloorFromList(stopFloor) {
-        let index = this.floorList.indexOf(stopFloor);
+    public void deleteFloorFromList(int stopFloor) {
+        int index = this.floorList.indexOf(stopFloor);
         if (index > -1) {
-            this.floorList.splice(index, 1);
+            this.floorList.remove(index);
         }
     }
 
@@ -419,13 +382,9 @@ class Elevator {
     //----------------- Entry method -----------------//
     /* ******* ENTRY METHOD ******* */
     /* ******* REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR ******* */
-    requestFloor(requestedFloor, requestedColumn) {
-        console.log();
-        console.log(` >> Someone inside the elevator$ {
-            this.id
-        } wants to go to floor<$ {
-            requestedFloor
-        }> <<`);
+    public void requestFloor(int requestedFloor, int requestedColumn, int maxWeight) {
+        System.out.println();
+        System.out.println(" >> Someone inside the elevator" + this.id + " wants to go to floor <" + requestedFloor + "> <<");
         this.checkWeight(maxWeight);
         this.checkObstruction();
         this.addFloorToFloorList(requestedFloor);
