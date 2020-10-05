@@ -77,8 +77,9 @@ class Battery {
         this.numberOfElevatorsPerColumn = numberOfElevatorsPerColumn;
         this.status = batteryStatus;
         this.columnsList = new ArrayList<>();
-        this.createColumnsList();
         this.numberOfFloorsPerColumn = calculateNumberOfFloorsPerColumn();
+        this.createColumnsList();
+        this.setColumnValues();
     }
 
 
@@ -107,14 +108,24 @@ class Battery {
     public int calculateNumberOfFloorsPerColumn() {
         numberOfFloors = totalNumberOfFloors - numberOfBasements;
         int numberOfFloorsPerColumn;
+
+        if (this.numberOfBasements > 0) { //if there are basement floors
+            numberOfFloorsPerColumn = (this.numberOfFloors / (this.numberOfColumns - 1)); //the first column serves the basement floors
+        } else { //there is no basement
+            numberOfFloorsPerColumn = (this.numberOfFloors / this.numberOfColumns);
+        }
+
+        return numberOfFloorsPerColumn;
+    }
+
+    /* ******* LOGIC TO FIND THE REMAINING FLOORS OF EACH COLUMN AND SET VALUES servedFloors, minFloors, maxFloors ******* */
+    public void setColumnValues(){
         int remainingFloors;
 
         //calculating the remaining floors
-        if (this.numberOfBasements > 0) { //if there are basement floors (negative number)
-            numberOfFloorsPerColumn = (this.numberOfFloors / (this.numberOfColumns - 1)); //the first column serves the basement floors
+        if (this.numberOfBasements > 0) { //if there are basement floors
             remainingFloors = this.numberOfFloors % (this.numberOfColumns - 1);
         } else { //there is no basement
-            numberOfFloorsPerColumn = (this.numberOfFloors / this.numberOfColumns);
             remainingFloors = this.numberOfFloors % this.numberOfColumns;
         }
 
@@ -148,7 +159,6 @@ class Battery {
                 this.columnsList.get(0).maxFloor = 1;
             }
         }
-        return numberOfFloorsPerColumn;
     }
 }
 
@@ -282,7 +292,7 @@ class Column {
             }
         }
         System.out.println();
-        System.out.println("   >> >>> ELEVATOR " + bestElevator.id + " WAS CALLED <<< <<");
+        System.out.println("   >> >>> ELEVATOR " + this.name + bestElevator.id + " WAS CALLED <<< <<");
 
         return bestElevator;
     }
@@ -298,11 +308,7 @@ class Column {
             this.buttonsDownList.get(requestedFloor - 2).status = ButtonStatus.ON;
         }
         System.out.println(">> Someone request an elevator from floor <" + requestedFloor + "> and direction <" + direction + "> <<");
-        this.elevatorsList.forEach(element -> {
-            System.out.println("Elevator" + element.id + " | Floor:" + element.floor + " | Status:" + element.status);
-        });
         Elevator bestElevator = this.findElevator(requestedFloor, direction);
-        bestElevator.addFloorToFloorList(requestedFloor);
         bestElevator.moveElevator(requestedFloor);
     }
 }
@@ -359,7 +365,7 @@ class Elevator {
     //----------------- Methods to create a list -----------------//
     /* ******* CREATE A LIST WITH A DOOR OF EACH FLOOR ******* */
     public void createFloorDoorsList() {
-//        ADD (INSTANTIATE Door WITH 1 AND "CLOSED") TO floorDoorsList    //Add the ground floor door to list of controled doors (floorDoorsList)
+//        ADD (INSTANTIATE Door WITH 1 AND "CLOSED") TO floorDoorsList    //Add the ground floor door to list of controlled doors (floorDoorsList)
         floorDoorsList.add(elevatorDoor);
         for (int i = column.minFloor; i <= this.numberServedFloors; i++) {
             this.floorDoorsList.add(new Door(i, DoorStatus.CLOSED, i));
@@ -384,23 +390,25 @@ class Elevator {
     //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO MOVE ELEVATOR ******* */
     public void moveElevator(int requestedFloor) {
+        this.addFloorToFloorList(requestedFloor);
+
         while (this.floorList.size() != 0) {
             if (this.status == ElevatorStatus.IDLE) {
                 if (this.floor < requestedFloor) {
                     this.status = ElevatorStatus.UP;
-                } else if (this.floor == requestedFloor) {
+                } else if (this.floor > requestedFloor) {
+                    this.status = ElevatorStatus.DOWN;
+                } else {
                     this.openDoors();
                     this.deleteFloorFromList(requestedFloor);
                     this.column.buttonsUpList.get(requestedFloor - 1).status = ButtonStatus.OFF;
                     this.column.buttonsDownList.get(requestedFloor - 1).status = ButtonStatus.OFF;
                     this.floorButtonsList.get(requestedFloor - 1).status = ButtonStatus.OFF;
-                } else {
-                    this.status = ElevatorStatus.DOWN;
                 }
             }
             if (this.status == ElevatorStatus.UP) {
                 this.moveUp();
-            } else {
+            } else if(this.status == ElevatorStatus.DOWN){
                 this.moveDown();
             }
         }
@@ -414,7 +422,7 @@ class Elevator {
                 System.out.println("   Doors are open, closing doors before move up");
                 this.closeDoors();
             }
-            System.out.println("Moving elevator" + this.id + " <up> from floor " + i + " to floor " + (i + 1));
+            System.out.println("Moving elevator" + column.name + this.id + " <up> from floor " + i + " to floor " + (i + 1));
             int nextFloor = (i + 1);
             this.floor = nextFloor;
             this.updateDisplays(this.floor);
@@ -427,7 +435,7 @@ class Elevator {
             }
         }
         if (this.floorList.size() == 0) {
-            column.optimizeDisplacement(this.column.elevatorsList);
+//            column.optimizeDisplacement(this.column.elevatorsList);
             this.status = ElevatorStatus.IDLE;
 //            System.out.println("       Elevator"+ this.id + " is now " + this.status);
         } else {
@@ -444,7 +452,7 @@ class Elevator {
                 System.out.println("       Doors are open, closing doors before move down");
                 this.closeDoors();
             }
-            System.out.println("Moving elevator" + this.id + " <down> from floor " + i + " to floor " + (i - 1));
+            System.out.println("Moving elevator" + column.name + this.id + " <down> from floor " + i + " to floor " + (i - 1));
             int nextFloor = (i - 1);
             this.floor = nextFloor;
             this.updateDisplays(this.floor);
@@ -457,7 +465,7 @@ class Elevator {
             }
         }
         if (this.floorList.size() == 0) {
-            column.optimizeDisplacement(this.column.elevatorsList);
+//            column.optimizeDisplacement(this.column.elevatorsList);
             this.status = ElevatorStatus.IDLE;
 //            System.out.println("       Elevator" + this.id + " is now " + this.status);
         } else {
@@ -549,7 +557,6 @@ class Elevator {
         System.out.println(" >> Someone inside the elevator" + this.id + " wants to go to floor <" + requestedFloor + "> <<");
         this.checkWeight();
         this.checkObstruction();
-        this.addFloorToFloorList(requestedFloor);
         this.moveElevator(requestedFloor);
     }
 }
@@ -661,24 +668,29 @@ public class Commercial_Controller {
         Battery battery1 = new Battery(1, 4, 66, 6, 5, BatteryStatus.ACTIVE);
         System.out.println(battery1);
         battery1.columnsList.forEach(System.out::println);
+//        battery1.columnsList.forEach(column -> System.out.println(column));
         System.out.println();
         System.out.println("****************************** SCENARIO 1: ******************************");
         battery1.columnsList.get(1).elevatorsList.get(0).floor = 20; //Elevator B1 (column2 elevator1)
-        battery1.columnsList.get(1).elevatorsList.get(0).status = ElevatorStatus.DOWN; //Elevator B1 (column2 elevator1)
+//        battery1.columnsList.get(1).elevatorsList.get(0).status = ElevatorStatus.DOWN; //Elevator B1 (column2 elevator1)
+        battery1.columnsList.get(1).elevatorsList.get(0).moveElevator(5); //Elevator B1 (column2 elevator1)
         battery1.columnsList.get(1).elevatorsList.get(1).floor = 3; //Elevator B2 (column2 elevator2)
-        battery1.columnsList.get(1).elevatorsList.get(1).status = ElevatorStatus.UP; //Elevator B2 (column2 elevator2)
+//        battery1.columnsList.get(1).elevatorsList.get(1).status = ElevatorStatus.UP; //Elevator B2 (column2 elevator2)
+        battery1.columnsList.get(1).elevatorsList.get(1).moveElevator(15); //Elevator B2 (column2 elevator2)
         battery1.columnsList.get(1).elevatorsList.get(2).floor = 13; //Elevator B2 (column2 elevator3)
-        battery1.columnsList.get(1).elevatorsList.get(2).status = ElevatorStatus.DOWN; //Elevator B2 (column2 elevator3)
+//        battery1.columnsList.get(1).elevatorsList.get(2).status = ElevatorStatus.DOWN; //Elevator B2 (column2 elevator3)
+        battery1.columnsList.get(1).elevatorsList.get(2).moveElevator(1); //Elevator B2 (column2 elevator3)
         battery1.columnsList.get(1).elevatorsList.get(3).floor = 15; //Elevator B2 (column2 elevator3)
-        battery1.columnsList.get(1).elevatorsList.get(3).status = ElevatorStatus.DOWN; //Elevator B2 (column2 elevator3)
+//        battery1.columnsList.get(1).elevatorsList.get(3).status = ElevatorStatus.DOWN; //Elevator B2 (column2 elevator3)
+        battery1.columnsList.get(1).elevatorsList.get(3).moveElevator(2); //Elevator B2 (column2 elevator3)
         battery1.columnsList.get(1).elevatorsList.get(4).floor = 6; //Elevator B2 (column2 elevator3)
-        battery1.columnsList.get(1).elevatorsList.get(4).status = ElevatorStatus.DOWN; //Elevator B2 (column2 elevator3)
+//        battery1.columnsList.get(1).elevatorsList.get(4).status = ElevatorStatus.DOWN; //Elevator B2 (column2 elevator3)
+        battery1.columnsList.get(1).elevatorsList.get(4).moveElevator(1); //Elevator B2 (column2 elevator3)
         battery1.columnsList.get(1).elevatorsList.forEach(System.out::println);
         System.out.println();
-        System.out.println("Person 1: (elevator 5 from column 2 is expected)"); //elevator expected
-        battery1.columnsList.get(1).requestElevator(3, Direction.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
-        battery1.columnsList.get(1).elevatorsList.get(4).requestFloor(7); //parameters (requestedFloor)
-        System.out.println("----------------------------------");
+        System.out.println("Person 1: (elevator B5 is expected)"); //elevator expected
+        battery1.columnsList.get(1).requestElevator(1, Direction.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
+        battery1.columnsList.get(1).elevatorsList.get(4).requestFloor(20); //parameters (requestedFloor)
         System.out.println("==================================");
     }
 
