@@ -179,7 +179,7 @@ class Column {
     /* ******* CREATE A LIST OF ELEVATORS FOR THE COLUMN ******* */
     public void createElevatorsList() {
         for (int i = 1; i <= this.numberOfElevatorsPerColumn; i++) {
-            this.elevatorsList.add(new Elevator(i, this.numberServedFloors, 1, ElevatorStatus.IDLE, SensorStatus.OFF, SensorStatus.OFF));
+            this.elevatorsList.add(new Elevator(i, this.numberServedFloors, 1, ElevatorStatus.IDLE, SensorStatus.OFF, SensorStatus.OFF, this));
         }
     }
 
@@ -213,9 +213,9 @@ class Column {
         LocalTime eveningPeakEnd = LocalTime.of(19, 0);
         elevatorsList.forEach(elevator -> {
             if (LocalTime.now().isAfter(morningPeakStart) && LocalTime.now().isBefore(morningPeakEnd)) {
-                elevator.moveElevator(1, this);
+                elevator.moveElevator(1);
             } else if (LocalTime.now().isAfter(eveningPeakStart) && LocalTime.now().isBefore(eveningPeakEnd)) {
-                elevator.moveElevator(this.maxFloor, this);
+                elevator.moveElevator(this.maxFloor);
             }
         });
     }
@@ -281,7 +281,7 @@ class Column {
         });
         Elevator bestElevator = this.findElevator(requestedFloor, direction);
         bestElevator.addFloorToFloorList(requestedFloor);
-        bestElevator.moveElevator(requestedFloor, this);
+        bestElevator.moveElevator(requestedFloor);
     }
 }
 
@@ -290,11 +290,12 @@ class Column {
 //---------------------------------------------------------------------------------------------------------------------------------
 class Elevator {
     int id;
-    int numberOfFloors;
+    int numberServedFloors;
     int floor;
     ElevatorStatus status;
     SensorStatus weightSensorStatus;
     SensorStatus obstructionSensorStatus;
+    Column column;
     Door elevatorDoor;
     Display elevatorDisplay;
     List<Door> floorDoorsList;
@@ -303,13 +304,14 @@ class Elevator {
     List<Integer> floorList;
 
     //----------------- Constructor and its attributes -----------------//
-    public Elevator(int id, int numberOfFloors, int floor, ElevatorStatus elevatorStatus, SensorStatus weightSensorStatus, SensorStatus obstructionSensorStatus) {
+    public Elevator(int id, int numberServedFloors, int floor, ElevatorStatus elevatorStatus, SensorStatus weightSensorStatus, SensorStatus obstructionSensorStatus, Column column) {
         this.id = id;
-        this.numberOfFloors = numberOfFloors;
+        this.numberServedFloors = numberServedFloors;
         this.floor = floor;
         this.status = elevatorStatus;
         this.weightSensorStatus = weightSensorStatus;
         this.obstructionSensorStatus = obstructionSensorStatus;
+        this.column = column;
         this.elevatorDoor = new Door(0, DoorStatus.CLOSED, 0);
         this.elevatorDisplay = new Display(0, DisplayStatus.ON, 0);
         this.floorDoorsList = new ArrayList<>();
@@ -326,21 +328,23 @@ class Elevator {
     //----------------- Methods to create a list -----------------//
     /* ******* CREATE A LIST WITH A DOOR OF EACH FLOOR ******* */
     public void createFloorDoorsList() {
-        for (int i = 1; i <= this.numberOfFloors; i++) {
+//        ADD (INSTANTIATE Door WITH 1 AND "CLOSED") TO floorDoorsList    //Add the ground floor door to list of controled doors (floorDoorsList)
+        floorDoorsList.add(elevatorDoor);
+        for (int i = column.minFloor; i <= this.numberServedFloors; i++) {
             this.floorDoorsList.add(new Door(i, DoorStatus.CLOSED, i));
         }
     }
 
     /* ******* CREATE A LIST WITH A DISPLAY OF EACH FLOOR ******* */
     public void createDisplaysList() {
-        for (int i = 1; i <= this.numberOfFloors; i++) {
+        for (int i = column.minFloor; i <= this.numberServedFloors; i++) {
             this.floorDisplaysList.add(new Display(i, DisplayStatus.ON, i));
         }
     }
 
     /* ******* CREATE A LIST WITH A BUTTON OF EACH FLOOR ******* */
     public void createFloorButtonsList() {
-        for (int i = 1; i <= this.numberOfFloors; i++) {
+        for (int i = column.minFloor; i <= this.numberServedFloors; i++) {
             this.floorButtonsList.add(new Button(i, ButtonStatus.OFF, i));
         }
     }
@@ -348,7 +352,7 @@ class Elevator {
 
     //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO MOVE ELEVATOR ******* */
-    public void moveElevator(int requestedFloor, Column requestedColumn) {
+    public void moveElevator(int requestedFloor) {
         while (this.floorList.size() != 0) {
             if (this.status == ElevatorStatus.IDLE) {
                 if (this.floor < requestedFloor) {
@@ -356,23 +360,23 @@ class Elevator {
                 } else if (this.floor == requestedFloor) {
                     this.openDoors();
                     this.deleteFloorFromList(requestedFloor);
-                    requestedColumn.buttonsUpList.get(requestedFloor - 1).status = ButtonStatus.OFF;
-                    requestedColumn.buttonsDownList.get(requestedFloor - 1).status = ButtonStatus.OFF;
+                    this.column.buttonsUpList.get(requestedFloor - 1).status = ButtonStatus.OFF;
+                    this.column.buttonsDownList.get(requestedFloor - 1).status = ButtonStatus.OFF;
                     this.floorButtonsList.get(requestedFloor - 1).status = ButtonStatus.OFF;
                 } else {
                     this.status = ElevatorStatus.DOWN;
                 }
             }
             if (this.status == ElevatorStatus.UP) {
-                this.moveUp(requestedColumn);
+                this.moveUp();
             } else {
-                this.moveDown(requestedColumn);
+                this.moveDown();
             }
         }
     }
 
     /* ******* LOGIC TO MOVE UP ******* */
-    public void moveUp(Column requestedColumn) {
+    public void moveUp() {
         List<Integer> tempArray = new ArrayList<>(this.floorList);
         for (int i = this.floor; i < tempArray.get(tempArray.size() - 1); i++) {
             if (this.floorDoorsList.get(i).status == DoorStatus.OPENED || this.elevatorDoor.status == DoorStatus.OPENED) {
@@ -387,7 +391,7 @@ class Elevator {
             if (tempArray.contains(nextFloor)) {
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
-                requestedColumn.buttonsUpList.get(i - 1).status = ButtonStatus.OFF;
+                this.column.buttonsUpList.get(i - 1).status = ButtonStatus.OFF;
                 this.floorButtonsList.get(i).status = ButtonStatus.OFF;
             }
         }
@@ -401,7 +405,7 @@ class Elevator {
     }
 
     /* ******* LOGIC TO MOVE DOWN ******* */
-    public void moveDown(Column requestedColumn) {
+    public void moveDown() {
         List<Integer> tempArray = new ArrayList<>(this.floorList);
         for (int i = this.floor; i > tempArray.get(tempArray.size() - 1); i--) {
             if (this.floorDoorsList.get(i - 1).status == DoorStatus.OPENED || this.elevatorDoor.status == DoorStatus.OPENED) {
@@ -416,7 +420,7 @@ class Elevator {
             if (tempArray.contains(nextFloor)) {
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
-                requestedColumn.buttonsDownList.get(i - 2).status = ButtonStatus.OFF;
+                this.column.buttonsDownList.get(i - 2).status = ButtonStatus.OFF;
                 this.floorButtonsList.get(i - 1).status = ButtonStatus.OFF;
             }
         }
@@ -512,7 +516,7 @@ class Elevator {
         this.checkWeight(maxWeight);
         this.checkObstruction();
         this.addFloorToFloorList(requestedFloor);
-        this.moveElevator(requestedFloor, requestedColumn);
+        this.moveElevator(requestedFloor);
     }
 }
 
