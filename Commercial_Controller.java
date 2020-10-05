@@ -1,10 +1,11 @@
 /* *********************************************** **
- @Author			Cindy Okino
+ @Author		Cindy Okino
  @Website		https://github.com/cindyokino
  @Last Update	October 9, 2020
 
 
  SUMMARY:
+ 0- BATTERY CLASS
  1- COLUMN CLASS
     1a- Constructor and its attributes
     1b- Methods to create a list: createElevatorsList, createButtonsUpList, createButtonsDownList
@@ -25,46 +26,151 @@
  10- TESTING PROGRAM - CALL SCENARIOS
 
  CONTROLLED OBJECTS:
+ Battery: contains a list of N columns
  Columns: controls a list of N elevators
  Elevators: controls doors, buttons, displays
+
+ numberOfBasements                                                  //Use a negative number
+ numberOfFloors                                                     //Floors of the building excluding the number of basements
+ totalNumberOfFloors = numberOfFloors + Math.abs(numberOfBasements) //Transform the number of basements to a positive number
+ minBuildingFloor                                                   //Is equal to 1 OR equal the numberOfBasements if there is a basement
+ maxBuildingFloor = numberOfFloors                                  //Is the last floor of the building
+ maxWeight                                                          //Maximum weight an elevator can carry in KG
 
   ** ************************************************** */
 
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-//------------------------------------------- COLUMN CLASS -----------------------------------------------------------------------
+
+//------------------------------------------- BATTERY CLASS -----------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+class Battery {
+    int id;
+    int numberOfColumns;
+    int minimumFloor;
+    int maximumFloor;
+    int numberOfBasements;
+    double numberOfElevatorsPerColumn;
+    BatteryStatus status;
+    List<Column> columnsList;
+
+    //----------------- Constructor and its attributes -----------------//
+    public Battery(int id, int numberOfColumns, int minimumFloor, int maximumFloor, int numberOfBasements, int numberOfElevatorsPerColumn, BatteryStatus batteryStatus) {
+        this.id = id;
+        this.numberOfColumns = numberOfColumns;
+        this.minimumFloor = minimumFloor;
+        this.maximumFloor = maximumFloor;
+        this.numberOfBasements = numberOfBasements;
+        this.numberOfElevatorsPerColumn = numberOfElevatorsPerColumn;
+        this.status = batteryStatus;
+        this.columnsList = new ArrayList<>();
+
+        this.createColumnsList();
+
+        System.out.println("Created battery" + this.id);
+        System.out.println("Building minimun floor: " + this.minimumFloor);
+        System.out.println("Building maximum floor: " + this.maximumFloor);
+        System.out.println("Building basements: " + this.numberOfBasements);
+        System.out.println("Number of columns: " + this.numberOfColumns);
+        System.out.println("Number of elevators per column: " + this.numberOfElevatorsPerColumn);
+        System.out.println("----------------------------------");
+    }
+
+
+    //----------------- Methods to create a list -----------------//
+    /* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
+    public void createColumnsList() {
+        for (int i = 1; i <= this.numberOfColumns; i++) {
+            this.columnsList.add(new Column(i, ColumnStatus.IDLE, this.numberOfFloors, this.numberOfElevators)); //****************************************************************************************
+        }
+    }
+
+
+    //----------------- Methods for logic -----------------//
+    /* ******* LOGIC TO FIND THE FLOORS SERVED PER EACH COLUMN ******* */
+    public int calculateNumberOfFloorsPerColumn(int numberOfColumns, int numberOfFloors, int numberOfBasements, int maximumFloor) {
+        int numberOfFloorsPerColumn;
+        int totalNumberOfFloors = numberOfFloors + Math.abs(numberOfBasements);
+        int remainingFloors;
+        int numberServedFloors = 0;
+        if (numberOfBasements > 0) {
+            numberOfFloorsPerColumn = (numberOfFloors / (numberOfColumns - 1));
+            remainingFloors = numberOfFloors % (numberOfColumns - 1);
+        } else {
+            numberOfFloorsPerColumn = (numberOfFloors / numberOfColumns);
+            remainingFloors = numberOfFloors % numberOfColumns;
+        }
+
+        int minimumFloor = 1;
+        if (numberOfColumns == 1) { //if there is just one column, it serves all the floors of the building
+            numberServedFloors = totalNumberOfFloors;
+            this.minimumFloor = minimumFloor;
+            this.maximumFloor = totalNumberOfFloors;
+        } else {
+            for (int i = 0; i < columnsList.size(); i++) {
+                if (columnsList.get(i) != columnsList.get(0) || this.numberOfBasements == 0) {
+                    numberServedFloors = numberOfFloorsPerColumn;
+                    columnsList.get(i).minimumFloor = minimumFloor;
+                    columnsList.get(i).maximumFloor = (minimumFloor + numberOfFloorsPerColumn - 1);
+                }
+                minimumFloor = columnsList.get(i).maximumFloor + 1;
+            }
+            if (remainingFloors != 0) { //if the remainingFloors is not zero, then it adds the remaining floors to the last column
+                columnsList.get(columnsList.size() - 1).maximumFloor = maximumFloor + remainingFloors;
+                numberServedFloors = numberOfFloorsPerColumn + remainingFloors;
+            }
+            if (numberOfBasements > 0) { //if there is a basement, then the first column will serve the basements + RDC
+                columnsList.get(0).numberServedFloors = (Math.abs(numberOfBasements) + 1);
+//            SET minimumFloor OF first column OF columnsList TO numberOfBasements
+                columnsList.get(0).minimumFloor = numberOfBasements;
+//            SET maximumFloor OF first column OF columnsList TO 1
+                columnsList.get(0).maximumFloor = 1;
+            }
+        }
+        return numberServedFloors;
+    }
+}
+
+
+//------------------------------------------- COLUMN CLASS ------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 class Column {
     int id;
     ColumnStatus status;
-    int numberOfFloors;
-    int numberOfElevators;
+    int numberOfElevatorsPerColumn;
+    int minFloor;
+    int maxFloor;
+    int numberServedFloors;
     List<Elevator> elevatorsList;
     List<Button> buttonsUpList;
     List<Button> buttonsDownList;
 
     //----------------- Constructor and its attributes -----------------//
-    public Column(int id, ColumnStatus columnStatus, int numberOfFloors, int numberOfElevators) {
+    public Column(int id, ColumnStatus columnStatus, int numberOfElevatorsPerColumn, int minFloor, int maxFloor, int numberServedFloors, int numberOfBasements) {
         this.id = id;
         this.status = columnStatus;
-        this.numberOfFloors = numberOfFloors;
-        this.numberOfElevators = numberOfElevators;
+        this.numberOfElevatorsPerColumn = numberOfElevatorsPerColumn;
+        this.minFloor = minFloor;
+        this.maxFloor = maxFloor;
+        this.numberServedFloors = numberServedFloors;
         this.elevatorsList = new ArrayList<>();
         this.buttonsUpList = new ArrayList<>();
         this.buttonsDownList = new ArrayList<>();
 
         this.createElevatorsList();
         this.createButtonsUpList();
-        this.createButtonsDownList();
+        this.createButtonsDownList(numberOfBasements);
 
         System.out.println("Created column" + this.id);
-        System.out.println("Number of floors:" + this.numberOfFloors);
-        System.out.println("Number of elevators:" + this.numberOfElevators);
+        System.out.println("Number of served floors:" + this.numberServedFloors);
+        System.out.println("Min floor:" + this.minFloor);
+        System.out.println("Max floor:" + this.maxFloor);
         System.out.println("----------------------------------");
     }
 
@@ -72,27 +178,48 @@ class Column {
     //----------------- Methods to create a list -----------------//
     /* ******* CREATE A LIST OF ELEVATORS FOR THE COLUMN ******* */
     public void createElevatorsList() {
-        for (int i = 1; i <= this.numberOfElevators; i++) {
-            this.elevatorsList.add(new Elevator(i, this.numberOfFloors, 1, ElevatorStatus.IDLE, SensorStatus.OFF, SensorStatus.OFF));
+        for (int i = 1; i <= this.numberOfElevatorsPerColumn; i++) {
+            this.elevatorsList.add(new Elevator(i, this.numberServedFloors, 1, ElevatorStatus.IDLE, SensorStatus.OFF, SensorStatus.OFF));
         }
     }
 
     /* ******* CREATE A LIST WITH UP BUTTONS FROM THE FIRST FLOOR TO THE LAST LAST BUT ONE FLOOR ******* */
     public void createButtonsUpList() {
-        for (int i = 1; i < this.numberOfFloors; i++) {
+        for (int i = minFloor; i < this.numberServedFloors; i++) {
             this.buttonsUpList.add(new Button(i, ButtonStatus.OFF, i));
         }
     }
 
     /* ******* CREATE A LIST WITH DOWN BUTTONS FROM THE SECOND FLOOR TO THE LAST FLOOR ******* */
-    public void createButtonsDownList() {
-        for (int i = 2; i <= this.numberOfFloors; i++) {
+    public void createButtonsDownList(int numberOfBasements) {
+        int minBuildingFloor;
+        if (numberOfBasements > 0) {
+            minBuildingFloor = (numberOfBasements * -1);
+        } else {
+            minBuildingFloor = 1;
+        }
+        for (int i = (minBuildingFloor + 1); i <= this.numberServedFloors; i++) {
             this.buttonsDownList.add(new Button(i, ButtonStatus.OFF, i));
         }
     }
 
 
     //----------------- Methods for logic -----------------//
+    /* ******* LOGIC TO OPTIMIZE THE ELEVATORS DISPLACEMENTS ******* */
+    public void optimizeDisplacement(List<Elevator> elevatorsList) {
+        LocalTime morningPeakStart = LocalTime.of(6, 0);
+        LocalTime morningPeakEnd = LocalTime.of(10, 0);
+        LocalTime eveningPeakStart = LocalTime.of(16, 0);
+        LocalTime eveningPeakEnd = LocalTime.of(19, 0);
+        elevatorsList.forEach(elevator -> {
+            if (LocalTime.now().isAfter(morningPeakStart) && LocalTime.now().isBefore(morningPeakEnd)) {
+                elevator.moveElevator(1, this);
+            } else if (LocalTime.now().isAfter(eveningPeakStart) && LocalTime.now().isBefore(eveningPeakEnd)) {
+                elevator.moveElevator(this.maxFloor, this);
+            }
+        });
+    }
+
     /* ******* LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ******* */
     public Elevator findElevator(int currentFloor, Direction direction) {
         Elevator bestElevator;
@@ -101,7 +228,7 @@ class Column {
         List<Elevator> sameDirectionElevatorList = new ArrayList<>();
         this.elevatorsList.forEach(elevator -> {
             if (elevator.status != ElevatorStatus.IDLE) {
-                //verify if the request is on the elevator way
+                //Verify if the request is on the elevators way, otherwise the elevator will just continue its way ignoring this call
                 if (elevator.status == ElevatorStatus.UP && elevator.floor <= currentFloor || elevator.status == ElevatorStatus.DOWN && elevator.floor >= currentFloor) {
                     activeElevatorList.add(elevator);
                 }
@@ -142,7 +269,7 @@ class Column {
     //----------------- Entry method -----------------//
     /* ******* ENTRY METHOD ******* */
     /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
-    public void requestElevator(int requestedFloor, Direction direction, int waitingTime) {
+    public void requestElevator(int requestedFloor, Direction direction) {
         if (direction == Direction.UP) {
             this.buttonsUpList.get(requestedFloor - 1).status = ButtonStatus.ON;
         } else {
@@ -154,12 +281,12 @@ class Column {
         });
         Elevator bestElevator = this.findElevator(requestedFloor, direction);
         bestElevator.addFloorToFloorList(requestedFloor);
-        bestElevator.moveElevator(requestedFloor, this, waitingTime);
+        bestElevator.moveElevator(requestedFloor, this);
     }
 }
 
 
-//------------------------------------------- ELEVATOR CLASS -----------------------------------------------------------------------
+//------------------------------------------- ELEVATOR CLASS ----------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 class Elevator {
     int id;
@@ -221,13 +348,13 @@ class Elevator {
 
     //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO MOVE ELEVATOR ******* */
-    public void moveElevator(int requestedFloor, Column requestedColumn, int waitingTime) {
+    public void moveElevator(int requestedFloor, Column requestedColumn) {
         while (this.floorList.size() != 0) {
             if (this.status == ElevatorStatus.IDLE) {
                 if (this.floor < requestedFloor) {
                     this.status = ElevatorStatus.UP;
                 } else if (this.floor == requestedFloor) {
-                    this.openDoors(waitingTime);
+                    this.openDoors();
                     this.deleteFloorFromList(requestedFloor);
                     requestedColumn.buttonsUpList.get(requestedFloor - 1).status = ButtonStatus.OFF;
                     requestedColumn.buttonsDownList.get(requestedFloor - 1).status = ButtonStatus.OFF;
@@ -237,15 +364,15 @@ class Elevator {
                 }
             }
             if (this.status == ElevatorStatus.UP) {
-                this.moveUp(requestedColumn, waitingTime);
+                this.moveUp(requestedColumn);
             } else {
-                this.moveDown(requestedColumn, waitingTime);
+                this.moveDown(requestedColumn);
             }
         }
     }
 
     /* ******* LOGIC TO MOVE UP ******* */
-    public void moveUp(Column requestedColumn, int waitingTime) {
+    public void moveUp(Column requestedColumn) {
         List<Integer> tempArray = new ArrayList<>(this.floorList);
         for (int i = this.floor; i < tempArray.get(tempArray.size() - 1); i++) {
             if (this.floorDoorsList.get(i).status == DoorStatus.OPENED || this.elevatorDoor.status == DoorStatus.OPENED) {
@@ -258,7 +385,7 @@ class Elevator {
             this.updateDisplays(this.floor);
 
             if (tempArray.contains(nextFloor)) {
-                this.openDoors(waitingTime);
+                this.openDoors();
                 this.deleteFloorFromList(nextFloor);
                 requestedColumn.buttonsUpList.get(i - 1).status = ButtonStatus.OFF;
                 this.floorButtonsList.get(i).status = ButtonStatus.OFF;
@@ -274,7 +401,7 @@ class Elevator {
     }
 
     /* ******* LOGIC TO MOVE DOWN ******* */
-    public void moveDown(Column requestedColumn, int waitingTime) {
+    public void moveDown(Column requestedColumn) {
         List<Integer> tempArray = new ArrayList<>(this.floorList);
         for (int i = this.floor; i > tempArray.get(tempArray.size() - 1); i--) {
             if (this.floorDoorsList.get(i - 1).status == DoorStatus.OPENED || this.elevatorDoor.status == DoorStatus.OPENED) {
@@ -287,7 +414,7 @@ class Elevator {
             this.updateDisplays(this.floor);
 
             if (tempArray.contains(nextFloor)) {
-                this.openDoors(waitingTime);
+                this.openDoors();
                 this.deleteFloorFromList(nextFloor);
                 requestedColumn.buttonsDownList.get(i - 2).status = ButtonStatus.OFF;
                 this.floorButtonsList.get(i - 1).status = ButtonStatus.OFF;
@@ -311,13 +438,13 @@ class Elevator {
     }
 
     /* ******* LOGIC TO OPEN DOORS ******* */
-    public void openDoors(int waitingTime) {
+    public void openDoors() {
         System.out.println("       Opening doors...");
         System.out.println("       Elevator" + this.id + " doors are opened");
         this.elevatorDoor.status = DoorStatus.OPENED;
         this.floorDoorsList.get(this.floor - 1).status = DoorStatus.OPENED;
         try {
-            Thread.sleep(waitingTime);
+            Thread.sleep(1000); //How many time the door remains opened in MILLISECONDS
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -326,7 +453,7 @@ class Elevator {
 
     /* ******* LOGIC TO CLOSE DOORS ******* */
     public void closeDoors() {
-        if (this.weightSensorStatus == SensorStatus.OFF && this.obstructionSensorStatus  == SensorStatus.OFF) {
+        if (this.weightSensorStatus == SensorStatus.OFF && this.obstructionSensorStatus == SensorStatus.OFF) {
             System.out.println("       Closing doors...");
             System.out.println("       Elevator" + this.id + " doors are closed");
             this.floorDoorsList.get(this.floor - 1).status = DoorStatus.CLOSED;
@@ -343,7 +470,7 @@ class Elevator {
             System.out.println("       ! Elevator capacity reached, waiting until the weight is lower before continue...");
             randomWeight -= 100; //I'm supposing the random number is 600, I'll subtract 101 so it will be less than 500 (the max weight I proposed) for the second time it runs
         }
-        this.weightSensorStatus= SensorStatus.OFF;
+        this.weightSensorStatus = SensorStatus.OFF;
         System.out.println("       Elevator capacity is OK");
     }
 
@@ -353,11 +480,11 @@ class Elevator {
         Random random = new Random();
         int number = random.nextInt(100); //This random simulates the probability of an obstruction (I supposed 30% of chance something is blocking the door)
         while (number > probabilityNotBlocked) {
-            this.obstructionSensorStatus= SensorStatus.ON;
+            this.obstructionSensorStatus = SensorStatus.ON;
             System.out.println("       ! Elevator door is blocked by something, waiting until door is free before continue...");
             number -= 30; //I'm supposing the random number is 100, I'll subtract 30 so it will be less than 70 (30% probability), so the second time it runs theres no one blocking the door
         }
-        this.obstructionSensorStatus= SensorStatus.OFF;
+        this.obstructionSensorStatus = SensorStatus.OFF;
         System.out.println("       Elevator door is FREE");
     }
 
@@ -379,18 +506,18 @@ class Elevator {
     //----------------- Entry method -----------------//
     /* ******* ENTRY METHOD ******* */
     /* ******* REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR ******* */
-    public void requestFloor(int requestedFloor, Column requestedColumn, int maxWeight, int waitingTime) {
+    public void requestFloor(int requestedFloor, Column requestedColumn, int maxWeight) {
         System.out.println();
         System.out.println(" >> Someone inside the elevator" + this.id + " wants to go to floor <" + requestedFloor + "> <<");
         this.checkWeight(maxWeight);
         this.checkObstruction();
         this.addFloorToFloorList(requestedFloor);
-        this.moveElevator(requestedFloor, requestedColumn, waitingTime);
+        this.moveElevator(requestedFloor, requestedColumn);
     }
 }
 
 
-//------------------------------------------- DOOR CLASS -----------------------------------------------------------------------
+//------------------------------------------- DOOR CLASS --------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 class Door {
     int id;
@@ -405,7 +532,7 @@ class Door {
 }
 
 
-//------------------------------------------- BUTTON CLASS -----------------------------------------------------------------------
+//------------------------------------------- BUTTON CLASS ------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 class Button {
     int id;
@@ -435,7 +562,7 @@ class Display {
 }
 
 
-//------------------------------------------- ENUMS -----------------------------------------------------------------------
+//------------------------------------------- ENUMS -------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 /* ******* COLUMN STATUS ******* */
 enum ColumnStatus {
@@ -482,11 +609,11 @@ enum Direction {
 
 
 public class Commercial_Controller {
-    //------------------------------------------- TESTING PROGRAM - SCENARIOS ----------------------------------------------------------
+    //------------------------------------------- TESTING PROGRAM - SCENARIOS ---------------------------------------------------------
     //---------------------------------------------------------------------------------------------------------------------------------
 
     /* ******* CREATE SCENARIO 1 ******* */
-    public static void scenario1 (int waitingTime, int maxWeight) {
+    public static void scenario1(int maxWeight) {
         System.out.println();
         System.out.println("****************************** SCENARIO 1: ******************************");
         Column columnScenario1 = new Column(1, ColumnStatus.ACTIVE, 10, 2); //parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
@@ -495,13 +622,13 @@ public class Commercial_Controller {
 
         System.out.println();
         System.out.println("Person 1: (elevator 1 is expected)"); //elevator expected
-        columnScenario1.requestElevator(3, Direction.UP, waitingTime); //parameters (requestedFloor, buttonDirection.UP/DOWN)
-        columnScenario1.elevatorsList.get(0).requestFloor(7, columnScenario1, maxWeight,waitingTime); //parameters (requestedFloor, requestedColumn, maxWeight)
+        columnScenario1.requestElevator(3, Direction.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
+        columnScenario1.elevatorsList.get(0).requestFloor(7, columnScenario1, maxWeight); //parameters (requestedFloor, requestedColumn, maxWeight)
         System.out.println("==================================");
     }
 
     /* ******* CREATE SCENARIO 2 ******* */
-    public static void scenario2 (int waitingTime, int maxWeight) {
+    public static void scenario2(int maxWeight) {
         System.out.println();
         System.out.println("****************************** SCENARIO 2: ******************************");
         Column columnScenario2 = new Column(1, ColumnStatus.ACTIVE, 10, 2);
@@ -510,23 +637,23 @@ public class Commercial_Controller {
 
         System.out.println();
         System.out.println("Person 1: (elevator 2 is expected)");
-        columnScenario2.requestElevator(1, Direction.UP, waitingTime);
-        columnScenario2.elevatorsList.get(1).requestFloor(6, columnScenario2, maxWeight, waitingTime);
+        columnScenario2.requestElevator(1, Direction.UP);
+        columnScenario2.elevatorsList.get(1).requestFloor(6, columnScenario2, maxWeight);
         System.out.println("----------------------------------");
         System.out.println();
         System.out.println("Person 2: (elevator 2 is expected)");
-        columnScenario2.requestElevator(3, Direction.UP, waitingTime);
-        columnScenario2.elevatorsList.get(1).requestFloor(5, columnScenario2, maxWeight, waitingTime);
+        columnScenario2.requestElevator(3, Direction.UP);
+        columnScenario2.elevatorsList.get(1).requestFloor(5, columnScenario2, maxWeight);
         System.out.println("----------------------------------");
         System.out.println();
         System.out.println("Person 3: (elevator 1 is expected)");
-        columnScenario2.requestElevator(9, Direction.DOWN, waitingTime);
-        columnScenario2.elevatorsList.get(0).requestFloor(2, columnScenario2, maxWeight,waitingTime);
+        columnScenario2.requestElevator(9, Direction.DOWN);
+        columnScenario2.elevatorsList.get(0).requestFloor(2, columnScenario2, maxWeight);
         System.out.println("==================================");
     }
 
     /* ******* CREATE SCENARIO 3 ******* */
-    public static void scenario3 (int waitingTime, int maxWeight) {
+    public static void scenario3(int maxWeight) {
         System.out.println();
         System.out.println("****************************** SCENARIO 3: ******************************");
         Column columnScenario3 = new Column(1, ColumnStatus.ACTIVE, 10, 2);
@@ -536,8 +663,8 @@ public class Commercial_Controller {
 
         System.out.println();
         System.out.println("Person 1: (elevator 1 is expected)");
-        columnScenario3.requestElevator(3, Direction.DOWN,waitingTime);
-        columnScenario3.elevatorsList.get(0).requestFloor(2, columnScenario3, maxWeight,waitingTime);
+        columnScenario3.requestElevator(3, Direction.DOWN);
+        columnScenario3.elevatorsList.get(0).requestFloor(2, columnScenario3, maxWeight);
         System.out.println("----------------------------------");
         System.out.println();
 
@@ -546,13 +673,13 @@ public class Commercial_Controller {
         columnScenario3.elevatorsList.get(1).status = ElevatorStatus.IDLE;
 
         System.out.println("Person 2: (elevator 2 is expected)");
-        columnScenario3.requestElevator(10, Direction.DOWN, waitingTime);
-        columnScenario3.elevatorsList.get(1).requestFloor(3, columnScenario3, maxWeight, waitingTime);
+        columnScenario3.requestElevator(10, Direction.DOWN);
+        columnScenario3.elevatorsList.get(1).requestFloor(3, columnScenario3, maxWeight);
         System.out.println("==================================");
     }
 
 
-    //------------------------------------------- TEST YOUR SCENARIO ---------------------------------------------------------------------
+    //------------------------------------------- TEST YOUR SCENARIO ------------------------------------------------------------------
     //---------------------------------------------------------------------------------------------------------------------------------
     //  Instruction for your test:
     // 1- Uncomment the scenarioX() function
@@ -562,7 +689,7 @@ public class Commercial_Controller {
     //    Then it will generate a new file and you can run called Residential_Controller.class and now you can run the program by typing: java Residential_Controller
     //    Or you can just run the program using an IDE (integrated development environment) like IntelliJ IDEA, Eclipse, NetBeans, etc
 
-//    public static void scenarioX (int waitingTime, int maxWeight) {
+//    public static void scenarioX (int maxWeight) {
 //        System.out.println();
 //        System.out.println("****************************** SCENARIO X: ******************************");
 //        Column columnX = new Column(X, ColumnStatus.X, X, X); //set parameters (id, ColumnStatus.ACTIVE/INACTIVE, numberOfFloors, numberOfElevators)
@@ -572,8 +699,8 @@ public class Commercial_Controller {
 //
 //        System.out.println();
 //        System.out.println("Person X: (elevator X is expected)"); //elevator expected
-//        columnX.requestElevator(X, Direction.X, waitingTime); //set parameters (requestedFloor, Direction.UP/DOWN)
-//        columnX.elevatorsList.get(X).requestFloor(X, columnX, maxWeight, waitingTime); //choose elevator by index and set parameters (requestedFloor, requestedColumn, maxWeight)
+//        columnX.requestElevator(X, Direction.X); //set parameters (requestedFloor, Direction.UP/DOWN)
+//        columnX.elevatorsList.get(X).requestFloor(X, columnX, maxWeight); //choose elevator by index and set parameters (requestedFloor, requestedColumn, maxWeight)
 //        System.out.println("==================================");
 //    }
 
@@ -581,18 +708,24 @@ public class Commercial_Controller {
     public static void main(String[] args) {
         //------------------------------------------- GLOBAL VARIABLES ---------------------------------------------------------------------
         //----------------------------------------------------------------------------------------------------------------------------------
-        int maxWeight = 500;     //Maximum weight an elevator can carry in KG
-        int waitingTime = 1;     // How many time the door remains opened in SECONDS
+        int numberOfElevatorsPerColumn;
+        int numberOfColumns;
+        int numberOfBasements;                                                  //Use a negative number
+        int numberOfFloors;                                                     //Floors of the building excluding the number of basements
+        int totalNumberOfFloors = numberOfFloors + Math.abs(numberOfBasements); //Transform the number of basements to a positive number
+        int minBuildingFloor;                                                   //Is equal to 1 OR equal the numberOfBasements if there is a basement
+        int maxBuildingFloor = numberOfFloors;                                  //Is the last floor of the building
+        int maxWeight = 500;                                                    //Maximum weight an elevator can carry in KG
 
 
-        //------------------------------------------- TESTING PROGRAM - CALL SCENARIOS ---------------------------------------------------------------------
+        //------------------------------------------- TESTING PROGRAM - CALL SCENARIOS -----------------------------------------------------
         //----------------------------------------------------------------------------------------------------------------------------------
         /* ******* CALL SCENARIOS ******* */
-        scenario1(waitingTime, maxWeight);
-        scenario2(waitingTime, maxWeight);
-        scenario3(waitingTime, maxWeight);
+        scenario1(maxWeight);
+        scenario2(maxWeight);
+        scenario3(maxWeight);
 
         /* ******* CALL YOUR SCENARIO ******* */
-        // scenarioX(waitingTime, maxWeight)
+        // scenarioX(maxWeight)
     }
 }
