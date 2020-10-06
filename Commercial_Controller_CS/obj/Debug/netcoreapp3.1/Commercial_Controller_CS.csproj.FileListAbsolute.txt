@@ -1,0 +1,13 @@
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\bin\Debug\netcoreapp3.1\Commercial_Controller_CS.exe
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\bin\Debug\netcoreapp3.1\Commercial_Controller_CS.deps.json
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\bin\Debug\netcoreapp3.1\Commercial_Controller_CS.runtimeconfig.json
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\bin\Debug\netcoreapp3.1\Commercial_Controller_CS.runtimeconfig.dev.json
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\bin\Debug\netcoreapp3.1\Commercial_Controller_CS.dll
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\bin\Debug\netcoreapp3.1\Commercial_Controller_CS.pdb
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\obj\Debug\netcoreapp3.1\Commercial_Controller_CS.csprojAssemblyReference.cache
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\obj\Debug\netcoreapp3.1\Commercial_Controller_CS.AssemblyInfoInputs.cache
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\obj\Debug\netcoreapp3.1\Commercial_Controller_CS.AssemblyInfo.cs
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\obj\Debug\netcoreapp3.1\Commercial_Controller_CS.csproj.CoreCompileInputs.cache
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\obj\Debug\netcoreapp3.1\Commercial_Controller_CS.dll
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\obj\Debug\netcoreapp3.1\Commercial_Controller_CS.pdb
+C:\Users\Cindy\Desktop\CodeBoxx Bootcamp\Odyssey\Week3 - Mechanics of Compiled Languages\Rocket_Elevators_Controllers\Commercial_Controller_CS\obj\Debug\netcoreapp3.1\Commercial_Controller_CS.genruntimeconfig.cache
