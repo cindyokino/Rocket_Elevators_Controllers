@@ -45,6 +45,7 @@
   
   
 using System;
+using System.Collections.Generic;
 
 namespace Commercial_Controller_CS
 {
@@ -52,6 +53,34 @@ namespace Commercial_Controller_CS
     //---------------------------------------------------------------------------------------------------------------------------------
     class Battery
     {
+        public int id;
+        public int numberOfColumns;
+        public int minBuildingFloor;                  //Is equal to 1 OR equal the numberOfBasements if there is a basement
+        public int maxBuildingFloor;                  //Is the last floor of the building
+        public int numberOfFloors;                    //Floors of the building excluding the number of basements
+        public int numberOfBasements;                 //Is a negative number
+        public int totalNumberOfFloors;               //numberOfFloors + Math.abs(numberOfBasements)
+        public int numberOfElevatorsPerColumn;
+        public int numberOfFloorsPerColumn;
+        public BatteryStatus status;
+        public List<Column> columnsList;
+
+        //----------------- Constructor and its attributes -----------------//
+        public Battery(int batteryId, int batteryNumberOfColumns, int batteryTotalNumberOfFloors, int batteryNumberOfBasements, int batteryNumberOfElevatorsPerColumn, BatteryStatus batteryStatus) 
+        {
+            id = batteryId;
+            numberOfColumns = batteryNumberOfColumns;
+            totalNumberOfFloors = batteryTotalNumberOfFloors;
+            numberOfBasements = batteryNumberOfBasements;
+            numberOfElevatorsPerColumn = batteryNumberOfElevatorsPerColumn;
+            status = batteryStatus;
+            columnsList = new List<Column>();
+            // numberOfFloorsPerColumn = calculateNumberOfFloorsPerColumn();
+            // createColumnsList();
+            // setColumnValues();
+            // createListsInsideColumns();
+        }
+        
 
         //----------------- Constructor and its attributes -----------------//
         //----------------- Method toString -----------------//
@@ -65,8 +94,35 @@ namespace Commercial_Controller_CS
     //---------------------------------------------------------------------------------------------------------------------------------
     class Column 
     {
+        public int id;
+        public char name;
+        public ColumnStatus status;
+        public int numberOfElevatorsPerColumn;
+        public int minFloor;
+        public int maxFloor;
+        public int numberServedFloors;
+        public int numberOfBasements;
+        public Battery battery;
+        public List<Elevator> elevatorsList;
+        public List<Button> buttonsUpList;
+        public List<Button> buttonsDownList;
 
         //----------------- Constructor and its attributes -----------------//
+        public Column(int columnId, char columnName, ColumnStatus columnStatus, int columnNumberOfElevators, int columnNumberServedFloors, int columnNumberOfBasements, Battery columnBattery) 
+        {
+            id = columnId;
+            name = columnName;
+            status = columnStatus;
+            numberOfElevatorsPerColumn = columnNumberOfElevators;
+            numberServedFloors = columnNumberServedFloors;
+            numberOfBasements = columnNumberOfBasements;
+            battery = columnBattery;
+            elevatorsList = new List<Elevator>();
+            buttonsUpList = new List<Button>();
+            buttonsDownList = new List<Button>();
+        }
+
+
         //----------------- Method toString -----------------//
         //----------------- Methods to create a list -----------------//
         //----------------- Methods for logic -----------------//
@@ -78,7 +134,42 @@ namespace Commercial_Controller_CS
     //---------------------------------------------------------------------------------------------------------------------------------
     class Elevator 
     {
+        public int id;
+        public int numberServedFloors;
+        public int floor;
+        public ElevatorStatus status;
+        public SensorStatus weightSensorStatus;
+        public SensorStatus obstructionSensorStatus;
+        public Column column;
+        public Door elevatorDoor;
+        public Display elevatorDisplay;
+        public List<Door> floorDoorsList;
+        public List<Display> floorDisplaysList;
+        public List<Button> floorButtonsList;
+        public List<int> floorList;    
+          
         //----------------- Constructor and its attributes -----------------//
+        public Elevator(int elevatorId, int elevatorNumberServedFloors, int elevatorFloor, ElevatorStatus elevatorStatus, SensorStatus weightStatus, SensorStatus obstructionStatus, Column elevatorColumn) 
+        {
+        id = elevatorId;
+        numberServedFloors = elevatorNumberServedFloors;
+        floor = elevatorFloor;
+        status = elevatorStatus;
+        weightSensorStatus = weightStatus;
+        obstructionSensorStatus = obstructionStatus;
+        column = elevatorColumn;
+        elevatorDoor = new Door(0, DoorStatus.CLOSED, 0);
+        elevatorDisplay = new Display(0, DisplayStatus.ON, 0);
+        floorDoorsList = new List<Door>();
+        floorDisplaysList = new List<Display>();
+        floorButtonsList = new List<Button>();
+        floorList = new List<int>();
+
+        // this.createFloorDoorsList();
+        // this.createDisplaysList();
+        // this.createFloorButtonsList();
+    }
+
         //----------------- Method toString -----------------//
         //----------------- Methods to create a list -----------------//
         //----------------- Methods for logic -----------------//
@@ -90,7 +181,16 @@ namespace Commercial_Controller_CS
     //---------------------------------------------------------------------------------------------------------------------------------
     class Door 
     {
+        public int id;
+        public DoorStatus status;
+        public int floor;
 
+        public Door(int doorId, DoorStatus doorStatus, int doorFloor) 
+        {
+            id = doorId;
+            status = doorStatus;
+            floor = doorFloor;
+        }
     }
 
 
@@ -98,7 +198,16 @@ namespace Commercial_Controller_CS
     //---------------------------------------------------------------------------------------------------------------------------------
     class Button 
     {
+        public int id;
+        public ButtonStatus status;
+        public int floor;
 
+        public Button(int buttonId, ButtonStatus buttonStatus, int buttonFloor) 
+        {
+            id = buttonId;
+            status = buttonStatus;
+            floor = buttonFloor;
+        }
     }
 
 
@@ -106,13 +215,22 @@ namespace Commercial_Controller_CS
     //---------------------------------------------------------------------------------------------------------------------------------
     class Display 
     {
+        public int id;
+        public DisplayStatus status;
+        public int floor;
 
+        public Display(int displayId, DisplayStatus displayStatus, int displayFloor) 
+        {
+            id = displayId;
+            status = displayStatus;
+            floor = displayFloor;
+        }
     }
 
 
     //------------------------------------------- ENUMS -------------------------------------------------------------------------------
     //---------------------------------------------------------------------------------------------------------------------------------
-    /* ******* COLUMN STATUS ******* */
+    /* ******* BATTERY STATUS ******* */
     enum BatteryStatus 
     {
         ACTIVE,
