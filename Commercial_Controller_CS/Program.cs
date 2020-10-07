@@ -45,6 +45,7 @@
 
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace Commercial_Controller_CS
@@ -92,37 +93,42 @@ namespace Commercial_Controller_CS
 
         //----------------- Methods to create a list -----------------//
         /* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
-        public void createColumnsList() 
+        public void createColumnsList()
         {
             char name = 'A';
-            for (int i = 1; i <= this.numberOfColumns; i++) {
-                this.columnsList.Add(new Column(i, name, ColumnStatus.ACTIVE, this.numberOfElevatorsPerColumn, numberOfFloorsPerColumn, numberOfBasements, this)); 
+            for (int i = 1; i <= this.numberOfColumns; i++)
+            {
+                this.columnsList.Add(new Column(i, name, ColumnStatus.ACTIVE, this.numberOfElevatorsPerColumn, numberOfFloorsPerColumn, numberOfBasements, this));
                 System.Console.WriteLine("column" + name + " created!!!");
                 name = Convert.ToChar(name + 1);
             }
         }
 
         /* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
-        public void createListsInsideColumns() 
+        public void createListsInsideColumns()
         {
             foreach (Column column in columnsList)
             {
                 column.createElevatorsList();
                 column.createButtonsUpList();
                 column.createButtonsDownList(numberOfBasements);
-            }            
+            }
         }
 
 
         //----------------- Methods for logic -----------------//
         /* ******* LOGIC TO FIND THE FLOORS SERVED PER EACH COLUMN ******* */
-        public int calculateNumberOfFloorsPerColumn() {
+        public int calculateNumberOfFloorsPerColumn()
+        {
             numberOfFloors = totalNumberOfFloors + numberOfBasements; //numberOfBasements is negative
             int numberOfFloorsPerColumn;
 
-            if (this.numberOfBasements > 0) { //if there is basement floors
+            if (this.numberOfBasements > 0)
+            { //if there is basement floors
                 numberOfFloorsPerColumn = (this.numberOfFloors / (this.numberOfColumns - 1)); //the first column serves the basement floors
-            } else { //there is no basement
+            }
+            else
+            { //there is no basement
                 numberOfFloorsPerColumn = (this.numberOfFloors / this.numberOfColumns);
             }
 
@@ -130,31 +136,45 @@ namespace Commercial_Controller_CS
         }
 
         /* ******* LOGIC TO FIND THE REMAINING FLOORS OF EACH COLUMN AND SET VALUES servedFloors, minFloors, maxFloors ******* */
-        public void setColumnValues() {
+        public void setColumnValues()
+        {
             int remainingFloors;
 
             //calculating the remaining floors
-            if (this.numberOfBasements > 0) { //if there are basement floors
+            if (this.numberOfBasements > 0)
+            { //if there are basement floors
                 remainingFloors = this.numberOfFloors % (this.numberOfColumns - 1);
-            } else { //there is no basement
+            }
+            else
+            { //there is no basement
                 remainingFloors = this.numberOfFloors % this.numberOfColumns;
             }
 
             //setting the minFloor and maxFloor of each column
             int minimumFloor = 1;
-            if (this.numberOfColumns == 1) { //if there is just one column, it serves all the floors of the building
+            if (this.numberOfColumns == 1)
+            { //if there is just one column, it serves all the floors of the building
                 this.columnsList[0].numberServedFloors = totalNumberOfFloors;
-                if (numberOfBasements > 0) { //if there is basement
+                if (numberOfBasements > 0)
+                { //if there is basement
                     this.columnsList[0].minFloor = numberOfBasements;
-                } else { //if there is NO basement
+                }
+                else
+                { //if there is NO basement
                     this.columnsList[0].minFloor = minimumFloor;
                     this.columnsList[0].maxFloor = numberOfFloors;
                 }
-            } else { //for more than 1 column
-                for (int i = 1; i < this.columnsList.Count; i++) { //if its not the first column (because the first column serves the basements)
-                    if (i == 1) {
+            }
+            else
+            { //for more than 1 column
+                for (int i = 1; i < this.columnsList.Count; i++)
+                { //if its not the first column (because the first column serves the basements)
+                    if (i == 1)
+                    {
                         this.columnsList[i].numberServedFloors = numberOfFloorsPerColumn;
-                    } else {
+                    }
+                    else
+                    {
                         this.columnsList[i].numberServedFloors = (numberOfFloorsPerColumn + 1); //Add 1 floor for the RDC/ground floor
                     }
                     this.columnsList[i].minFloor = minimumFloor;
@@ -163,12 +183,14 @@ namespace Commercial_Controller_CS
                 }
 
                 //adjusting the number of served floors of the columns if there are remaining floors
-                if (remainingFloors != 0) { //if the remainingFloors is not zero, then it adds the remaining floors to the last column
+                if (remainingFloors != 0)
+                { //if the remainingFloors is not zero, then it adds the remaining floors to the last column
                     this.columnsList[this.columnsList.Count - 1].maxFloor = this.columnsList[this.columnsList.Count - 1].minFloor + this.columnsList[this.columnsList.Count - 1].numberServedFloors;
                     this.columnsList[this.columnsList.Count - 1].numberServedFloors = numberOfFloorsPerColumn + remainingFloors;
                 }
                 //if there is a basement, then the first column will serve the basements + RDC
-                if (this.numberOfBasements > 0) {
+                if (this.numberOfBasements > 0)
+                {
                     this.columnsList[0].numberServedFloors = (this.numberOfBasements + 1); //+1 is the RDC
                     this.columnsList[0].minFloor = numberOfBasements; //the minFloor of basement is a negative number
                     this.columnsList[0].maxFloor = 1; //1 is the RDC
@@ -218,9 +240,172 @@ namespace Commercial_Controller_CS
         {
             return "column" + this.name + " | Served floors: " + this.numberServedFloors + " | Min floor: " + this.minFloor + " | Max floor: " + this.maxFloor;
         }
+
+
         //----------------- Methods to create a list -----------------//
+        /* ******* CREATE A LIST OF ELEVATORS FOR THE COLUMN ******* */
+        public void createElevatorsList()
+        {
+            for (int i = 1; i <= this.numberOfElevatorsPerColumn; i++)
+            {
+                this.elevatorsList.Add(new Elevator(i, this.numberServedFloors, 1, ElevatorStatus.IDLE, SensorStatus.OFF, SensorStatus.OFF, this));
+            }
+        }
+
+        /* ******* CREATE A LIST WITH UP BUTTONS FROM THE FIRST FLOOR TO THE LAST LAST BUT ONE FLOOR ******* */
+        public void createButtonsUpList()
+        {
+            buttonsUpList.Add(new Button(1, ButtonStatus.OFF, 1));
+            for (int i = minFloor; i < this.maxFloor; i++)
+            {
+                this.buttonsUpList.Add(new Button(i, ButtonStatus.OFF, i));
+            }
+        }
+
+        /* ******* CREATE A LIST WITH DOWN BUTTONS FROM THE SECOND FLOOR TO THE LAST FLOOR ******* */
+        public void createButtonsDownList(int numberOfBasements)
+        {
+            buttonsDownList.Add(new Button(1, ButtonStatus.OFF, 1));
+            int minBuildingFloor;
+            if (numberOfBasements > 0)
+            {
+                minBuildingFloor = numberOfBasements;
+            }
+            else
+            {
+                minBuildingFloor = 1;
+            }
+            for (int i = (minBuildingFloor + 1); i <= this.maxFloor; i++)
+            {
+                this.buttonsDownList.Add(new Button(i, ButtonStatus.OFF, i));
+            }
+        }
+
+
         //----------------- Methods for logic -----------------//
+        /* ******* LOGIC TO OPTIMIZE THE ELEVATORS DISPLACEMENTS ******* */
+        public void optimizeDisplacement(List<Elevator> elevatorsList)
+        {
+            DateTime dateNow = DateTime.Now;
+            DateTime morningPeakStart = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, 6, 0, 0);
+            DateTime morningPeakEnd = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, 10, 0, 0);
+            DateTime eveningPeakStart = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, 16, 0, 0);
+            DateTime eveningPeakEnd = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, 19, 0, 0);
+
+            elevatorsList.ForEach(elevator =>
+            {
+                if (DateTime.Now.TimeOfDay > (morningPeakStart.TimeOfDay) && DateTime.Now.TimeOfDay < (morningPeakEnd.TimeOfDay))
+                {
+                    System.Console.WriteLine("Between 6 and 10 am the elevator waits at floor 1 when status is IDLE");
+                    System.Console.WriteLine("Moving elevator to floor 1");
+                    elevator.moveElevator(1);
+                }
+                else if (DateTime.Now.TimeOfDay > (eveningPeakStart.TimeOfDay) && DateTime.Now.TimeOfDay < (eveningPeakEnd.TimeOfDay))
+                {
+                    System.Console.WriteLine("Between 4 and 7 pm the elevator waits at the last floor when status is IDLE");
+                    System.Console.WriteLine("Moving elevator to last floor of column");
+                    elevator.moveElevator(this.maxFloor);
+                }
+            });
+        }
+
+        /* ******* LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ******* */
+        public Elevator findElevator(int currentFloor, Direction direction)
+        {
+            Elevator bestElevator;
+            List<Elevator> activeElevatorList = new List<Elevator>();
+            List<Elevator> idleElevatorList = new List<Elevator>();
+            List<Elevator> sameDirectionElevatorList = new List<Elevator>();
+            this.elevatorsList.ForEach(elevator =>
+            {
+                if (elevator.status != ElevatorStatus.IDLE)
+                {
+                    //Verify if the request is on the elevators way, otherwise the elevator will just continue its way ignoring this call
+                    if (elevator.status == ElevatorStatus.UP && elevator.floor <= currentFloor || elevator.status == ElevatorStatus.DOWN && elevator.floor >= currentFloor)
+                    {
+                        activeElevatorList.Add(elevator);
+                    }
+                }
+                else
+                {
+                    idleElevatorList.Add(elevator);
+                }
+            });
+
+            if (activeElevatorList.Count > 0)
+            { //Create new list for elevators with same direction that the request
+                sameDirectionElevatorList = activeElevatorList.Where(elevator => elevator.status.ToString().Equals(direction.ToString())).ToList();
+            }
+
+            if (sameDirectionElevatorList.Count > 0)
+            {
+                bestElevator = this.findNearestElevator(currentFloor, sameDirectionElevatorList); // 1- Try to use an elevator that is moving and has the same direction
+            }
+            else if (idleElevatorList.Count > 0)
+            {
+                bestElevator = this.findNearestElevator(currentFloor, idleElevatorList); // 2- Try to use an elevator that is IDLE
+            }
+            else
+            {
+                bestElevator = this.findNearestElevator(currentFloor, activeElevatorList); // 3- As the last option, uses an elevator that is moving at the contrary direction
+            }
+
+            return bestElevator;
+        }
+
+        /* ******* LOGIC TO FIND THE NEAREST ELEVATOR ******* */
+        public Elevator findNearestElevator(int currentFloor, List<Elevator> selectedList)
+        {
+            Elevator bestElevator = selectedList[0];
+            int bestDistance = Math.Abs(selectedList[0].floor - currentFloor); //Math.abs() returns the absolute value of a number (always positive).
+            foreach (Elevator elevator in selectedList)
+            {
+                if (Math.Abs(elevator.floor - currentFloor) < bestDistance)
+                {
+                    bestElevator = elevator;
+                }
+            }
+            System.Console.WriteLine("\n-----------------------------------------------------");
+            System.Console.WriteLine("-----------------------------------------------------");
+            System.Console.WriteLine("   > > >> >>> ELEVATOR " + this.name + bestElevator.id + " WAS CALLED <<< << < <");
+
+            return bestElevator;
+        }
+
+
         //----------------- Entry method -----------------//
+        /* ******* ENTRY METHOD ******* */
+        /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
+        public void requestElevator(int requestedFloor, Direction direction)
+        { // User goes to the specific column and press a button outside the elevator requesting for an elevator
+            if (direction == Direction.UP)
+            {
+                //find the UP button by ID
+                // Optional<Button> currentButton = this.buttonsUpList.stream().filter(door => door.id == requestedFloor).findFirst();
+                Button currentButton = this.buttonsUpList.FirstOrDefault(door => door.id == requestedFloor);
+                if (currentButton != null)
+                {
+                    currentButton.status = ButtonStatus.ON;
+                }
+            }
+            else
+            {
+                //find the DOWN button by ID
+                Button currentButton = this.buttonsDownList.FirstOrDefault(door => door.id == requestedFloor);
+                if (currentButton != null)
+                {
+                    currentButton.status = ButtonStatus.ON;
+                }
+            }
+            //        System.Console.WriteLine(">> Someone request an elevator from floor <" + requestedFloor + "> and direction <" + direction + "> <<");
+            Elevator bestElevator = this.findElevator(requestedFloor, direction);
+            if (bestElevator.floor != requestedFloor)
+            {
+                bestElevator.addFloorToFloorList(requestedFloor);
+                bestElevator.moveElevator(requestedFloor);
+            }
+        }
+
     }
 
 

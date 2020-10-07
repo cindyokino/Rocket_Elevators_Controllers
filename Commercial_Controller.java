@@ -252,8 +252,12 @@ class Column {
         LocalTime eveningPeakEnd = LocalTime.of(19, 0);
         elevatorsList.forEach(elevator -> {
             if (LocalTime.now().isAfter(morningPeakStart) && LocalTime.now().isBefore(morningPeakEnd)) {
+                System.out.println("Between 6 and 10 am the elevator waits at floor 1 when status is IDLE");
+                System.out.println("Moving elevator to floor 1");
                 elevator.moveElevator(1);
             } else if (LocalTime.now().isAfter(eveningPeakStart) && LocalTime.now().isBefore(eveningPeakEnd)) {
+                System.out.println("Between 4 and 7 pm the elevator waits at the last floor when status is IDLE");
+                System.out.println("Moving elevator to last floor of column");
                 elevator.moveElevator(this.maxFloor);
             }
         });
@@ -281,11 +285,11 @@ class Column {
         }
 
         if (sameDirectionElevatorList.size() > 0) {
-            bestElevator = this.findNearestElevator(currentFloor, sameDirectionElevatorList);
+            bestElevator = this.findNearestElevator(currentFloor, sameDirectionElevatorList); // 1- Try to use an elevator that is moving and has the same direction
         } else if (idleElevatorList.size() > 0){
-            bestElevator = this.findNearestElevator(currentFloor, idleElevatorList);
+            bestElevator = this.findNearestElevator(currentFloor, idleElevatorList); // 2- Try to use an elevator that is IDLE
         } else {
-            bestElevator = this.findNearestElevator(currentFloor, activeElevatorList);
+            bestElevator = this.findNearestElevator(currentFloor, activeElevatorList); // 3- As the last option, uses an elevator that is moving at the contrary direction
         }
 
         return bestElevator;
