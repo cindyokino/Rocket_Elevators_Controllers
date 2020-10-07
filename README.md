@@ -34,3 +34,8 @@ Here are the steps if you want to run the code in each version of the elevator c
 * You can run the code with at the terminal of your preference by typing: **dotnet run**
 
     Note that you have to be in the script folder **Commercial_Controller_CS** for it to run correctly.
+        
+## 🏢Commercial Controller Go - Commercial_Controller.go
+* You can run the code with at the terminal of your preference by typing: **go run Commercial_Controller.go**
+
+    Note that you have to be in the script folder for it to run correctly.
