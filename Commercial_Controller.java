@@ -93,7 +93,7 @@ class Battery {
     public void createColumnsList() {
         char name = 'A';
         for (int i = 1; i <= this.numberOfColumns; i++) {
-            this.columnsList.add(new Column(i, name, ColumnStatus.ACTIVE, this.numberOfElevatorsPerColumn, numberOfFloorsPerColumn, numberOfBasements, this)); //****************************************************************************************
+            this.columnsList.add(new Column(i, name, ColumnStatus.ACTIVE, this.numberOfElevatorsPerColumn, numberOfFloorsPerColumn, numberOfBasements, this));
             name += 1;
         }
     }
@@ -122,7 +122,6 @@ class Battery {
 
         return numberOfFloorsPerColumn;
     }
-
 
     /* ******* LOGIC TO FIND THE REMAINING FLOORS OF EACH COLUMN AND SET VALUES servedFloors, minFloors, maxFloors ******* */
     public void setColumnValues() {
@@ -673,7 +672,7 @@ class Display {
 
 //------------------------------------------- ENUMS -------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
-/* ******* COLUMN STATUS ******* */
+/* ******* BATTERY STATUS ******* */
 enum BatteryStatus {
     ACTIVE,
     INACTIVE
