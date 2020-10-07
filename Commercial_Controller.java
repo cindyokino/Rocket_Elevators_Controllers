@@ -137,13 +137,7 @@ class Battery {
         //setting the minFloor and maxFloor of each column
         int minimumFloor = 1;
         if (this.numberOfColumns == 1) { //if there is just one column, it serves all the floors of the building
-            this.columnsList.get(0).numberServedFloors = totalNumberOfFloors;
-            if (numberOfBasements > 0) { //if there is basement
-                this.columnsList.get(0).minFloor = numberOfBasements;
-            } else { //if there is NO basement
-                this.columnsList.get(0).minFloor = minimumFloor;
-                this.columnsList.get(0).maxFloor = numberOfFloors;
-            }
+            initializeUniqueColumnFloors();
         } else { //for more than 1 column
             for (int i = 1; i < this.columnsList.size(); i++) { //if its not the first column (because the first column serves the basements)
                 if (i == 1) {
@@ -167,6 +161,17 @@ class Battery {
                 this.columnsList.get(0).minFloor = numberOfBasements; //the minFloor of basement is a negative number
                 this.columnsList.get(0).maxFloor = 1; //1 is the RDC
             }
+        }
+    }
+
+    /* ******* LOGIC TO SET THE minFloor AND maxFloor IF THERE IS JUST ONE COLUMN ******* */
+    public void initializeUniqueColumnFloors() {
+        this.columnsList.get(0).numberServedFloors = totalNumberOfFloors;
+        if (numberOfBasements > 0) { //if there is basement
+            this.columnsList.get(0).minFloor = numberOfBasements;
+        } else { //if there is NO basement
+            this.columnsList.get(0).minFloor = minimumFloor;
+            this.columnsList.get(0).maxFloor = numberOfFloors;
         }
     }
 
@@ -312,11 +317,8 @@ class Column {
         return bestElevator;
     }
 
-
-    //----------------- Entry method -----------------//
-    /* ******* ENTRY METHOD ******* */
-    /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
-    public void requestElevator(int requestedFloor, Direction direction) { // User goes to the specific column and press a button outside the elevator requesting for an elevator
+    /* ******* LOGIC TO FIND THE NEAREST ELEVATOR ******* */
+    public void manageButtonStatus(int requestedFloor, Direction direction) {
         if (direction == Direction.UP) {
             //find the UP button by ID
             Optional<Button> currentButton = this.buttonsUpList.stream().filter(door -> door.id == requestedFloor).findFirst();
@@ -330,6 +332,14 @@ class Column {
                 currentButton.get().status = ButtonStatus.ON;
             }
         }
+    }
+
+
+    //----------------- Entry method -----------------//
+    /* ******* ENTRY METHOD ******* */
+    /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
+    public void requestElevator(int requestedFloor, Direction direction) { // User goes to the specific column and press a button outside the elevator requesting for an elevator
+        manageButtonStatus(requestedFloor, direction); //turn ON the good button
 //        System.out.println(">> Someone request an elevator from floor <" + requestedFloor + "> and direction <" + direction + "> <<");
         Elevator bestElevator = this.findElevator(requestedFloor, direction);
         if (bestElevator.floor != requestedFloor) {
