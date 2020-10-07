@@ -9,12 +9,12 @@
     0a- Constructor and its attributes
     0b- Method toString
     0c- Methods to create a list: createColumnsList, createListsInsideColumns
-    0d- Methods for logic: calculateNumberOfFloorsPerColumn, setColumnValues
+    0d- Methods for logic: calculateNumberOfFloorsPerColumn, setColumnValues, initializeBasementColumnFloors, initializeMultiColumnFloors, initializeUniqueColumnFloors
  1- COLUMN CLASS
     1a- Constructor and its attributes
     1b- Method toString
     1c- Methods to create a list: createElevatorsList, createButtonsUpList, createButtonsDownList
-    1d- Methods for logic: optimizeDisplacement, findElevator, findNearestElevator
+    1d- Methods for logic: optimizeDisplacement, findElevator, findNearestElevator, manageButtonStatus
     1e- Entry method: requestElevator
  2- ELEVATOR CLASS
     2a- Constructor and its attributes
@@ -130,25 +130,15 @@ class Battery {
         //calculating the remaining floors
         if (this.numberOfBasements > 0) { //if there are basement floors
             remainingFloors = this.numberOfFloors % (this.numberOfColumns - 1);
-        } else { //there is no basement
+        } else { //if there is no basement
             remainingFloors = this.numberOfFloors % this.numberOfColumns;
         }
 
         //setting the minFloor and maxFloor of each column
-        int minimumFloor = 1;
         if (this.numberOfColumns == 1) { //if there is just one column, it serves all the floors of the building
             initializeUniqueColumnFloors();
         } else { //for more than 1 column
-            for (int i = 1; i < this.columnsList.size(); i++) { //if its not the first column (because the first column serves the basements)
-                if (i == 1) {
-                    this.columnsList.get(i).numberServedFloors = numberOfFloorsPerColumn;
-                } else {
-                    this.columnsList.get(i).numberServedFloors = (numberOfFloorsPerColumn + 1); //Add 1 floor for the RDC/ground floor
-                }
-                this.columnsList.get(i).minFloor = minimumFloor;
-                this.columnsList.get(i).maxFloor = (this.columnsList.get(i).minFloor + numberOfFloorsPerColumn - 1);
-                minimumFloor = this.columnsList.get(i).maxFloor + 1; //setting the minimum floor for the next column
-            }
+            initializeMultiColumnFloors();
 
             //adjusting the number of served floors of the columns if there are remaining floors
             if (remainingFloors != 0) { //if the remainingFloors is not zero, then it adds the remaining floors to the last column
@@ -157,15 +147,36 @@ class Battery {
             }
             //if there is a basement, then the first column will serve the basements + RDC
             if (this.numberOfBasements > 0) {
-                this.columnsList.get(0).numberServedFloors = (this.numberOfBasements + 1); //+1 is the RDC
-                this.columnsList.get(0).minFloor = numberOfBasements; //the minFloor of basement is a negative number
-                this.columnsList.get(0).maxFloor = 1; //1 is the RDC
+                initializeBasementColumnFloors();
             }
         }
     }
 
+    /* ******* LOGIC TO SET THE minFloor AND maxFloor FOR THE BASEMENT COLUMN ******* */
+    private void initializeBasementColumnFloors() {
+        this.columnsList.get(0).numberServedFloors = (this.numberOfBasements + 1); //+1 is the RDC
+        this.columnsList.get(0).minFloor = numberOfBasements; //the minFloor of basement is a negative number
+        this.columnsList.get(0).maxFloor = 1; //1 is the RDC
+    }
+
+    /* ******* LOGIC TO SET THE minFloor AND maxFloor FOR ALL THE COLUMNS EXCLUDING BASEMENT COLUMN ******* */
+    private void initializeMultiColumnFloors() {
+        int minimumFloor = 1;
+        for (int i = 1; i < this.columnsList.size(); i++) { //if its not the first column (because the first column serves the basements)
+            if (i == 1) {
+                this.columnsList.get(i).numberServedFloors = numberOfFloorsPerColumn;
+            } else {
+                this.columnsList.get(i).numberServedFloors = (numberOfFloorsPerColumn + 1); //Add 1 floor for the RDC/ground floor
+            }
+            this.columnsList.get(i).minFloor = minimumFloor;
+            this.columnsList.get(i).maxFloor = (this.columnsList.get(i).minFloor + numberOfFloorsPerColumn - 1);
+            minimumFloor = this.columnsList.get(i).maxFloor + 1; //setting the minimum floor for the next column
+        }
+    }
+
     /* ******* LOGIC TO SET THE minFloor AND maxFloor IF THERE IS JUST ONE COLUMN ******* */
-    public void initializeUniqueColumnFloors() {
+    private void initializeUniqueColumnFloors() {
+        int minimumFloor = 1;
         this.columnsList.get(0).numberServedFloors = totalNumberOfFloors;
         if (numberOfBasements > 0) { //if there is basement
             this.columnsList.get(0).minFloor = numberOfBasements;
