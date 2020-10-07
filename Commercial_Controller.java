@@ -20,7 +20,7 @@
     2a- Constructor and its attributes
     2b- Method toString
     2c- Methods to create a list: createFloorDoorsList, createDisplaysList, createFloorButtonsList, addFloorToFloorList
-    2d- Methods for logic: moveElevator, moveUp, moveDown, updateDisplays, openDoors, closeDoors, checkWeight, checkObstruction, addFloorToFloorList, deleteFloorFromList
+    2d- Methods for logic: moveElevator, moveUp, moveDown, manageButtonStatusOff, updateDisplays, openDoors, closeDoors, checkWeight, checkObstruction, addFloorToFloorList, deleteFloorFromList
     2e- Entry method: requestFloor
  3- DOOR CLASS
  4- BUTTON CLASS
@@ -490,14 +490,7 @@ class Elevator {
             if (tempArray.contains(nextFloor)) {
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
-                Optional<Button> currentUpButton = this.column.buttonsUpList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter UP button by ID and set status to OFF
-                if (currentUpButton.isPresent()) {
-                    currentUpButton.get().status = ButtonStatus.OFF;
-                }
-                Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter floor button by ID and set status to OFF
-                if (currentFloorButton.isPresent()) {
-                    currentFloorButton.get().status = ButtonStatus.OFF;
-                }
+                this.manageButtonStatusOff(nextFloor);
             }
         }
         if (this.floorList.size() == 0) {
@@ -529,15 +522,7 @@ class Elevator {
             if (tempArray.contains(nextFloor)) {
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
-                //finding buttons by ID
-                Optional<Button> currentDownButton = this.column.buttonsDownList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter DOWN button by ID and set status to OFF
-                if (currentDownButton.isPresent()) {
-                    currentDownButton.get().status = ButtonStatus.OFF;
-                }
-                Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter floor button by ID and set status to OFF
-                if (currentFloorButton.isPresent()) {
-                    currentFloorButton.get().status = ButtonStatus.OFF;
-                }
+                this.manageButtonStatusOff(nextFloor);
             }
         }
         if (this.floorList.size() == 0) {
@@ -547,6 +532,18 @@ class Elevator {
         } else {
             this.status = ElevatorStatus.UP;
 //            System.out.println("       Elevator" + column.name + this.id + " is now going " + this.status);
+        }
+    }
+
+    /* ******* LOGIC TO FIND BUTTONS BY ID AND SET BUTTON STATUS OFF ******* */
+    private void manageButtonStatusOff(int nextFloor) {
+        Optional<Button> currentUpButton = this.column.buttonsUpList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter UP button by ID and set status to OFF
+        if (currentUpButton.isPresent()) {
+            currentUpButton.get().status = ButtonStatus.OFF;
+        }
+        Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter floor button by ID and set status to OFF
+        if (currentFloorButton.isPresent()) {
+            currentFloorButton.get().status = ButtonStatus.OFF;
         }
     }
 
