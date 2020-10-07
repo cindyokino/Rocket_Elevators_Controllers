@@ -45,6 +45,7 @@
 
 
 using System;
+using System.Threading;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -220,7 +221,7 @@ namespace Commercial_Controller_CS
 
         //------------------------------------------- COLUMN CLASS ------------------------------------------------------------------------
         //---------------------------------------------------------------------------------------------------------------------------------
-        class Column
+        public class Column
         {
             public int id;
             public char name;
@@ -434,7 +435,7 @@ namespace Commercial_Controller_CS
 
         //------------------------------------------- ELEVATOR CLASS ----------------------------------------------------------------------
         //---------------------------------------------------------------------------------------------------------------------------------
-        class Elevator
+        public class Elevator
         {
             public int id;
             public int numberServedFloors;
@@ -583,32 +584,35 @@ namespace Commercial_Controller_CS
 
                     if (tempArray.Contains(nextFloor))
                     {
-                        this.openDoors();(
+                        this.openDoors();
                         this.deleteFloorFromList(nextFloor);
                         this.manageButtonStatusOff(nextFloor);
                     }
                 }
-                if (this.floorList.size() == 0)
+                if (this.floorList.Count == 0)
                 {
-                               column.optimizeDisplacement(this.column.elevatorsList);
+                    column.optimizeDisplacement(this.column.elevatorsList);
                     this.status = ElevatorStatus.IDLE;
-                            //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now " + this.status);
+                    //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now " + this.status);
                 }
                 else
                 {
                     this.status = ElevatorStatus.DOWN;
-                            //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now going " + this.status);
+                    //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now going " + this.status);
                 }
             }
 
             /* ******* LOGIC TO MOVE DOWN ******* */
-            public void moveDown() {
+            public void moveDown()
+            {
                 List<int> tempArray = new List<int>(this.floorList);
-                for (int i = this.floor; i > tempArray[tempArray.Count - 1]; i--) {
-                    
+                for (int i = this.floor; i > tempArray[tempArray.Count - 1]; i--)
+                {
+
                     int j = i;
                     Door currentDoor = this.floorDoorsList.FirstOrDefault(door => door.id == j); // finding doors by id
-                    if (currentDoor != null && currentDoor.status == DoorStatus.OPENED || this.elevatorDoor.status == DoorStatus.OPENED) {
+                    if (currentDoor != null && currentDoor.status == DoorStatus.OPENED || this.elevatorDoor.status == DoorStatus.OPENED)
+                    {
                         System.Console.WriteLine("       Doors are open, closing doors before move down");
                         this.closeDoors();
                     }
@@ -618,25 +622,29 @@ namespace Commercial_Controller_CS
                     this.floor = nextFloor;
                     this.updateDisplays(this.floor);
 
-                    if (tempArray.Contains(nextFloor)) {
+                    if (tempArray.Contains(nextFloor))
+                    {
                         this.openDoors();
                         this.deleteFloorFromList(nextFloor);
                         this.manageButtonStatusOff(nextFloor);
                     }
                 }
-                if (this.floorList.Count() == 0) {
-        //            column.optimizeDisplacement(this.column.elevatorsList); //I Commented this call because it can affect the results depending on the time of the day
+                if (this.floorList.Count() == 0)
+                {
+                    //            column.optimizeDisplacement(this.column.elevatorsList); //I Commented this call because it can affect the results depending on the time of the day
                     this.status = ElevatorStatus.IDLE;
-                //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now " + this.status);
-                } else {
+                    //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now " + this.status);
+                }
+                else
+                {
                     this.status = ElevatorStatus.UP;
-                //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now going " + this.status);
+                    //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now going " + this.status);
                 }
             }
 
             /* ******* LOGIC TO FIND BUTTONS BY ID AND SET BUTTON STATUS OFF ******* */
             private void manageButtonStatusOff(int nextFloor)
-            {                
+            {
                 Button currentUpButton = this.column.buttonsUpList.FirstOrDefault(button => button.id == nextFloor);
                 if (currentUpButton != null)
                 {
@@ -649,14 +657,122 @@ namespace Commercial_Controller_CS
                 }
             }
 
+            /* ******* LOGIC TO UPDATE DISPLAYS OF ELEVATOR AND SHOW FLOOR ******* */
+            public void updateDisplays(int elevatorFloor)
+            {
+                this.floorDisplaysList.ForEach(display =>
+                {
+                    display.floor = elevatorFloor;
+                });
+                //    System.Console.WriteLine("Displays show #" + elevatorFloor);
+            }
+
+            /* ******* LOGIC TO OPEN DOORS ******* */
+            public void openDoors()
+            {
+                System.Console.WriteLine("       Elevator is stopped at floor " + this.floor);
+                System.Console.WriteLine("       Opening doors...");
+                System.Console.WriteLine("       Elevator doors are opened");
+                this.elevatorDoor.status = DoorStatus.OPENED;
+                Door currentDoor = this.floorDoorsList.FirstOrDefault(door => door.id == this.floor); //filter floor door by ID and set status to OPENED
+                if (currentDoor != null)
+                {
+                    currentDoor.status = DoorStatus.OPENED;
+                }
+
+                Thread.Sleep(1000); //How many time the door remains opened in MILLISECONDS - I use 1 second so the scenarios test will run faster                
+                this.closeDoors();
+            }
+
+            /* ******* LOGIC TO CLOSE DOORS ******* */
+            public void closeDoors()
+            {
+                this.checkWeight();
+                this.checkObstruction();
+                if (this.weightSensorStatus == SensorStatus.OFF && this.obstructionSensorStatus == SensorStatus.OFF)
+                { //Security logic
+                    System.Console.WriteLine("       Closing doors...");
+                    System.Console.WriteLine("       Elevator doors are closed");
+                    Door currentDoor = this.floorDoorsList.FirstOrDefault(door => door.id == this.floor); //filter floor door by ID and set status to OPENED
+                    if (currentDoor != null)
+                    {
+                        currentDoor.status = DoorStatus.CLOSED;
+                    }
+                    this.elevatorDoor.status = DoorStatus.CLOSED;
+                }
+            }
+
+            /* ******* LOGIC FOR WEIGHT SENSOR ******* */
+            public void checkWeight()
+            {
+                int maxWeight = 500; //Maximum weight an elevator can carry in KG
+                Random random = new Random();
+                int randomWeight = random.Next(maxWeight + 100); //This random simulates the weight from a weight sensor
+                while (randomWeight > maxWeight)
+                {  //Logic of loading
+                    this.weightSensorStatus = SensorStatus.ON;  //Detect a full elevator
+                    System.Console.WriteLine("       ! Elevator capacity reached, waiting until the weight is lower before continue...");
+                    randomWeight -= 100; //I'm supposing the random number is 600, I'll subtract 101 so it will be less than 500 (the max weight I proposed) for the second time it runs
+                }
+                this.weightSensorStatus = SensorStatus.OFF;
+                System.Console.WriteLine("       Elevator capacity is OK");
+            }
+
+            /* ******* LOGIC FOR OBSTRUCTION SENSOR ******* */
+            public void checkObstruction()
+            {
+                int probabilityNotBlocked = 70;
+                Random random = new Random();
+                int number = random.Next(100); //This random simulates the probability of an obstruction (I supposed 30% of chance something is blocking the door)
+                while (number > probabilityNotBlocked)
+                {
+                    this.obstructionSensorStatus = SensorStatus.ON;
+                    System.Console.WriteLine("       ! Elevator door is blocked by something, waiting until door is free before continue...");
+                    number -= 30; //I'm supposing the random number is 100, I'll subtract 30 so it will be less than 70 (30% probability), so the second time it runs theres no one blocking the door
+                }
+                this.obstructionSensorStatus = SensorStatus.OFF;
+                System.Console.WriteLine("       Elevator door is FREE");
+            }
+
+            /* ******* LOGIC TO ADD A FLOOR TO THE FLOOR LIST ******* */
+            public void addFloorToFloorList(int floor)
+            {
+                if (!floorList.Contains(floor))
+                {
+                    this.floorList.Add(floor);
+                    this.floorList = this.floorList.OrderBy(i => i).ToList(); //Order list ascending
+                }
+            }
+
+            /* ******* LOGIC TO DELETE ITEM FROM FLOORS LIST ******* */
+            public void deleteFloorFromList(int stopFloor)
+            {
+                int index = this.floorList.IndexOf(stopFloor);
+                if (index > -1)
+                {
+                    this.floorList.Remove(index);
+                }
+            }
+
 
             //----------------- Entry method -----------------//
+            /* ******* ENTRY METHOD ******* */
+            /* ******* REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR ******* */
+            public void requestFloor(int requestedFloor)
+            {
+                // System.Console.WriteLine(" >> Someone inside the elevator" + this.id + " wants to go to floor <" + requestedFloor + "> <<");
+                if (this.floor != requestedFloor)
+                {
+                    this.addFloorToFloorList(requestedFloor);
+                    this.moveElevator(requestedFloor);
+                }
+            }
         }
 
 
         //------------------------------------------- DOOR CLASS --------------------------------------------------------------------------
         //---------------------------------------------------------------------------------------------------------------------------------
-        class Door
+        public class Door
         {
             public int id;
             public DoorStatus status;
@@ -673,7 +789,7 @@ namespace Commercial_Controller_CS
 
         //------------------------------------------- BUTTON CLASS ------------------------------------------------------------------------
         //---------------------------------------------------------------------------------------------------------------------------------
-        class Button
+        public class Button
         {
             public int id;
             public ButtonStatus status;
@@ -690,7 +806,7 @@ namespace Commercial_Controller_CS
 
         //------------------------------------------- DISPLAY CLASS -----------------------------------------------------------------------
         //---------------------------------------------------------------------------------------------------------------------------------
-        class Display
+        public class Display
         {
             public int id;
             public DisplayStatus status;
@@ -708,21 +824,21 @@ namespace Commercial_Controller_CS
         //------------------------------------------- ENUMS -------------------------------------------------------------------------------
         //---------------------------------------------------------------------------------------------------------------------------------
         /* ******* BATTERY STATUS ******* */
-        enum BatteryStatus
+        public enum BatteryStatus
         {
             ACTIVE,
             INACTIVE
         }
 
         /* ******* COLUMN STATUS ******* */
-        enum ColumnStatus
+        public enum ColumnStatus
         {
             ACTIVE,
             INACTIVE
         }
 
         /* ******* ELEVATOR STATUS ******* */
-        enum ElevatorStatus
+        public enum ElevatorStatus
         {
             IDLE,
             UP,
@@ -730,35 +846,35 @@ namespace Commercial_Controller_CS
         }
 
         /* ******* BUTTONS STATUS ******* */
-        enum ButtonStatus
+        public enum ButtonStatus
         {
             ON,
             OFF
         }
 
         /* ******* SENSORS STATUS ******* */
-        enum SensorStatus
+        public enum SensorStatus
         {
             ON,
             OFF
         }
 
         /* ******* DOORS STATUS ******* */
-        enum DoorStatus
+        public enum DoorStatus
         {
             OPENED,
             CLOSED
         }
 
         /* ******* DISPLAY STATUS ******* */
-        enum DisplayStatus
+        public enum DisplayStatus
         {
             ON,
             OFF
         }
 
         /* ******* REQUESTED DIRECTION ******* */
-        enum Direction
+        public enum Direction
         {
             UP,
             DOWN
@@ -775,8 +891,8 @@ namespace Commercial_Controller_CS
                 System.Console.WriteLine("\n****************************** SCENARIO 1: ******************************");
                 Battery batteryScenario1 = new Battery(1, 4, 66, 6, 5, BatteryStatus.ACTIVE);
                 System.Console.WriteLine(batteryScenario1);
-                // batteryScenario1.columnsList.forEach(System.out::println); //batteryScenario1.columnsList.forEach(column -> System.out.println(column));
-                //     System.out.println();
+                // batteryScenario1.columnsList.forEach(System.out::println); //batteryScenario1.columnsList.forEach(column -> System.Console.WriteLine(column));
+                //     System.Console.WriteLine();
                 //     //--------- ElevatorB1 ---------
                 //     batteryScenario1.columnsList.get(1).elevatorsList.get(0).floor = 20;
                 //     batteryScenario1.columnsList.get(1).elevatorsList.get(0).status = ElevatorStatus.DOWN;
@@ -803,14 +919,14 @@ namespace Commercial_Controller_CS
                 //     batteryScenario1.columnsList.get(1).elevatorsList.get(4).addFloorToFloorList(1);
 
                 //     batteryScenario1.columnsList.get(1).elevatorsList.forEach(System.out::println);
-                //     System.out.println();
-                //     System.out.println("Person 1: (elevator B5 is expected)"); //elevator expected
-                //     System.out.println(">> User request an elevator from floor <1> and direction <UP> <<");
-                //     System.out.println(">> User request to go to floor <20>");
+                //     System.Console.WriteLine();
+                //     System.Console.WriteLine("Person 1: (elevator B5 is expected)"); //elevator expected
+                //     System.Console.WriteLine(">> User request an elevator from floor <1> and direction <UP> <<");
+                //     System.Console.WriteLine(">> User request to go to floor <20>");
                 //     batteryScenario1.columnsList.get(1).requestElevator(1, Direction.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
                 //     batteryScenario1.columnsList.get(1).elevatorsList.get(4).requestFloor(20); //parameters (requestedFloor)
-                //     System.out.println("=========================================================================");
-                //     System.out.println();
+                //     System.Console.WriteLine("=========================================================================");
+                //     System.Console.WriteLine();
             }
 
             /* ******* CREATE SCENARIO 2 ******* */
@@ -829,3 +945,4 @@ namespace Commercial_Controller_CS
             }
         }
     }
+}
