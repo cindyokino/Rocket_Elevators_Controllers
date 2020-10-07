@@ -14,7 +14,7 @@
     1a- Constructor and its attributes
     1b- Method toString
     1c- Methods to create a list: createElevatorsList, createButtonsUpList, createButtonsDownList
-    1d- Methods for logic: optimizeDisplacement, findElevator, findNearestElevator, manageButtonStatusOn
+    1d- Methods for logic: findElevator, findNearestElevator, manageButtonStatusOn
     1e- Entry method: requestElevator
  2- ELEVATOR CLASS
     2a- Constructor and its attributes
@@ -34,7 +34,7 @@
  Columns: controls a list of N elevators
  Elevators: controls doors, buttons, displays
 
- numberOfBasements                                                  //Use a negative number
+ numberOfBasements                                                  
  numberOfFloors                                                     //Floors of the building excluding the number of basements
  totalNumberOfFloors = numberOfFloors + Math.abs(numberOfBasements) //Transform the number of basements to a positive number
  minBuildingFloor                                                   //Is equal to 1 OR equal the numberOfBasements if there is a basement
@@ -60,7 +60,7 @@ namespace Commercial_Controller_CS
         public int minBuildingFloor;                  //Is equal to 1 OR equal the numberOfBasements if there is a basement
         public int maxBuildingFloor;                  //Is the last floor of the building
         public int numberOfFloors;                    //Floors of the building excluding the number of basements
-        public int numberOfBasements;                 //Is a negative number
+        public int numberOfBasements;
         public int totalNumberOfFloors;               //numberOfFloors + Math.abs(numberOfBasements)
         public int numberOfElevatorsPerColumn;
         public int numberOfFloorsPerColumn;
@@ -112,7 +112,7 @@ namespace Commercial_Controller_CS
             {
                 column.createElevatorsList();
                 column.createButtonsUpList();
-                column.createButtonsDownList(numberOfBasements);
+                column.createButtonsDownList();
             }
         }
 
@@ -121,7 +121,7 @@ namespace Commercial_Controller_CS
         /* ******* LOGIC TO FIND THE FLOORS SERVED PER EACH COLUMN ******* */
         public int calculateNumberOfFloorsPerColumn()
         {
-            numberOfFloors = totalNumberOfFloors + numberOfBasements; //numberOfBasements is negative
+            numberOfFloors = totalNumberOfFloors - numberOfBasements; //numberOfBasements is negative
             int numberOfFloorsPerColumn;
 
             if (this.numberOfBasements > 0)
@@ -158,7 +158,7 @@ namespace Commercial_Controller_CS
             }
             else
             { //for more than 1 column
-                initializeBasementColumnFloors();
+                initializeMultiColumnFloors();
 
                 //adjusting the number of served floors of the columns if there are remaining floors
                 if (remainingFloors != 0)
@@ -178,7 +178,7 @@ namespace Commercial_Controller_CS
         private void initializeBasementColumnFloors()
         {
             this.columnsList[0].numberServedFloors = (this.numberOfBasements + 1); //+1 is the RDC
-            this.columnsList[0].minFloor = numberOfBasements; //the minFloor of basement is a negative number
+            this.columnsList[0].minFloor = numberOfBasements * -1; //the minFloor of basement is a negative number
             this.columnsList[0].maxFloor = 1; //1 is the RDC
         }
 
@@ -244,7 +244,7 @@ namespace Commercial_Controller_CS
                 status = columnStatus;
                 numberOfElevatorsPerColumn = columnNumberOfElevators;
                 numberServedFloors = columnNumberServedFloors;
-                numberOfBasements = columnNumberOfBasements;
+                numberOfBasements = columnNumberOfBasements * -1;
                 battery = columnBattery;
                 elevatorsList = new List<Elevator>();
                 buttonsUpList = new List<Button>();
@@ -281,13 +281,13 @@ namespace Commercial_Controller_CS
             }
 
             /* ******* CREATE A LIST WITH DOWN BUTTONS FROM THE SECOND FLOOR TO THE LAST FLOOR ******* */
-            public void createButtonsDownList(int numberOfBasements)
+            public void createButtonsDownList()
             {
                 buttonsDownList.Add(new Button(1, ButtonStatus.OFF, 1));
                 int minBuildingFloor;
                 if (numberOfBasements > 0)
                 {
-                    minBuildingFloor = numberOfBasements;
+                    minBuildingFloor = numberOfBasements * -1;
                 }
                 else
                 {
@@ -300,33 +300,7 @@ namespace Commercial_Controller_CS
             }
 
 
-            //----------------- Methods for logic -----------------//
-            /* ******* LOGIC TO OPTIMIZE THE ELEVATORS DISPLACEMENTS ******* */
-            public void optimizeDisplacement(List<Elevator> elevatorsList)
-            {
-                DateTime dateNow = DateTime.Now;
-                DateTime morningPeakStart = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, 6, 0, 0);
-                DateTime morningPeakEnd = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, 10, 0, 0);
-                DateTime eveningPeakStart = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, 16, 0, 0);
-                DateTime eveningPeakEnd = new DateTime(dateNow.Year, dateNow.Month, dateNow.Day, 19, 0, 0);
-
-                elevatorsList.ForEach(elevator =>
-                {
-                    if (DateTime.Now.TimeOfDay > (morningPeakStart.TimeOfDay) && DateTime.Now.TimeOfDay < (morningPeakEnd.TimeOfDay))
-                    {
-                        System.Console.WriteLine("Between 6 and 10 am the elevator waits at floor 1 when status is IDLE");
-                        System.Console.WriteLine("Moving elevator to floor 1");
-                        elevator.moveElevator(1);
-                    }
-                    else if (DateTime.Now.TimeOfDay > (eveningPeakStart.TimeOfDay) && DateTime.Now.TimeOfDay < (eveningPeakEnd.TimeOfDay))
-                    {
-                        System.Console.WriteLine("Between 4 and 7 pm the elevator waits at the last floor when status is IDLE");
-                        System.Console.WriteLine("Moving elevator to last floor of column");
-                        elevator.moveElevator(this.maxFloor);
-                    }
-                });
-            }
-
+            //----------------- Methods for logic -----------------//            
             /* ******* LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ******* */
             public Elevator findElevator(int currentFloor, Direction direction)
             {
@@ -383,9 +357,11 @@ namespace Commercial_Controller_CS
                         bestElevator = elevator;
                     }
                 }
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
                 System.Console.WriteLine("\n-----------------------------------------------------");
-                System.Console.WriteLine("-----------------------------------------------------");
                 System.Console.WriteLine("   > > >> >>> ELEVATOR " + this.name + bestElevator.id + " WAS CALLED <<< << < <");
+                System.Console.WriteLine("-----------------------------------------------------\n");
+                Console.ResetColor();
 
                 return bestElevator;
             }
@@ -591,14 +567,13 @@ namespace Commercial_Controller_CS
                 }
                 if (this.floorList.Count == 0)
                 {
-                    column.optimizeDisplacement(this.column.elevatorsList);
                     this.status = ElevatorStatus.IDLE;
                     //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now " + this.status);
                 }
                 else
                 {
                     this.status = ElevatorStatus.DOWN;
-                    //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now going " + this.status);
+                    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now going " + this.status);
                 }
             }
 
@@ -631,14 +606,13 @@ namespace Commercial_Controller_CS
                 }
                 if (this.floorList.Count() == 0)
                 {
-                    //            column.optimizeDisplacement(this.column.elevatorsList); //I Commented this call because it can affect the results depending on the time of the day
                     this.status = ElevatorStatus.IDLE;
                     //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now " + this.status);
                 }
                 else
                 {
                     this.status = ElevatorStatus.UP;
-                    //    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now going " + this.status);
+                    System.Console.WriteLine("       Elevator" + column.name + this.id + " is now going " + this.status);
                 }
             }
 
@@ -750,7 +724,7 @@ namespace Commercial_Controller_CS
                 int index = this.floorList.IndexOf(stopFloor);
                 if (index > -1)
                 {
-                    this.floorList.Remove(index);
+                    this.floorList.RemoveAt(index);
                 }
             }
 
@@ -888,48 +862,183 @@ namespace Commercial_Controller_CS
             /* ******* CREATE SCENARIO 1 ******* */
             static void scenario1()
             {
+                Console.BackgroundColor = ConsoleColor.DarkBlue;
                 System.Console.WriteLine("\n****************************** SCENARIO 1: ******************************");
+                Console.ResetColor();
+                System.Console.WriteLine();
                 Battery batteryScenario1 = new Battery(1, 4, 66, 6, 5, BatteryStatus.ACTIVE);
                 System.Console.WriteLine(batteryScenario1);
-                // batteryScenario1.columnsList.forEach(System.out::println); //batteryScenario1.columnsList.forEach(column -> System.Console.WriteLine(column));
-                //     System.Console.WriteLine();
-                //     //--------- ElevatorB1 ---------
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(0).floor = 20;
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(0).status = ElevatorStatus.DOWN;
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(0).addFloorToFloorList(5);
+                System.Console.WriteLine();
+                batteryScenario1.columnsList.ForEach(column => System.Console.WriteLine(column));
+                System.Console.WriteLine();
+                //--------- ElevatorB1 ---------
+                batteryScenario1.columnsList[1].elevatorsList[0].floor = 20;
+                batteryScenario1.columnsList[1].elevatorsList[0].status = ElevatorStatus.DOWN;
+                batteryScenario1.columnsList[1].elevatorsList[0].addFloorToFloorList(5);
 
-                //     //--------- ElevatorB2 ---------
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(1).floor = 3;
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(1).status = ElevatorStatus.UP;
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(1).addFloorToFloorList(15);
+                //--------- ElevatorB2 ---------
+                batteryScenario1.columnsList[1].elevatorsList[1].floor = 3;
+                batteryScenario1.columnsList[1].elevatorsList[1].status = ElevatorStatus.UP;
+                batteryScenario1.columnsList[1].elevatorsList[1].addFloorToFloorList(15);
 
-                //     //--------- ElevatorB3 ---------
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(2).floor = 13;
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(2).status = ElevatorStatus.DOWN;
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(2).addFloorToFloorList(1);
+                //--------- ElevatorB3 ---------
+                batteryScenario1.columnsList[1].elevatorsList[2].floor = 13;
+                batteryScenario1.columnsList[1].elevatorsList[2].status = ElevatorStatus.DOWN;
+                batteryScenario1.columnsList[1].elevatorsList[2].addFloorToFloorList(1);
 
-                //     //--------- ElevatorB4 ---------
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(3).floor = 15;
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(3).status = ElevatorStatus.DOWN;
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(3).addFloorToFloorList(2);
+                //--------- ElevatorB4 ---------
+                batteryScenario1.columnsList[1].elevatorsList[3].floor = 15;
+                batteryScenario1.columnsList[1].elevatorsList[3].status = ElevatorStatus.DOWN;
+                batteryScenario1.columnsList[1].elevatorsList[3].addFloorToFloorList(2);
 
-                //     //--------- ElevatorB5 ---------
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(4).floor = 6;
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(4).status = ElevatorStatus.DOWN;
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(4).addFloorToFloorList(1);
+                //--------- ElevatorB5 ---------
+                batteryScenario1.columnsList[1].elevatorsList[4].floor = 6;
+                batteryScenario1.columnsList[1].elevatorsList[4].status = ElevatorStatus.DOWN;
+                batteryScenario1.columnsList[1].elevatorsList[4].addFloorToFloorList(1);
 
-                //     batteryScenario1.columnsList.get(1).elevatorsList.forEach(System.out::println);
-                //     System.Console.WriteLine();
-                //     System.Console.WriteLine("Person 1: (elevator B5 is expected)"); //elevator expected
-                //     System.Console.WriteLine(">> User request an elevator from floor <1> and direction <UP> <<");
-                //     System.Console.WriteLine(">> User request to go to floor <20>");
-                //     batteryScenario1.columnsList.get(1).requestElevator(1, Direction.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
-                //     batteryScenario1.columnsList.get(1).elevatorsList.get(4).requestFloor(20); //parameters (requestedFloor)
-                //     System.Console.WriteLine("=========================================================================");
-                //     System.Console.WriteLine();
+                batteryScenario1.columnsList[1].elevatorsList.ForEach(elevator => System.Console.WriteLine(elevator));
+                System.Console.WriteLine();
+                System.Console.WriteLine("Person 1: (elevator B5 is expected)"); //elevator expected
+                System.Console.WriteLine(">> User request an elevator from floor <1> and direction <UP> <<");
+                System.Console.WriteLine(">> User request to go to floor <20>");
+                batteryScenario1.columnsList[1].requestElevator(1, Direction.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
+                batteryScenario1.columnsList[1].elevatorsList[4].requestFloor(20); //parameters (requestedFloor)
+                System.Console.WriteLine("=========================================================================");
             }
 
             /* ******* CREATE SCENARIO 2 ******* */
+            public static void scenario2()
+            {
+                Console.BackgroundColor = ConsoleColor.DarkBlue;
+                System.Console.WriteLine("\n****************************** SCENARIO 2: ******************************");
+                Console.ResetColor();
+                System.Console.WriteLine();
+                Battery batteryScenario2 = new Battery(1, 4, 66, 6, 5, BatteryStatus.ACTIVE);
+                System.Console.WriteLine(batteryScenario2);
+                System.Console.WriteLine();
+                batteryScenario2.columnsList.ForEach(column => System.Console.WriteLine(column));
+                System.Console.WriteLine();
+                //--------- ElevatorC1 ---------;
+                batteryScenario2.columnsList[2].elevatorsList[0].floor = 1;
+                batteryScenario2.columnsList[2].elevatorsList[0].status = ElevatorStatus.UP;
+                batteryScenario2.columnsList[2].elevatorsList[0].addFloorToFloorList(21); //not departed yet
+
+                //--------- ElevatorC2 ---------
+                batteryScenario2.columnsList[2].elevatorsList[1].floor = 23;
+                batteryScenario2.columnsList[2].elevatorsList[1].status = ElevatorStatus.UP;
+                batteryScenario2.columnsList[2].elevatorsList[1].addFloorToFloorList(28);
+
+                //--------- ElevatorC3 ---------
+                batteryScenario2.columnsList[2].elevatorsList[2].floor = 33;
+                batteryScenario2.columnsList[2].elevatorsList[2].status = ElevatorStatus.DOWN;
+                batteryScenario2.columnsList[2].elevatorsList[2].addFloorToFloorList(1);
+
+                //--------- ElevatorC4 ---------
+                batteryScenario2.columnsList[2].elevatorsList[3].floor = 40;
+                batteryScenario2.columnsList[2].elevatorsList[3].status = ElevatorStatus.DOWN;
+                batteryScenario2.columnsList[2].elevatorsList[3].addFloorToFloorList(24);
+
+                //--------- ElevatorC5 ---------
+                batteryScenario2.columnsList[2].elevatorsList[4].floor = 39;
+                batteryScenario2.columnsList[2].elevatorsList[4].status = ElevatorStatus.DOWN;
+                batteryScenario2.columnsList[2].elevatorsList[4].addFloorToFloorList(1);
+
+                batteryScenario2.columnsList[2].elevatorsList.ForEach(elevator => System.Console.WriteLine(elevator));
+                System.Console.WriteLine();
+                System.Console.WriteLine("Person 1: (elevator C1 is expected)"); //elevator expected
+                System.Console.WriteLine(">> User request an elevator from floor <1> and direction <UP> <<");
+                System.Console.WriteLine(">> User request to go to floor <36>");
+                batteryScenario2.columnsList[2].requestElevator(1, Direction.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
+                batteryScenario2.columnsList[2].elevatorsList[0].requestFloor(36); //parameters (requestedFloor)
+                System.Console.WriteLine("=========================================================================");
+            }
+
+            /* ******* CREATE SCENARIO 3 ******* */
+            public static void scenario3()
+            {
+                Console.BackgroundColor = ConsoleColor.DarkBlue;
+                System.Console.WriteLine("\n****************************** SCENARIO 3: ******************************");
+                Console.ResetColor();
+                System.Console.WriteLine();
+                Battery batteryScenario3 = new Battery(1, 4, 66, 6, 5, BatteryStatus.ACTIVE);
+                System.Console.WriteLine(batteryScenario3);
+                System.Console.WriteLine();
+                batteryScenario3.columnsList.ForEach(column => System.Console.WriteLine(column));
+                System.Console.WriteLine();
+                batteryScenario3.columnsList[3].elevatorsList[0].floor = 58;
+                batteryScenario3.columnsList[3].elevatorsList[0].status = ElevatorStatus.DOWN;
+                batteryScenario3.columnsList[3].elevatorsList[0].addFloorToFloorList(1);
+
+                batteryScenario3.columnsList[3].elevatorsList[1].floor = 50;
+                batteryScenario3.columnsList[3].elevatorsList[1].status = ElevatorStatus.UP;
+                batteryScenario3.columnsList[3].elevatorsList[1].addFloorToFloorList(60);
+
+                batteryScenario3.columnsList[3].elevatorsList[2].floor = 46;
+                batteryScenario3.columnsList[3].elevatorsList[2].status = ElevatorStatus.UP;
+                batteryScenario3.columnsList[3].elevatorsList[2].addFloorToFloorList(58);
+
+                batteryScenario3.columnsList[3].elevatorsList[3].floor = 1;
+                batteryScenario3.columnsList[3].elevatorsList[3].status = ElevatorStatus.UP;
+                batteryScenario3.columnsList[3].elevatorsList[3].addFloorToFloorList(54);
+
+                batteryScenario3.columnsList[3].elevatorsList[4].floor = 60;
+                batteryScenario3.columnsList[3].elevatorsList[4].status = ElevatorStatus.DOWN;
+                batteryScenario3.columnsList[3].elevatorsList[4].addFloorToFloorList(1);
+
+                batteryScenario3.columnsList[3].elevatorsList.ForEach(elevator => System.Console.WriteLine(elevator));
+                System.Console.WriteLine();
+                System.Console.WriteLine("Person 1: (elevator D1 is expected)"); //elevator expected
+                System.Console.WriteLine(">> User request an elevator from floor <54> and direction <DOWN> <<");
+                System.Console.WriteLine(">> User request to go to floor <1>");
+                batteryScenario3.columnsList[3].requestElevator(54, Direction.DOWN); //parameters (requestedFloor, buttonDirection.UP/DOWN)
+                batteryScenario3.columnsList[3].elevatorsList[0].requestFloor(1); //parameters (requestedFloor)
+                System.Console.WriteLine("=========================================================================");
+            }
+
+            /* ******* CREATE SCENARIO 4 ******* */
+            public static void scenario4()
+            {
+                Console.BackgroundColor = ConsoleColor.DarkBlue;
+                System.Console.WriteLine("\n****************************** SCENARIO 4: ******************************");
+                Console.ResetColor();
+                System.Console.WriteLine();
+                Battery batteryScenario4 = new Battery(1, 4, 66, 6, 5, BatteryStatus.ACTIVE);
+                System.Console.WriteLine(batteryScenario4);
+                System.Console.WriteLine();
+                batteryScenario4.columnsList.ForEach(column => System.Console.WriteLine(column));
+                System.Console.WriteLine();
+                //--------- ElevatorA1 ---------
+                batteryScenario4.columnsList[0].elevatorsList[0].floor = -4; //use of negative numbers to indicate SS / basement
+                batteryScenario4.columnsList[0].elevatorsList[0].status = ElevatorStatus.IDLE;
+
+                //--------- ElevatorA2 ---------
+                batteryScenario4.columnsList[0].elevatorsList[1].floor = 1;
+                batteryScenario4.columnsList[0].elevatorsList[1].status = ElevatorStatus.IDLE;
+
+                //--------- ElevatorA3 ---------
+                batteryScenario4.columnsList[0].elevatorsList[2].floor = -3; //use of negative numbers to indicate SS / basement
+                batteryScenario4.columnsList[0].elevatorsList[2].status = ElevatorStatus.DOWN;
+                batteryScenario4.columnsList[0].elevatorsList[2].addFloorToFloorList(-5);
+
+                //--------- ElevatorA4 ---------
+                batteryScenario4.columnsList[0].elevatorsList[3].floor = -6; //use of negative numbers to indicate SS / basement
+                batteryScenario4.columnsList[0].elevatorsList[3].status = ElevatorStatus.UP;
+                batteryScenario4.columnsList[0].elevatorsList[3].addFloorToFloorList(1);
+
+                //--------- ElevatorA5 ---------
+                batteryScenario4.columnsList[0].elevatorsList[4].floor = -1; //use of negative numbers to indicate SS / basement
+                batteryScenario4.columnsList[0].elevatorsList[4].status = ElevatorStatus.DOWN;
+                batteryScenario4.columnsList[0].elevatorsList[4].addFloorToFloorList(-6); //use of negative numbers to indicate SS / basement
+
+                batteryScenario4.columnsList[0].elevatorsList.ForEach(elevator => System.Console.WriteLine(elevator));
+                System.Console.WriteLine();
+                System.Console.WriteLine("Person 1: (elevator A4 is expected)"); //elevator expected
+                System.Console.WriteLine(">> User request an elevator from floor <-3> (basement) and direction <UP> <<");
+                System.Console.WriteLine(">> User request to go to floor <1>");
+                batteryScenario4.columnsList[0].requestElevator(-3, Direction.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
+                batteryScenario4.columnsList[0].elevatorsList[3].requestFloor(1); //parameters (requestedFloor)
+                System.Console.WriteLine("=========================================================================");
+            }
 
             //------------------------------------------- TESTING PROGRAM - CALL SCENARIOS -----------------------------------------------------
             //----------------------------------------------------------------------------------------------------------------------------------
@@ -939,9 +1048,9 @@ namespace Commercial_Controller_CS
 
                 /* ******* CALL SCENARIOS ******* */
                 scenario1();
-                // scenario2();
-                // scenario3();
-                // scenario4();
+                scenario2();
+                scenario3();
+                scenario4();
             }
         }
     }
