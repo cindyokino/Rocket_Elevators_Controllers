@@ -14,7 +14,7 @@
     1a- Constructor and its attributes
     1b- Method toString
     1c- Methods to create a list: createElevatorsList, createButtonsUpList, createButtonsDownList
-    1d- Methods for logic: optimizeDisplacement, findElevator, findNearestElevator, manageButtonStatusOn
+    1d- Methods for logic: findElevator, findNearestElevator, manageButtonStatusOn
     1e- Entry method: requestElevator
  2- ELEVATOR CLASS
     2a- Constructor and its attributes
@@ -259,26 +259,7 @@ class Column {
     }
 
 
-    //----------------- Methods for logic -----------------//
-    /* ******* LOGIC TO OPTIMIZE THE ELEVATORS DISPLACEMENTS ******* */
-    public void optimizeDisplacement(List<Elevator> elevatorsList) {
-        LocalTime morningPeakStart = LocalTime.of(6, 0);
-        LocalTime morningPeakEnd = LocalTime.of(10, 0);
-        LocalTime eveningPeakStart = LocalTime.of(16, 0);
-        LocalTime eveningPeakEnd = LocalTime.of(19, 0);
-        elevatorsList.forEach(elevator -> {
-            if (LocalTime.now().isAfter(morningPeakStart) && LocalTime.now().isBefore(morningPeakEnd)) {
-                System.out.println("Between 6 and 10 am the elevator waits at floor 1 when status is IDLE");
-                System.out.println("Moving elevator to floor 1");
-                elevator.moveElevator(1);
-            } else if (LocalTime.now().isAfter(eveningPeakStart) && LocalTime.now().isBefore(eveningPeakEnd)) {
-                System.out.println("Between 4 and 7 pm the elevator waits at the last floor when status is IDLE");
-                System.out.println("Moving elevator to last floor of column");
-                elevator.moveElevator(this.maxFloor);
-            }
-        });
-    }
-
+    //----------------- Methods for logic -----------------//   
     /* ******* LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ******* */
     public Elevator findElevator(int currentFloor, Direction direction) {
         Elevator bestElevator;
@@ -494,7 +475,6 @@ class Elevator {
             }
         }
         if (this.floorList.size() == 0) {
-        //    column.optimizeDisplacement(this.column.elevatorsList); //I Commented this call because it can affect the results depending on the time of the day
             this.status = ElevatorStatus.IDLE;
 //            System.out.println("       Elevator" + column.name + this.id + " is now " + this.status);
         } else {
@@ -526,7 +506,6 @@ class Elevator {
             }
         }
         if (this.floorList.size() == 0) {
-//            column.optimizeDisplacement(this.column.elevatorsList);
             this.status = ElevatorStatus.IDLE;
 //            System.out.println("       Elevator" + column.name + this.id + " is now " + this.status);
         } else {
