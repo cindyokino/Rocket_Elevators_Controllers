@@ -14,7 +14,7 @@
     1a- Constructor and its attributes
     1b- Method toString
     1c- Methods to create a list: createElevatorsList, createButtonsUpList, createButtonsDownList
-    1d- Methods for logic: optimizeDisplacement, findElevator, findNearestElevator, manageButtonStatus
+    1d- Methods for logic: optimizeDisplacement, findElevator, findNearestElevator, manageButtonStatusOn
     1e- Entry method: requestElevator
  2- ELEVATOR CLASS
     2a- Constructor and its attributes
@@ -329,7 +329,7 @@ class Column {
     }
 
     /* ******* LOGIC TO TURN ON THE BUTTONS FOR THE ASKED DIRECTION ******* */
-    public void manageButtonStatus(int requestedFloor, Direction direction) {
+    private void manageButtonStatusOn(int requestedFloor, Direction direction) {
         if (direction == Direction.UP) {
             //find the UP button by ID
             Optional<Button> currentButton = this.buttonsUpList.stream().filter(door -> door.id == requestedFloor).findFirst();
@@ -350,7 +350,7 @@ class Column {
     /* ******* ENTRY METHOD ******* */
     /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
     public void requestElevator(int requestedFloor, Direction direction) { // User goes to the specific column and press a button outside the elevator requesting for an elevator
-        manageButtonStatus(requestedFloor, direction); //turn ON the good button
+        manageButtonStatusOn(requestedFloor, direction); //turn ON the good button
 //        System.out.println(">> Someone request an elevator from floor <" + requestedFloor + "> and direction <" + direction + "> <<");
         Elevator bestElevator = this.findElevator(requestedFloor, direction);
         if (bestElevator.floor != requestedFloor) {
@@ -494,7 +494,7 @@ class Elevator {
             }
         }
         if (this.floorList.size() == 0) {
-//            column.optimizeDisplacement(this.column.elevatorsList);
+        //    column.optimizeDisplacement(this.column.elevatorsList); //I Commented this call because it can affect the results depending on the time of the day
             this.status = ElevatorStatus.IDLE;
 //            System.out.println("       Elevator" + column.name + this.id + " is now " + this.status);
         } else {
