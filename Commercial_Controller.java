@@ -328,7 +328,7 @@ class Column {
         return bestElevator;
     }
 
-    /* ******* LOGIC TO FIND THE NEAREST ELEVATOR ******* */
+    /* ******* LOGIC TO TURN ON THE BUTTONS FOR THE ASKED DIRECTION ******* */
     public void manageButtonStatus(int requestedFloor, Direction direction) {
         if (direction == Direction.UP) {
             //find the UP button by ID

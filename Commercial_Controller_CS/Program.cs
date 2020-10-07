@@ -9,12 +9,12 @@
     0a- Constructor and its attributes
     0b- Method toString
     0c- Methods to create a list: createColumnsList, createListsInsideColumns
-    0d- Methods for logic: calculateNumberOfFloorsPerColumn, setColumnValues
+    0d- Methods for logic: calculateNumberOfFloorsPerColumn, setColumnValues, initializeBasementColumnFloors, initializeMultiColumnFloors, initializeUniqueColumnFloors
  1- COLUMN CLASS
     1a- Constructor and its attributes
     1b- Method toString
     1c- Methods to create a list: createElevatorsList, createButtonsUpList, createButtonsDownList
-    1d- Methods for logic: optimizeDisplacement, findElevator, findNearestElevator
+    1d- Methods for logic: optimizeDisplacement, findElevator, findNearestElevator, manageButtonStatus
     1e- Entry method: requestElevator
  2- ELEVATOR CLASS
     2a- Constructor and its attributes
@@ -76,7 +76,7 @@ namespace Commercial_Controller_CS
             numberOfElevatorsPerColumn = batteryNumberOfElevatorsPerColumn;
             status = batteryStatus;
             columnsList = new List<Column>();
-            // numberOfFloorsPerColumn = calculateNumberOfFloorsPerColumn();
+            numberOfFloorsPerColumn = calculateNumberOfFloorsPerColumn();
             createColumnsList();
             setColumnValues();
             createListsInsideColumns();
@@ -99,7 +99,7 @@ namespace Commercial_Controller_CS
             for (int i = 1; i <= this.numberOfColumns; i++)
             {
                 this.columnsList.Add(new Column(i, name, ColumnStatus.ACTIVE, this.numberOfElevatorsPerColumn, numberOfFloorsPerColumn, numberOfBasements, this));
-                System.Console.WriteLine("column" + name + " created!!!");
+                // System.Console.WriteLine("column" + name + " created!!!");
                 name = Convert.ToChar(name + 1);
             }
         }
@@ -150,24 +150,42 @@ namespace Commercial_Controller_CS
                 remainingFloors = this.numberOfFloors % this.numberOfColumns;
             }
 
-            //setting the minFloor and maxFloor of each column
-            int minimumFloor = 1;
+            //setting the minFloor and maxFloor of each column            
             if (this.numberOfColumns == 1)
             { //if there is just one column, it serves all the floors of the building
-                this.columnsList[0].numberServedFloors = totalNumberOfFloors;
-                if (numberOfBasements > 0)
-                { //if there is basement
-                    this.columnsList[0].minFloor = numberOfBasements;
-                }
-                else
-                { //if there is NO basement
-                    this.columnsList[0].minFloor = minimumFloor;
-                    this.columnsList[0].maxFloor = numberOfFloors;
-                }
+                initializeUniqueColumnFloors();                
             }
             else
             { //for more than 1 column
-                for (int i = 1; i < this.columnsList.Count; i++)
+                initializeBasementColumnFloors();
+
+                //adjusting the number of served floors of the columns if there are remaining floors
+                if (remainingFloors != 0)
+                { //if the remainingFloors is not zero, then it adds the remaining floors to the last column
+                    this.columnsList[this.columnsList.Count - 1].maxFloor = this.columnsList[this.columnsList.Count - 1].minFloor + this.columnsList[this.columnsList.Count - 1].numberServedFloors;
+                    this.columnsList[this.columnsList.Count - 1].numberServedFloors = numberOfFloorsPerColumn + remainingFloors;
+                }
+                //if there is a basement, then the first column will serve the basements + RDC
+                if (this.numberOfBasements > 0)
+                {
+                    initializeBasementColumnFloors();
+                }
+            }
+        }
+
+        /* ******* LOGIC TO SET THE minFloor AND maxFloor FOR THE BASEMENT COLUMN ******* */
+        private void initializeBasementColumnFloors() 
+        {
+            this.columnsList[0].numberServedFloors = (this.numberOfBasements + 1); //+1 is the RDC
+            this.columnsList[0].minFloor = numberOfBasements; //the minFloor of basement is a negative number
+            this.columnsList[0].maxFloor = 1; //1 is the RDC
+        }
+
+        /* ******* LOGIC TO SET THE minFloor AND maxFloor FOR ALL THE COLUMNS EXCLUDING BASEMENT COLUMN ******* */
+        private void initializeMultiColumnFloors() 
+        {
+            int minimumFloor = 1;
+            for (int i = 1; i < this.columnsList.Count; i++)
                 { //if its not the first column (because the first column serves the basements)
                     if (i == 1)
                     {
@@ -181,24 +199,23 @@ namespace Commercial_Controller_CS
                     this.columnsList[i].maxFloor = (this.columnsList[i].minFloor + numberOfFloorsPerColumn - 1);
                     minimumFloor = this.columnsList[i].maxFloor + 1; //setting the minimum floor for the next column
                 }
-
-                //adjusting the number of served floors of the columns if there are remaining floors
-                if (remainingFloors != 0)
-                { //if the remainingFloors is not zero, then it adds the remaining floors to the last column
-                    this.columnsList[this.columnsList.Count - 1].maxFloor = this.columnsList[this.columnsList.Count - 1].minFloor + this.columnsList[this.columnsList.Count - 1].numberServedFloors;
-                    this.columnsList[this.columnsList.Count - 1].numberServedFloors = numberOfFloorsPerColumn + remainingFloors;
-                }
-                //if there is a basement, then the first column will serve the basements + RDC
-                if (this.numberOfBasements > 0)
-                {
-                    this.columnsList[0].numberServedFloors = (this.numberOfBasements + 1); //+1 is the RDC
-                    this.columnsList[0].minFloor = numberOfBasements; //the minFloor of basement is a negative number
-                    this.columnsList[0].maxFloor = 1; //1 is the RDC
-                }
-            }
         }
 
-    }
+        /* ******* LOGIC TO SET THE minFloor AND maxFloor IF THERE IS JUST ONE COLUMN ******* */
+        private void initializeUniqueColumnFloors() 
+        {
+            int minimumFloor = 1;
+            this.columnsList[0].numberServedFloors = totalNumberOfFloors;
+            if (numberOfBasements > 0)
+            { //if there is basement
+                this.columnsList[0].minFloor = numberOfBasements;
+            }
+            else
+            { //if there is NO basement
+                this.columnsList[0].minFloor = minimumFloor;
+                this.columnsList[0].maxFloor = numberOfFloors;
+            }
+        }
 
 
     //------------------------------------------- COLUMN CLASS ------------------------------------------------------------------------
@@ -372,12 +389,9 @@ namespace Commercial_Controller_CS
             return bestElevator;
         }
 
-
-        //----------------- Entry method -----------------//
-        /* ******* ENTRY METHOD ******* */
-        /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
-        public void requestElevator(int requestedFloor, Direction direction)
-        { // User goes to the specific column and press a button outside the elevator requesting for an elevator
+        /* ******* LOGIC TO TURN ON THE BUTTONS FOR THE ASKED DIRECTION ******* */
+        public void manageButtonStatus(int requestedFloor, Direction direction)
+        {
             if (direction == Direction.UP)
             {
                 //find the UP button by ID
@@ -397,6 +411,15 @@ namespace Commercial_Controller_CS
                     currentButton.status = ButtonStatus.ON;
                 }
             }
+        }
+
+
+        //----------------- Entry method -----------------//
+        /* ******* ENTRY METHOD ******* */
+        /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
+        public void requestElevator(int requestedFloor, Direction direction)
+        { // User goes to the specific column and press a button outside the elevator requesting for an elevator
+            manageButtonStatus(requestedFloor, direction);
             //        System.Console.WriteLine(">> Someone request an elevator from floor <" + requestedFloor + "> and direction <" + direction + "> <<");
             Elevator bestElevator = this.findElevator(requestedFloor, direction);
             if (bestElevator.floor != requestedFloor)
@@ -444,9 +467,9 @@ namespace Commercial_Controller_CS
             floorButtonsList = new List<Button>();
             floorList = new List<int>();
 
-            // this.createFloorDoorsList();
-            // this.createDisplaysList();
-            // this.createFloorButtonsList();
+            this.createFloorDoorsList();
+            this.createDisplaysList();
+            this.createFloorButtonsList();
         }
 
         //----------------- Method toString -----------------//
@@ -455,7 +478,11 @@ namespace Commercial_Controller_CS
         {
             return "elevator" + column.name + this.id + " | Floor: " + this.floor + " | Status: " + this.status;
         }
+
+
         //----------------- Methods to create a list -----------------//
+
+
         //----------------- Methods for logic -----------------//
         //----------------- Entry method -----------------//
     }
