@@ -45,6 +45,8 @@
 
 package main
 
+import "fmt"
+
 //------------------------------------------- BATTERY -----------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 type Battery struct {
@@ -64,18 +66,40 @@ type Battery struct {
 //----------------- Function to create Battery -----------------//
 func newBattery(id int, numberOfColumns int, totalNumberOfFloors int, numberOfBasements int, numberOfElevatorsPerColumn int, batteryStatus BatteryStatus) *Battery {
 	b := new(Battery)
-	b.id
+	b.id = id
 	b.numberOfColumns = numberOfColumns
 	b.totalNumberOfFloors = totalNumberOfFloors
 	b.numberOfBasements = numberOfBasements
 	b.numberOfElevatorsPerColumn = numberOfElevatorsPerColumn
 	b.status = batteryStatus
 	b.columnsList = []Column{}
-	b.numberOfFloorsPerColumn = calculateNumberOfFloorsPerColumn()
-	b.createColumnsList()
-	b.setColumnValues()
-	b.createListsInsideColumns()
+	// b.numberOfFloorsPerColumn = calculateNumberOfFloorsPerColumn()
+	createColumnsList(b)
+	// setColumnValues()
+	createListsInsideColumns()
+
+	return b
 }
+
+//----------------- Methods to create a list -----------------//
+/* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
+func createColumnsList(b *Battery) {
+	name := 'A'
+	for i := 1; i <= b.numberOfColumns; i++ {
+		c := newColumn(i, name, columnActive, b.numberOfElevatorsPerColumn, b.numberOfFloorsPerColumn, b.numberOfBasements, b)
+		b.columnsList = append(b.columnsList, *c)
+		name++
+	}
+}
+
+/* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
+// func createListsInsideColumns(b *Battery) {
+//    columnsList.forEach(column -> {
+//        column.createElevatorsList();
+//        column.createButtonsUpList();
+//        column.createButtonsDownList();
+//    });
+// }
 
 //------------------------------------------- COLUMN ------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -95,7 +119,7 @@ type Column struct {
 }
 
 //----------------- Function to create Column -----------------//
-func newColumn(id int, name rune, columnStatus ColumnStatus, numberOfElevatorsPerColumn int, numberServedFloors int, numberOfBasements int, battery Battery) *Column {
+func newColumn(id int, name rune, columnStatus ColumnStatus, numberOfElevatorsPerColumn int, numberServedFloors int, numberOfBasements int, battery *Battery) *Column {
 	c := new(Column)
 	c.id = id
 	c.name = name
@@ -103,10 +127,12 @@ func newColumn(id int, name rune, columnStatus ColumnStatus, numberOfElevatorsPe
 	c.numberOfElevatorsPerColumn = numberOfElevatorsPerColumn
 	c.numberServedFloors = numberServedFloors
 	c.numberOfBasements = numberOfBasements
-	c.battery = battery
+	c.battery = *battery
 	c.elevatorsList = []Elevator{}
 	c.buttonsUpList = []Button{}
 	c.buttonsDownList = []Button{}
+
+	return c
 }
 
 //------------------------------------------- ELEVATOR ----------------------------------------------------------------------------
@@ -137,15 +163,14 @@ func newElevator(id int, numberServedFloors int, floor int, elevatorStatus Eleva
 	e.weightSensorStatus = weightSensorStatus
 	e.obstructionSensorStatus = obstructionSensorStatus
 	e.column = column
-	e.elevatorDoor = Door{0, doCLOSED, 0}
-	e.elevatorDisplay = Display{0, diON, 0}
-	e.floorDoorsList = []Door{}
-	e.floorDisplaysList = []Display{}
-	e.floorButtonsList = []Button{}
-	e.floorList = []Button{}
-	e.createFloorDoorsList()
-	e.createDisplaysList()
-	e.createFloorButtonsList()
+	e.elevatorDoor = Door{0, doorClosed, 0}
+	e.elevatorDisplay = Display{0, displayOn, 0}
+	// e.floorDoorsList = createFloorDoorsList()
+	// e.floorDisplaysList = createDisplaysList()
+	// e.floorButtonsList = createFloorButtonsList()
+	e.floorList = []int{}
+
+	return e
 }
 
 //------------------------------------------- DOOR --------------------------------------------------------------------------------
@@ -178,73 +203,81 @@ type Display struct {
 type BatteryStatus string
 
 const (
-	baACTIVE   BatteryStatus = "Active"
-	baINACTIVE               = "Inactive"
+	batteryActive   BatteryStatus = "Active"
+	batteryInactive               = "Inactive"
 )
 
 /* ******* COLUMN ******* */
 type ColumnStatus string
 
 const (
-	coACTIVE   ColumnStatus = "Active"
-	coINACTIVE              = "Inactive"
+	columnActive   ColumnStatus = "Active"
+	columnInactive              = "Inactive"
 )
 
 /* ******* ELEVATOR STATUS ******* */
 type ElevatorStatus string
 
 const (
-	elIDLE ElevatorStatus = "Idle"
-	elUP                  = "Up"
-	elDOWN                = "Down"
+	elevatorIdle ElevatorStatus = "Idle"
+	elevatorUp                  = "Up"
+	elevatorDown                = "Down"
 )
 
 /* ******* BUTTONS STATUS ******* */
 type ButtonStatus string
 
 const (
-	buON  ButtonStatus = "On"
-	buOFF              = "Off"
+	buttonOn  ButtonStatus = "On"
+	buttonOff              = "Off"
 )
 
 /* ******* SENSORS STATUS ******* */
 type SensorStatus string
 
 const (
-	seON  SensorStatus = "On"
-	seOFF              = "Off"
+	sensorOn  SensorStatus = "On"
+	sensorOff              = "Off"
 )
 
 /* ******* DOORS STATUS ******* */
 type DoorStatus string
 
 const (
-	doOPENED DoorStatus = "Opened"
-	doCLOSED            = "Closed"
+	doorOpened DoorStatus = "Opened"
+	doorClosed            = "Closed"
 )
 
 /* ******* DISPLAY STATUS ******* */
 type DisplayStatus string
 
 const (
-	diON  DisplayStatus = "On"
-	diOFF               = "Off"
+	displayOn  DisplayStatus = "On"
+	displayOff               = "Off"
 )
 
 /* ******* REQUESTED DIRECTION ******* */
 type Direction string
 
 const (
-	diUP   Direction = "Up"
-	diDOWN           = "Down"
+	directionOn  Direction = "Up"
+	directionOff           = "Down"
 )
 
-// func soma(x int, y int) int { //last int is the return type, for more than 1 return use: func soma(x int) int (int, int) {}
-// 	return x + y
-// }
+//------------------------------------------- TESTING PROGRAM - SCENARIOS ---------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+/* ******* CREATE SCENARIO 1 ******* */
+func scenario1() {
+
+}
 
 func main() {
-	// var nome string = "Cindy"
-	// fmt.Println("Hello, " + nome)
-	// fmt.Println(soma(3, 4))
+	/* ******* CALL SCENARIOS ******* */
+	battery1 := newBattery(1, 4, 66, 6, 5, batteryActive)
+	fmt.Println(string(battery1.columnsList[0].name))
+	fmt.Println(battery1.id)
+	// scenario1()
+	// scenario2()
+	// scenario3()
+	// scenario4()
 }

@@ -964,23 +964,28 @@ namespace Commercial_Controller_CS
                 System.Console.WriteLine(batteryScenario3);
                 System.Console.WriteLine();
                 batteryScenario3.columnsList.ForEach(column => System.Console.WriteLine(column));
-                System.Console.WriteLine();
+                System.Console.WriteLine();                
+                //--------- ElevatorD1 ---------
                 batteryScenario3.columnsList[3].elevatorsList[0].floor = 58;
                 batteryScenario3.columnsList[3].elevatorsList[0].status = ElevatorStatus.DOWN;
                 batteryScenario3.columnsList[3].elevatorsList[0].addFloorToFloorList(1);
 
+                //--------- ElevatorD2 ---------
                 batteryScenario3.columnsList[3].elevatorsList[1].floor = 50;
                 batteryScenario3.columnsList[3].elevatorsList[1].status = ElevatorStatus.UP;
                 batteryScenario3.columnsList[3].elevatorsList[1].addFloorToFloorList(60);
 
+                //--------- ElevatorD3 ---------
                 batteryScenario3.columnsList[3].elevatorsList[2].floor = 46;
                 batteryScenario3.columnsList[3].elevatorsList[2].status = ElevatorStatus.UP;
                 batteryScenario3.columnsList[3].elevatorsList[2].addFloorToFloorList(58);
 
+                //--------- ElevatorD4 ---------
                 batteryScenario3.columnsList[3].elevatorsList[3].floor = 1;
                 batteryScenario3.columnsList[3].elevatorsList[3].status = ElevatorStatus.UP;
                 batteryScenario3.columnsList[3].elevatorsList[3].addFloorToFloorList(54);
 
+                //--------- ElevatorD5 ---------
                 batteryScenario3.columnsList[3].elevatorsList[4].floor = 60;
                 batteryScenario3.columnsList[3].elevatorsList[4].status = ElevatorStatus.DOWN;
                 batteryScenario3.columnsList[3].elevatorsList[4].addFloorToFloorList(1);

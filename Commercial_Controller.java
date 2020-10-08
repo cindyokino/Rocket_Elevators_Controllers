@@ -778,7 +778,7 @@ public class Commercial_Controller {
         System.out.println();
         batteryScenario2.columnsList.forEach(System.out::println);
         System.out.println();
-        //--------- ElevatorC1 ---------;
+        //--------- ElevatorC1 ---------
         batteryScenario2.columnsList.get(2).elevatorsList.get(0).floor = 1;
         batteryScenario2.columnsList.get(2).elevatorsList.get(0).status = ElevatorStatus.UP;
         batteryScenario2.columnsList.get(2).elevatorsList.get(0).addFloorToFloorList(21); //not departed yet
@@ -821,22 +821,27 @@ public class Commercial_Controller {
         System.out.println();
         batteryScenario3.columnsList.forEach(System.out::println);
         System.out.println();
+        //--------- ElevatorD1 ---------
         batteryScenario3.columnsList.get(3).elevatorsList.get(0).floor = 58;
         batteryScenario3.columnsList.get(3).elevatorsList.get(0).status = ElevatorStatus.DOWN;
         batteryScenario3.columnsList.get(3).elevatorsList.get(0).addFloorToFloorList(1);
 
+        //--------- ElevatorD2 ---------
         batteryScenario3.columnsList.get(3).elevatorsList.get(1).floor = 50;
         batteryScenario3.columnsList.get(3).elevatorsList.get(1).status = ElevatorStatus.UP;
         batteryScenario3.columnsList.get(3).elevatorsList.get(1).addFloorToFloorList(60);
 
+        //--------- ElevatorD3 ---------
         batteryScenario3.columnsList.get(3).elevatorsList.get(2).floor = 46;
         batteryScenario3.columnsList.get(3).elevatorsList.get(2).status = ElevatorStatus.UP;
         batteryScenario3.columnsList.get(3).elevatorsList.get(2).addFloorToFloorList(58);
 
+        //--------- ElevatorD4 ---------
         batteryScenario3.columnsList.get(3).elevatorsList.get(3).floor = 1;
         batteryScenario3.columnsList.get(3).elevatorsList.get(3).status = ElevatorStatus.UP;
         batteryScenario3.columnsList.get(3).elevatorsList.get(3).addFloorToFloorList(54);
 
+        //--------- ElevatorD5 ---------
         batteryScenario3.columnsList.get(3).elevatorsList.get(4).floor = 60;
         batteryScenario3.columnsList.get(3).elevatorsList.get(4).status = ElevatorStatus.DOWN;
         batteryScenario3.columnsList.get(3).elevatorsList.get(4).addFloorToFloorList(1);
