@@ -9,18 +9,18 @@
     0a- Constructor and its attributes
     0b- Method toString
     0c- Methods to create a list: createColumnsList, createListsInsideColumns
-    0d- Methods for logic: calculateNumberOfFloorsPerColumn, setColumnValues
+    0d- Methods for logic: calculateNumberOfFloorsPerColumn, setColumnValues, initializeBasementColumnFloors, initializeMultiColumnFloors, initializeUniqueColumnFloors
  1- COLUMN CLASS
     1a- Constructor and its attributes
     1b- Method toString
     1c- Methods to create a list: createElevatorsList, createButtonsUpList, createButtonsDownList
-    1d- Methods for logic: optimizeDisplacement, findElevator, findNearestElevator
+    1d- Methods for logic: findElevator, findNearestElevator, manageButtonStatusOn
     1e- Entry method: requestElevator
  2- ELEVATOR CLASS
     2a- Constructor and its attributes
     2b- Method toString
     2c- Methods to create a list: createFloorDoorsList, createDisplaysList, createFloorButtonsList, addFloorToFloorList
-    2d- Methods for logic: moveElevator, moveUp, moveDown, updateDisplays, openDoors, closeDoors, checkWeight, checkObstruction, addFloorToFloorList, deleteFloorFromList
+    2d- Methods for logic: moveElevator, moveUp, moveDown, manageButtonStatusOff, updateDisplays, openDoors, closeDoors, checkWeight, checkObstruction, addFloorToFloorList, deleteFloorFromList
     2e- Entry method: requestFloor
  3- DOOR CLASS
  4- BUTTON CLASS
@@ -34,7 +34,7 @@
  Columns: controls a list of N elevators
  Elevators: controls doors, buttons, displays
 
- numberOfBasements                                                  //Use a negative number
+ numberOfBasements                                                  
  numberOfFloors                                                     //Floors of the building excluding the number of basements
  totalNumberOfFloors = numberOfFloors + Math.abs(numberOfBasements) //Transform the number of basements to a positive number
  minBuildingFloor                                                   //Is equal to 1 OR equal the numberOfBasements if there is a basement
@@ -57,7 +57,7 @@ class Battery {
     int minBuildingFloor;                  //Is equal to 1 OR equal the numberOfBasements if there is a basement
     int maxBuildingFloor;                  //Is the last floor of the building
     int numberOfFloors;                    //Floors of the building excluding the number of basements
-    int numberOfBasements;                 //Is a negative number
+    int numberOfBasements;                 
     int totalNumberOfFloors;               //numberOfFloors + Math.abs(numberOfBasements)
     int numberOfElevatorsPerColumn;
     int numberOfFloorsPerColumn;
@@ -103,7 +103,7 @@ class Battery {
         columnsList.forEach(column -> {
             column.createElevatorsList();
             column.createButtonsUpList();
-            column.createButtonsDownList(numberOfBasements);
+            column.createButtonsDownList();
         });
     }
 
@@ -111,7 +111,7 @@ class Battery {
     //----------------- Methods for logic -----------------//
     /* ******* LOGIC TO FIND THE FLOORS SERVED PER EACH COLUMN ******* */
     public int calculateNumberOfFloorsPerColumn() {
-        numberOfFloors = totalNumberOfFloors + numberOfBasements; //numberOfBasements is negative
+        numberOfFloors = totalNumberOfFloors - numberOfBasements; 
         int numberOfFloorsPerColumn;
 
         if (this.numberOfBasements > 0) { //if there is basement floors
@@ -130,31 +130,15 @@ class Battery {
         //calculating the remaining floors
         if (this.numberOfBasements > 0) { //if there are basement floors
             remainingFloors = this.numberOfFloors % (this.numberOfColumns - 1);
-        } else { //there is no basement
+        } else { //if there is no basement
             remainingFloors = this.numberOfFloors % this.numberOfColumns;
         }
 
         //setting the minFloor and maxFloor of each column
-        int minimumFloor = 1;
         if (this.numberOfColumns == 1) { //if there is just one column, it serves all the floors of the building
-            this.columnsList.get(0).numberServedFloors = totalNumberOfFloors;
-            if (numberOfBasements > 0) { //if there is basement
-                this.columnsList.get(0).minFloor = numberOfBasements;
-            } else { //if there is NO basement
-                this.columnsList.get(0).minFloor = minimumFloor;
-                this.columnsList.get(0).maxFloor = numberOfFloors;
-            }
+            initializeUniqueColumnFloors();
         } else { //for more than 1 column
-            for (int i = 1; i < this.columnsList.size(); i++) { //if its not the first column (because the first column serves the basements)
-                if (i == 1) {
-                    this.columnsList.get(i).numberServedFloors = numberOfFloorsPerColumn;
-                } else {
-                    this.columnsList.get(i).numberServedFloors = (numberOfFloorsPerColumn + 1); //Add 1 floor for the RDC/ground floor
-                }
-                this.columnsList.get(i).minFloor = minimumFloor;
-                this.columnsList.get(i).maxFloor = (this.columnsList.get(i).minFloor + numberOfFloorsPerColumn - 1);
-                minimumFloor = this.columnsList.get(i).maxFloor + 1; //setting the minimum floor for the next column
-            }
+            initializeMultiColumnFloors();
 
             //adjusting the number of served floors of the columns if there are remaining floors
             if (remainingFloors != 0) { //if the remainingFloors is not zero, then it adds the remaining floors to the last column
@@ -163,10 +147,42 @@ class Battery {
             }
             //if there is a basement, then the first column will serve the basements + RDC
             if (this.numberOfBasements > 0) {
-                this.columnsList.get(0).numberServedFloors = (this.numberOfBasements + 1); //+1 is the RDC
-                this.columnsList.get(0).minFloor = numberOfBasements; //the minFloor of basement is a negative number
-                this.columnsList.get(0).maxFloor = 1; //1 is the RDC
+                initializeBasementColumnFloors();
             }
+        }
+    }
+
+    /* ******* LOGIC TO SET THE minFloor AND maxFloor FOR THE BASEMENT COLUMN ******* */
+    private void initializeBasementColumnFloors() {
+        this.columnsList.get(0).numberServedFloors = (this.numberOfBasements + 1); //+1 is the RDC
+        this.columnsList.get(0).minFloor = numberOfBasements * -1; //the minFloor of basement is a negative number
+        this.columnsList.get(0).maxFloor = 1; //1 is the RDC
+    }
+
+    /* ******* LOGIC TO SET THE minFloor AND maxFloor FOR ALL THE COLUMNS EXCLUDING BASEMENT COLUMN ******* */
+    private void initializeMultiColumnFloors() {
+        int minimumFloor = 1;
+        for (int i = 1; i < this.columnsList.size(); i++) { //if its not the first column (because the first column serves the basements)
+            if (i == 1) {
+                this.columnsList.get(i).numberServedFloors = numberOfFloorsPerColumn;
+            } else {
+                this.columnsList.get(i).numberServedFloors = (numberOfFloorsPerColumn + 1); //Add 1 floor for the RDC/ground floor
+            }
+            this.columnsList.get(i).minFloor = minimumFloor;
+            this.columnsList.get(i).maxFloor = (this.columnsList.get(i).minFloor + numberOfFloorsPerColumn - 1);
+            minimumFloor = this.columnsList.get(i).maxFloor + 1; //setting the minimum floor for the next column
+        }
+    }
+
+    /* ******* LOGIC TO SET THE minFloor AND maxFloor IF THERE IS JUST ONE COLUMN ******* */
+    private void initializeUniqueColumnFloors() {
+        int minimumFloor = 1;
+        this.columnsList.get(0).numberServedFloors = totalNumberOfFloors;
+        if (numberOfBasements > 0) { //if there is basement
+            this.columnsList.get(0).minFloor = numberOfBasements;
+        } else { //if there is NO basement
+            this.columnsList.get(0).minFloor = minimumFloor;
+            this.columnsList.get(0).maxFloor = numberOfFloors;
         }
     }
 
@@ -196,7 +212,7 @@ class Column {
         this.status = columnStatus;
         this.numberOfElevatorsPerColumn = numberOfElevatorsPerColumn;
         this.numberServedFloors = numberServedFloors;
-        this.numberOfBasements = numberOfBasements;
+        this.numberOfBasements = numberOfBasements * -1;
         this.battery = battery;
         this.elevatorsList = new ArrayList<>();
         this.buttonsUpList = new ArrayList<>();
@@ -229,11 +245,11 @@ class Column {
     }
 
     /* ******* CREATE A LIST WITH DOWN BUTTONS FROM THE SECOND FLOOR TO THE LAST FLOOR ******* */
-    public void createButtonsDownList(int numberOfBasements) {
+    public void createButtonsDownList() {
         buttonsDownList.add(new Button(1, ButtonStatus.OFF, 1));
         int minBuildingFloor;
         if (numberOfBasements > 0) {
-            minBuildingFloor = numberOfBasements;
+            minBuildingFloor = numberOfBasements * -1;
         } else {
             minBuildingFloor = 1;
         }
@@ -243,26 +259,7 @@ class Column {
     }
 
 
-    //----------------- Methods for logic -----------------//
-    /* ******* LOGIC TO OPTIMIZE THE ELEVATORS DISPLACEMENTS ******* */
-    public void optimizeDisplacement(List<Elevator> elevatorsList) {
-        LocalTime morningPeakStart = LocalTime.of(6, 0);
-        LocalTime morningPeakEnd = LocalTime.of(10, 0);
-        LocalTime eveningPeakStart = LocalTime.of(16, 0);
-        LocalTime eveningPeakEnd = LocalTime.of(19, 0);
-        elevatorsList.forEach(elevator -> {
-            if (LocalTime.now().isAfter(morningPeakStart) && LocalTime.now().isBefore(morningPeakEnd)) {
-                System.out.println("Between 6 and 10 am the elevator waits at floor 1 when status is IDLE");
-                System.out.println("Moving elevator to floor 1");
-                elevator.moveElevator(1);
-            } else if (LocalTime.now().isAfter(eveningPeakStart) && LocalTime.now().isBefore(eveningPeakEnd)) {
-                System.out.println("Between 4 and 7 pm the elevator waits at the last floor when status is IDLE");
-                System.out.println("Moving elevator to last floor of column");
-                elevator.moveElevator(this.maxFloor);
-            }
-        });
-    }
-
+    //----------------- Methods for logic -----------------//   
     /* ******* LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ******* */
     public Elevator findElevator(int currentFloor, Direction direction) {
         Elevator bestElevator;
@@ -312,11 +309,8 @@ class Column {
         return bestElevator;
     }
 
-
-    //----------------- Entry method -----------------//
-    /* ******* ENTRY METHOD ******* */
-    /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
-    public void requestElevator(int requestedFloor, Direction direction) { // User goes to the specific column and press a button outside the elevator requesting for an elevator
+    /* ******* LOGIC TO TURN ON THE BUTTONS FOR THE ASKED DIRECTION ******* */
+    private void manageButtonStatusOn(int requestedFloor, Direction direction) {
         if (direction == Direction.UP) {
             //find the UP button by ID
             Optional<Button> currentButton = this.buttonsUpList.stream().filter(door -> door.id == requestedFloor).findFirst();
@@ -330,6 +324,14 @@ class Column {
                 currentButton.get().status = ButtonStatus.ON;
             }
         }
+    }
+
+
+    //----------------- Entry method -----------------//
+    /* ******* ENTRY METHOD ******* */
+    /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
+    public void requestElevator(int requestedFloor, Direction direction) { // User goes to the specific column and press a button outside the elevator requesting for an elevator
+        manageButtonStatusOn(requestedFloor, direction); //turn ON the good button
 //        System.out.println(">> Someone request an elevator from floor <" + requestedFloor + "> and direction <" + direction + "> <<");
         Elevator bestElevator = this.findElevator(requestedFloor, direction);
         if (bestElevator.floor != requestedFloor) {
@@ -469,18 +471,10 @@ class Elevator {
             if (tempArray.contains(nextFloor)) {
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
-                Optional<Button> currentUpButton = this.column.buttonsUpList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter UP button by ID and set status to OFF
-                if (currentUpButton.isPresent()) {
-                    currentUpButton.get().status = ButtonStatus.OFF;
-                }
-                Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter floor button by ID and set status to OFF
-                if (currentFloorButton.isPresent()) {
-                    currentFloorButton.get().status = ButtonStatus.OFF;
-                }
+                this.manageButtonStatusOff(nextFloor);
             }
         }
         if (this.floorList.size() == 0) {
-//            column.optimizeDisplacement(this.column.elevatorsList);
             this.status = ElevatorStatus.IDLE;
 //            System.out.println("       Elevator" + column.name + this.id + " is now " + this.status);
         } else {
@@ -508,24 +502,27 @@ class Elevator {
             if (tempArray.contains(nextFloor)) {
                 this.openDoors();
                 this.deleteFloorFromList(nextFloor);
-                //finding buttons by ID
-                Optional<Button> currentDownButton = this.column.buttonsDownList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter DOWN button by ID and set status to OFF
-                if (currentDownButton.isPresent()) {
-                    currentDownButton.get().status = ButtonStatus.OFF;
-                }
-                Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter floor button by ID and set status to OFF
-                if (currentFloorButton.isPresent()) {
-                    currentFloorButton.get().status = ButtonStatus.OFF;
-                }
+                this.manageButtonStatusOff(nextFloor);
             }
         }
         if (this.floorList.size() == 0) {
-//            column.optimizeDisplacement(this.column.elevatorsList);
             this.status = ElevatorStatus.IDLE;
 //            System.out.println("       Elevator" + column.name + this.id + " is now " + this.status);
         } else {
             this.status = ElevatorStatus.UP;
 //            System.out.println("       Elevator" + column.name + this.id + " is now going " + this.status);
+        }
+    }
+
+    /* ******* LOGIC TO FIND BUTTONS BY ID AND SET BUTTON STATUS OFF ******* */
+    private void manageButtonStatusOff(int nextFloor) {
+        Optional<Button> currentUpButton = this.column.buttonsUpList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter UP button by ID and set status to OFF
+        if (currentUpButton.isPresent()) {
+            currentUpButton.get().status = ButtonStatus.OFF;
+        }
+        Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter floor button by ID and set status to OFF
+        if (currentFloorButton.isPresent()) {
+            currentFloorButton.get().status = ButtonStatus.OFF;
         }
     }
 
@@ -732,9 +729,10 @@ public class Commercial_Controller {
 
     /* ******* CREATE SCENARIO 1 ******* */
     public static void scenario1() {
-        System.out.println("****************************** SCENARIO 1: ******************************");
+        System.out.println("\n****************************** SCENARIO 1: ***************************\n");
         Battery batteryScenario1 = new Battery(1, 4, 66, 6, 5, BatteryStatus.ACTIVE);
         System.out.println(batteryScenario1);
+        System.out.println();
         batteryScenario1.columnsList.forEach(System.out::println); //batteryScenario1.columnsList.forEach(column -> System.out.println(column));
         System.out.println();
         //--------- ElevatorB1 ---------
@@ -770,15 +768,15 @@ public class Commercial_Controller {
         batteryScenario1.columnsList.get(1).requestElevator(1, Direction.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
         batteryScenario1.columnsList.get(1).elevatorsList.get(4).requestFloor(20); //parameters (requestedFloor)
         System.out.println("=========================================================================");
-        System.out.println();
     }
 
     /* ******* CREATE SCENARIO 2 ******* */
     public static void scenario2() {
-        System.out.println("****************************** SCENARIO 2: ******************************");
+        System.out.println("\n****************************** SCENARIO 2: ******************************\n");
         Battery batteryScenario2 = new Battery(1, 4, 66, 6, 5, BatteryStatus.ACTIVE);
         System.out.println(batteryScenario2);
-        batteryScenario2.columnsList.forEach(System.out::println); //batteryScenario2.columnsList.forEach(column -> System.out.println(column));
+        System.out.println();
+        batteryScenario2.columnsList.forEach(System.out::println);
         System.out.println();
         //--------- ElevatorC1 ---------;
         batteryScenario2.columnsList.get(2).elevatorsList.get(0).floor = 1;
@@ -812,17 +810,16 @@ public class Commercial_Controller {
         System.out.println(">> User request to go to floor <36>");
         batteryScenario2.columnsList.get(2).requestElevator(1, Direction.UP); //parameters (requestedFloor, buttonDirection.UP/DOWN)
         batteryScenario2.columnsList.get(2).elevatorsList.get(0).requestFloor(36); //parameters (requestedFloor)
-//        batteryScenario2.columnsList.get(2).elevatorsList.get(0).moveElevator(36);
         System.out.println("=========================================================================");
-        System.out.println();
     }
 
     /* ******* CREATE SCENARIO 3 ******* */
     public static void scenario3() {
-        System.out.println("****************************** SCENARIO 3: ******************************");
-        Battery batteryScenario3 = new Battery(1, 4, 66, -6, 5, BatteryStatus.ACTIVE);
+        System.out.println("\n****************************** SCENARIO 3: ******************************\n");
+        Battery batteryScenario3 = new Battery(1, 4, 66, 6, 5, BatteryStatus.ACTIVE);
         System.out.println(batteryScenario3);
-        batteryScenario3.columnsList.forEach(System.out::println); //batteryScenario3.columnsList.forEach(column -> System.out.println(column));
+        System.out.println();
+        batteryScenario3.columnsList.forEach(System.out::println);
         System.out.println();
         batteryScenario3.columnsList.get(3).elevatorsList.get(0).floor = 58;
         batteryScenario3.columnsList.get(3).elevatorsList.get(0).status = ElevatorStatus.DOWN;
@@ -852,18 +849,18 @@ public class Commercial_Controller {
         batteryScenario3.columnsList.get(3).requestElevator(54, Direction.DOWN); //parameters (requestedFloor, buttonDirection.UP/DOWN)
         batteryScenario3.columnsList.get(3).elevatorsList.get(0).requestFloor(1); //parameters (requestedFloor)
         System.out.println("=========================================================================");
-        System.out.println();
     }
 
     /* ******* CREATE SCENARIO 4 ******* */
-    public static void scenario4() { //use of negative number to indicate SS / basement
-        System.out.println("****************************** SCENARIO 4: ******************************");
+    public static void scenario4() { 
+        System.out.println("\n****************************** SCENARIO 4: ******************************\n");
         Battery batteryScenario4 = new Battery(1, 4, 66, 6, 5, BatteryStatus.ACTIVE);
         System.out.println(batteryScenario4);
-        batteryScenario4.columnsList.forEach(System.out::println); //batteryScenario4.columnsList.forEach(column -> System.out.println(column));
+        System.out.println();
+        batteryScenario4.columnsList.forEach(System.out::println);
         System.out.println();
         //--------- ElevatorA1 ---------
-        batteryScenario4.columnsList.get(0).elevatorsList.get(0).floor = -4;
+        batteryScenario4.columnsList.get(0).elevatorsList.get(0).floor = -4; //use of negative numbers to indicate SS / basement
         batteryScenario4.columnsList.get(0).elevatorsList.get(0).status = ElevatorStatus.IDLE;
 
         //--------- ElevatorA2 ---------
@@ -871,21 +868,20 @@ public class Commercial_Controller {
         batteryScenario4.columnsList.get(0).elevatorsList.get(1).status = ElevatorStatus.IDLE;
 
         //--------- ElevatorA3 ---------
-        batteryScenario4.columnsList.get(0).elevatorsList.get(2).floor = -3;
+        batteryScenario4.columnsList.get(0).elevatorsList.get(2).floor = -3; //use of negative numbers to indicate SS / basement
         batteryScenario4.columnsList.get(0).elevatorsList.get(2).status = ElevatorStatus.DOWN;
         batteryScenario4.columnsList.get(0).elevatorsList.get(2).addFloorToFloorList(-5);
 
         //--------- ElevatorA4 ---------
-        batteryScenario4.columnsList.get(0).elevatorsList.get(3).floor = -6;
+        batteryScenario4.columnsList.get(0).elevatorsList.get(3).floor = -6; //use of negative numbers to indicate SS / basement
         batteryScenario4.columnsList.get(0).elevatorsList.get(3).status = ElevatorStatus.UP;
         batteryScenario4.columnsList.get(0).elevatorsList.get(3).addFloorToFloorList(1);
 
         //--------- ElevatorA5 ---------
-        batteryScenario4.columnsList.get(0).elevatorsList.get(4).floor = -1;
+        batteryScenario4.columnsList.get(0).elevatorsList.get(4).floor = -1; //use of negative numbers to indicate SS / basement
         batteryScenario4.columnsList.get(0).elevatorsList.get(4).status = ElevatorStatus.DOWN;
         batteryScenario4.columnsList.get(0).elevatorsList.get(4).addFloorToFloorList(-6);
 
-        System.out.println();
         batteryScenario4.columnsList.get(0).elevatorsList.forEach(System.out::println);
         System.out.println();
         System.out.println("Person 1: (elevator A4 is expected)"); //elevator expected
