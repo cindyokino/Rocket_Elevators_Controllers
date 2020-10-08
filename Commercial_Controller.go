@@ -75,31 +75,32 @@ func newBattery(id int, numberOfColumns int, totalNumberOfFloors int, numberOfBa
 	b.columnsList = []Column{}
 	// b.numberOfFloorsPerColumn = calculateNumberOfFloorsPerColumn()
 	createColumnsList(b)
-	// setColumnValues()
-	createListsInsideColumns()
+	// setColumnValues(b)
+	createListsInsideColumns(b)
 
 	return b
 }
 
-//----------------- Methods to create a list -----------------//
+//----------------- Functions to create a list -----------------//
 /* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
 func createColumnsList(b *Battery) {
 	name := 'A'
 	for i := 1; i <= b.numberOfColumns; i++ {
 		c := newColumn(i, name, columnActive, b.numberOfElevatorsPerColumn, b.numberOfFloorsPerColumn, b.numberOfBasements, b)
 		b.columnsList = append(b.columnsList, *c)
+		fmt.Println("Created column" + string(c.name))
 		name++
 	}
 }
 
-/* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
-// func createListsInsideColumns(b *Battery) {
-//    columnsList.forEach(column -> {
-//        column.createElevatorsList();
-//        column.createButtonsUpList();
-//        column.createButtonsDownList();
-//    });
-// }
+/* ******* CALL FUNCTIONS TO CREATE THE LISTS INSIDE EACH COLUMN ******* */
+func createListsInsideColumns(b *Battery) {
+	for _, c := range b.columnsList {
+		createElevatorsList(&c)
+		// createButtonsUpList()
+		// createButtonsDownList()
+	}
+}
 
 //------------------------------------------- COLUMN ------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -135,6 +136,26 @@ func newColumn(id int, name rune, columnStatus ColumnStatus, numberOfElevatorsPe
 	return c
 }
 
+//----------------- Functions to create a list -----------------//
+/* ******* CREATE A LIST OF ELEVATORS FOR THE COLUMN ******* */
+func createElevatorsList(c *Column) {
+	for i := 1; i <= c.numberOfElevatorsPerColumn; i++ {
+		e := newElevator(i, c.numberServedFloors, 1, elevatorIdle, sensorOff, sensorOff, c)
+		c.elevatorsList = append(c.elevatorsList)
+		// fmt.Println("Created elevator" + *c.name + string(e.id))
+		fmt.Printf("Created elevator%v%d\n", string(c.name), e.id)
+	}
+}
+
+/* ******* CREATE A LIST WITH UP BUTTONS FROM THE FIRST FLOOR TO THE LAST LAST BUT ONE FLOOR ******* */
+func createButtonsUpList(c *Column) {
+	c.buttonsUpList = append(newButton(0, buttonOff, 0))
+	for i := c.minFloor; i < c.maxFloor; i++ {
+		e := newButton(i, buttonOff, i)
+		c.buttonsUpList = append(c.buttonsUpList)
+	}
+}
+
 //------------------------------------------- ELEVATOR ----------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 type Elevator struct {
@@ -154,7 +175,7 @@ type Elevator struct {
 }
 
 //----------------- Function to create Elevator -----------------//
-func newElevator(id int, numberServedFloors int, floor int, elevatorStatus ElevatorStatus, weightSensorStatus SensorStatus, obstructionSensorStatus SensorStatus, column Column) *Elevator {
+func newElevator(id int, numberServedFloors int, floor int, elevatorStatus ElevatorStatus, weightSensorStatus SensorStatus, obstructionSensorStatus SensorStatus, column *Column) *Elevator {
 	e := new(Elevator)
 	e.id = id
 	e.numberServedFloors = numberServedFloors
@@ -162,7 +183,7 @@ func newElevator(id int, numberServedFloors int, floor int, elevatorStatus Eleva
 	e.status = elevatorStatus
 	e.weightSensorStatus = weightSensorStatus
 	e.obstructionSensorStatus = obstructionSensorStatus
-	e.column = column
+	e.column = *column
 	e.elevatorDoor = Door{0, doorClosed, 0}
 	e.elevatorDisplay = Display{0, displayOn, 0}
 	// e.floorDoorsList = createFloorDoorsList()
@@ -181,6 +202,14 @@ type Door struct {
 	floor  int
 }
 
+func newDoor(id int, doorStatus DoorStatus, floor int) *Door {
+	button := id
+	button.status = doorStatus
+	button.floor = floor
+
+	return door
+}
+
 //------------------------------------------- BUTTON ------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 type Button struct {
@@ -189,12 +218,28 @@ type Button struct {
 	floor  int
 }
 
+func newButton(id int, buttonStatus ButtonStatus, floor int) *Button {
+	button := id
+	button.status = buttonStatus
+	button.floor = floor
+
+	return button
+}
+
 //------------------------------------------- DISPLAY -----------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 type Display struct {
 	id     int
 	status DisplayStatus
 	floor  int
+}
+
+func newDisplay(id int, displayStatus DisplayStatus, floor int) *Display {
+	button := id
+	button.status = displayStatus
+	button.floor = floor
+
+	return display
 }
 
 // ------------------------------------------- CONSTANTS (as enums) ---------------------------------------------------------------
@@ -274,8 +319,7 @@ func scenario1() {
 func main() {
 	/* ******* CALL SCENARIOS ******* */
 	battery1 := newBattery(1, 4, 66, 6, 5, batteryActive)
-	fmt.Println(string(battery1.columnsList[0].name))
-	fmt.Println(battery1.id)
+	fmt.Printf("Created battery%d%v\n", battery1.id, string(battery1.columnsList[0].name))
 	// scenario1()
 	// scenario2()
 	// scenario3()

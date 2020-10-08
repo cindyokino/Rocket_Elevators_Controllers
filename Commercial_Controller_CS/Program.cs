@@ -105,7 +105,7 @@ namespace Commercial_Controller_CS
             }
         }
 
-        /* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
+        /* ******* CALL FUNCTIONS TO CREATE THE LISTS INSIDE EACH COLUMN ******* */
         public void createListsInsideColumns()
         {
             foreach (Column column in columnsList)

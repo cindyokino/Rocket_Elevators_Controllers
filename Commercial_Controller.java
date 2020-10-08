@@ -98,7 +98,7 @@ class Battery {
         }
     }
 
-    /* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
+    /* ******* CALL FUNCTIONS TO CREATE THE LISTS INSIDE EACH COLUMN ******* */
     public void createListsInsideColumns() {
         columnsList.forEach(column -> {
             column.createElevatorsList();
