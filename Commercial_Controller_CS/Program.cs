@@ -197,7 +197,7 @@ namespace Commercial_Controller_CS
                     this.columnsList[i].numberServedFloors = (numberOfFloorsPerColumn + 1); //Add 1 floor for the RDC/ground floor
                 }
                 this.columnsList[i].minFloor = minimumFloor;
-                this.columnsList[i].maxFloor = (this.columnsList[i].minFloor + numberOfFloorsPerColumn - 1);
+                this.columnsList[i].maxFloor = this.columnsList[i].minFloor + (numberOfFloorsPerColumn - 1);
                 minimumFloor = this.columnsList[i].maxFloor + 1; //setting the minimum floor for the next column
             }
         }
