@@ -698,7 +698,7 @@ const (
 	batteryInactive               = "Inactive"
 )
 
-/* ******* COLUMN ******* */
+/* ******* COLUMN STATUS******* */
 type ColumnStatus string
 
 const (
