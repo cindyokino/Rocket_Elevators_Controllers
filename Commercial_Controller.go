@@ -79,7 +79,6 @@ func newBattery(id int, numberOfColumns int, totalNumberOfFloors int, numberOfBa
 	b.numberOfFloorsPerColumn = calculateNumberOfFloorsPerColumn(b)
 	createColumnsList(b)
 	setColumnValues(b)
-	// createListsInsideColumns(b)
 	fmt.Printf("battery%d | Basements: %d | Columns: %d | Elevators per column: %d\n", b.id, b.numberOfBasements, b.numberOfColumns, b.numberOfElevatorsPerColumn)
 
 	return b
@@ -93,15 +92,6 @@ func createColumnsList(b *Battery) {
 		c := newColumn(i, name, columnActive, b.numberOfElevatorsPerColumn, b.numberOfFloorsPerColumn, b.numberOfBasements, b)
 		b.columnsList = append(b.columnsList, c)
 		name++
-	}
-}
-
-/* ******* CALL FUNCTIONS TO CREATE THE LISTS INSIDE EACH COLUMN ******* */
-func createListsInsideColumns(b *Battery) {
-	for _, c := range b.columnsList {
-		createElevatorsList(c)
-		createButtonsUpList(c)
-		createButtonsDownList(c)
 	}
 }
 
@@ -331,8 +321,8 @@ func manageButtonStatusOn(requestedFloor int, direction Direction, c *Column) {
 	currentButton.status = buttonOn
 }
 
-//----------------- Entry method -----------------//
-/* ******* ENTRY METHOD ******* */
+//----------------- Entry Function -----------------//
+/* ******* ENTRY FUNCTION ******* */
 /* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
 func requestElevator(requestedFloor int, direction Direction, c *Column) { // User goes to the specific column and press a button outside the elevator requesting for an elevator
 	manageButtonStatusOn(requestedFloor, direction, c)
@@ -381,7 +371,7 @@ func newElevator(id int, numberServedFloors int, floor int, elevatorStatus Eleva
 	return e
 }
 
-//----------------- Methods to create a list -----------------//
+//----------------- Functions to create a list -----------------//
 /* ******* CREATE A LIST WITH A DOOR OF EACH FLOOR ******* */
 func createFloorDoorsList(e *Elevator) {
 	door := newDoor(1, doorClosed, 1)
@@ -412,7 +402,7 @@ func createFloorButtonsList(e *Elevator) {
 	}
 }
 
-//----------------- Methods for logic -----------------//
+//----------------- Functions for logic -----------------//
 /* ******* LOGIC TO MOVE ELEVATOR ******* */
 func moveElevator(requestedFloor int, e *Elevator) *Elevator {
 	for len(e.floorList) > 0 {
@@ -619,10 +609,6 @@ func deleteFloorFromList(stopFloor int, e *Elevator) {
 
 	if i > -1 {
 		e.floorList = remove(e.floorList, i)
-		// Remove the element at index i from e.floorList
-		// copy(e.floorList[i:], e.floorList[i+1:])       // Shift e.floorList[i+1:] left one index.
-		// e.floorList[len(e.floorList)-1] = 0            // Erase last element (write zero value).
-		// e.floorList = e.floorList[:len(e.floorList)-1] // Truncate slice.
 	}
 }
 
@@ -641,8 +627,8 @@ func indexOf(limit int, predicate func(i int) bool) int {
 	return -1
 }
 
-//----------------- Entry method -----------------//
-/* ******* ENTRY METHOD ******* */
+//----------------- Entry Function -----------------//
+/* ******* ENTRY FUNCTION ******* */
 /* ******* REQUEST FOR A FLOOR BY PRESSING THE FLOOR BUTTON INSIDE THE ELEVATOR ******* */
 func requestFloor(requestedFloor int, e *Elevator) {
 	if e.floor != requestedFloor {
