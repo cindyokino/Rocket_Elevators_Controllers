@@ -105,7 +105,7 @@ namespace Commercial_Controller_CS
             }
         }
 
-        /* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
+        /* ******* CALL FUNCTIONS TO CREATE THE LISTS INSIDE EACH COLUMN ******* */
         public void createListsInsideColumns()
         {
             foreach (Column column in columnsList)
@@ -197,7 +197,7 @@ namespace Commercial_Controller_CS
                     this.columnsList[i].numberServedFloors = (numberOfFloorsPerColumn + 1); //Add 1 floor for the RDC/ground floor
                 }
                 this.columnsList[i].minFloor = minimumFloor;
-                this.columnsList[i].maxFloor = (this.columnsList[i].minFloor + numberOfFloorsPerColumn - 1);
+                this.columnsList[i].maxFloor = this.columnsList[i].minFloor + (numberOfFloorsPerColumn - 1);
                 minimumFloor = this.columnsList[i].maxFloor + 1; //setting the minimum floor for the next column
             }
         }
@@ -372,8 +372,7 @@ namespace Commercial_Controller_CS
                 if (direction == Direction.UP)
                 {
                     //find the UP button by ID
-                    // Optional<Button> currentButton = this.buttonsUpList.stream().filter(door => door.id == requestedFloor).findFirst();
-                    Button currentButton = this.buttonsUpList.FirstOrDefault(door => door.id == requestedFloor);
+                    Button currentButton = this.buttonsUpList.FirstOrDefault(button => button.id == requestedFloor);
                     if (currentButton != null)
                     {
                         currentButton.status = ButtonStatus.ON;
@@ -382,7 +381,7 @@ namespace Commercial_Controller_CS
                 else
                 {
                     //find the DOWN button by ID
-                    Button currentButton = this.buttonsDownList.FirstOrDefault(door => door.id == requestedFloor);
+                    Button currentButton = this.buttonsDownList.FirstOrDefault(button => button.id == requestedFloor);
                     if (currentButton != null)
                     {
                         currentButton.status = ButtonStatus.ON;
@@ -508,24 +507,8 @@ namespace Commercial_Controller_CS
                         else
                         {
                             this.openDoors();
-                            this.deleteFloorFromList(requestedFloor);
-
-                            // finding buttons by ID
-                            Button currentUpButton = this.column.buttonsUpList.FirstOrDefault(button => button.id == requestedFloor);
-                            if (currentUpButton != null)
-                            {
-                                currentUpButton.status = ButtonStatus.OFF;
-                            }
-                            Button currentDownButton = this.column.buttonsDownList.FirstOrDefault(button => button.id == requestedFloor);
-                            if (currentDownButton != null)
-                            {
-                                currentDownButton.status = ButtonStatus.OFF;
-                            }
-                            Button currentFloorButton = this.floorButtonsList.FirstOrDefault(button => button.id == requestedFloor);
-                            if (currentFloorButton != null)
-                            {
-                                currentFloorButton.status = ButtonStatus.OFF;
-                            }
+                            this.deleteFloorFromList(requestedFloor); 
+                            this.manageButtonStatusOff(requestedFloor);                      
 
                         }
                     }
@@ -617,14 +600,19 @@ namespace Commercial_Controller_CS
             }
 
             /* ******* LOGIC TO FIND BUTTONS BY ID AND SET BUTTON STATUS OFF ******* */
-            private void manageButtonStatusOff(int nextFloor)
+            private void manageButtonStatusOff(int floor)
             {
-                Button currentUpButton = this.column.buttonsUpList.FirstOrDefault(button => button.id == nextFloor);
+                Button currentUpButton = this.column.buttonsUpList.FirstOrDefault(button => button.id == floor);
                 if (currentUpButton != null)
                 {
                     currentUpButton.status = ButtonStatus.OFF;
                 }
-                Button currentFloorButton = this.floorButtonsList.FirstOrDefault(button => button.id == nextFloor);
+                Button currentDownButton = this.column.buttonsDownList.FirstOrDefault(button => button.id == floor);
+                if (currentDownButton != null)
+                {
+                    currentDownButton.status = ButtonStatus.OFF;
+                }
+                Button currentFloorButton = this.floorButtonsList.FirstOrDefault(button => button.id == floor);
                 if (currentFloorButton != null)
                 {
                     currentFloorButton.status = ButtonStatus.OFF;
@@ -964,23 +952,28 @@ namespace Commercial_Controller_CS
                 System.Console.WriteLine(batteryScenario3);
                 System.Console.WriteLine();
                 batteryScenario3.columnsList.ForEach(column => System.Console.WriteLine(column));
-                System.Console.WriteLine();
+                System.Console.WriteLine();                
+                //--------- ElevatorD1 ---------
                 batteryScenario3.columnsList[3].elevatorsList[0].floor = 58;
                 batteryScenario3.columnsList[3].elevatorsList[0].status = ElevatorStatus.DOWN;
                 batteryScenario3.columnsList[3].elevatorsList[0].addFloorToFloorList(1);
 
+                //--------- ElevatorD2 ---------
                 batteryScenario3.columnsList[3].elevatorsList[1].floor = 50;
                 batteryScenario3.columnsList[3].elevatorsList[1].status = ElevatorStatus.UP;
                 batteryScenario3.columnsList[3].elevatorsList[1].addFloorToFloorList(60);
 
+                //--------- ElevatorD3 ---------
                 batteryScenario3.columnsList[3].elevatorsList[2].floor = 46;
                 batteryScenario3.columnsList[3].elevatorsList[2].status = ElevatorStatus.UP;
                 batteryScenario3.columnsList[3].elevatorsList[2].addFloorToFloorList(58);
 
+                //--------- ElevatorD4 ---------
                 batteryScenario3.columnsList[3].elevatorsList[3].floor = 1;
                 batteryScenario3.columnsList[3].elevatorsList[3].status = ElevatorStatus.UP;
                 batteryScenario3.columnsList[3].elevatorsList[3].addFloorToFloorList(54);
 
+                //--------- ElevatorD5 ---------
                 batteryScenario3.columnsList[3].elevatorsList[4].floor = 60;
                 batteryScenario3.columnsList[3].elevatorsList[4].status = ElevatorStatus.DOWN;
                 batteryScenario3.columnsList[3].elevatorsList[4].addFloorToFloorList(1);

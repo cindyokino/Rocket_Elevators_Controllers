@@ -98,7 +98,7 @@ class Battery {
         }
     }
 
-    /* ******* CREATE A LIST OF COLUMNS FOR THE BATTERY ******* */
+    /* ******* CALL FUNCTIONS TO CREATE THE LISTS INSIDE EACH COLUMN ******* */
     public void createListsInsideColumns() {
         columnsList.forEach(column -> {
             column.createElevatorsList();
@@ -428,21 +428,7 @@ class Elevator {
                 } else {
                     this.openDoors();
                     this.deleteFloorFromList(requestedFloor);
-
-                    // finding buttons by ID using Optional
-                    Optional<Button> currentUpButton = this.column.buttonsUpList.stream().filter(button -> button.id == requestedFloor).findFirst();
-                    if (currentUpButton.isPresent()) {
-                        currentUpButton.get().status = ButtonStatus.OFF;
-                    }
-                    Optional<Button> currentDownButton = this.column.buttonsDownList.stream().filter(button -> button.id == requestedFloor).findFirst();
-                    if (currentDownButton.isPresent()) {
-                        currentDownButton.get().status = ButtonStatus.OFF;
-                    }
-                    Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == requestedFloor).findFirst();
-                    if (currentFloorButton.isPresent()) {
-                        currentFloorButton.get().status = ButtonStatus.OFF;
-                    }
-
+                    manageButtonStatusOff(requestedFloor);
                 }
             }
             if (this.status == ElevatorStatus.UP) {
@@ -515,12 +501,16 @@ class Elevator {
     }
 
     /* ******* LOGIC TO FIND BUTTONS BY ID AND SET BUTTON STATUS OFF ******* */
-    private void manageButtonStatusOff(int nextFloor) {
-        Optional<Button> currentUpButton = this.column.buttonsUpList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter UP button by ID and set status to OFF
+    private void manageButtonStatusOff(int floor) {
+        Optional<Button> currentUpButton = this.column.buttonsUpList.stream().filter(button -> button.id == floor).findFirst(); //filter UP button by ID and set status to OFF
         if (currentUpButton.isPresent()) {
             currentUpButton.get().status = ButtonStatus.OFF;
         }
-        Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter floor button by ID and set status to OFF
+        Optional<Button> currentDownButton = this.column.buttonsDownList.stream().filter(button -> button.id == floor).findFirst(); //filter DOWN button by ID and set status to OFF
+        if (currentDownButton.isPresent()) {
+            currentDownButton.get().status = ButtonStatus.OFF;
+        }
+        Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == floor).findFirst(); //filter floor button by ID and set status to OFF
         if (currentFloorButton.isPresent()) {
             currentFloorButton.get().status = ButtonStatus.OFF;
         }
@@ -778,7 +768,7 @@ public class Commercial_Controller {
         System.out.println();
         batteryScenario2.columnsList.forEach(System.out::println);
         System.out.println();
-        //--------- ElevatorC1 ---------;
+        //--------- ElevatorC1 ---------
         batteryScenario2.columnsList.get(2).elevatorsList.get(0).floor = 1;
         batteryScenario2.columnsList.get(2).elevatorsList.get(0).status = ElevatorStatus.UP;
         batteryScenario2.columnsList.get(2).elevatorsList.get(0).addFloorToFloorList(21); //not departed yet
@@ -821,22 +811,27 @@ public class Commercial_Controller {
         System.out.println();
         batteryScenario3.columnsList.forEach(System.out::println);
         System.out.println();
+        //--------- ElevatorD1 ---------
         batteryScenario3.columnsList.get(3).elevatorsList.get(0).floor = 58;
         batteryScenario3.columnsList.get(3).elevatorsList.get(0).status = ElevatorStatus.DOWN;
         batteryScenario3.columnsList.get(3).elevatorsList.get(0).addFloorToFloorList(1);
 
+        //--------- ElevatorD2 ---------
         batteryScenario3.columnsList.get(3).elevatorsList.get(1).floor = 50;
         batteryScenario3.columnsList.get(3).elevatorsList.get(1).status = ElevatorStatus.UP;
         batteryScenario3.columnsList.get(3).elevatorsList.get(1).addFloorToFloorList(60);
 
+        //--------- ElevatorD3 ---------
         batteryScenario3.columnsList.get(3).elevatorsList.get(2).floor = 46;
         batteryScenario3.columnsList.get(3).elevatorsList.get(2).status = ElevatorStatus.UP;
         batteryScenario3.columnsList.get(3).elevatorsList.get(2).addFloorToFloorList(58);
 
+        //--------- ElevatorD4 ---------
         batteryScenario3.columnsList.get(3).elevatorsList.get(3).floor = 1;
         batteryScenario3.columnsList.get(3).elevatorsList.get(3).status = ElevatorStatus.UP;
         batteryScenario3.columnsList.get(3).elevatorsList.get(3).addFloorToFloorList(54);
 
+        //--------- ElevatorD5 ---------
         batteryScenario3.columnsList.get(3).elevatorsList.get(4).floor = 60;
         batteryScenario3.columnsList.get(3).elevatorsList.get(4).status = ElevatorStatus.DOWN;
         batteryScenario3.columnsList.get(3).elevatorsList.get(4).addFloorToFloorList(1);
