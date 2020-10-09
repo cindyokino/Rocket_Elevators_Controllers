@@ -809,8 +809,6 @@ func scenario2() {
 	fmt.Println("\n****************************** SCENARIO 2: ******************************")
 	fmt.Println()
 	batteryScenario2 := newBattery(1, 4, 66, 6, 5, batteryActive)
-	fmt.Println(batteryScenario2)
-	fmt.Println()
 	fmt.Println()
 	for _, column := range batteryScenario2.columnsList {
 		fmt.Printf("column%v | Served floors: %d | Min floor: %d | Max floor: %d\n", string(column.name), column.numberServedFloors, column.minFloor, column.maxFloor)
@@ -858,8 +856,6 @@ func scenario3() {
 	fmt.Println("\n****************************** SCENARIO 3: ******************************")
 	fmt.Println()
 	batteryScenario3 := newBattery(1, 4, 66, 6, 5, batteryActive)
-	fmt.Println(batteryScenario3)
-	fmt.Println()
 	fmt.Println()
 	for _, column := range batteryScenario3.columnsList {
 		fmt.Printf("column%v | Served floors: %d | Min floor: %d | Max floor: %d\n", string(column.name), column.numberServedFloors, column.minFloor, column.maxFloor)
@@ -908,8 +904,6 @@ func scenario4() {
 	fmt.Println("\n****************************** SCENARIO 4: ******************************")
 	fmt.Println()
 	batteryScenario4 := newBattery(1, 4, 66, 6, 5, batteryActive)
-	fmt.Println(batteryScenario4)
-	fmt.Println()
 	fmt.Println()
 	for _, column := range batteryScenario4.columnsList {
 		fmt.Printf("column%v | Served floors: %d | Min floor: %d | Max floor: %d\n", string(column.name), column.numberServedFloors, column.minFloor, column.maxFloor)
