@@ -325,7 +325,7 @@ namespace Commercial_Controller_CS
                 });
 
                 if (activeElevatorList.Count > 0)
-                { //Create new list for elevators with same direction that the request
+                { //Create new list for elevators and filter by same direction that the request
                     sameDirectionElevatorList = activeElevatorList.Where(elevator => elevator.status.ToString().Equals(direction.ToString())).ToList();
                 }
 
@@ -1037,7 +1037,6 @@ namespace Commercial_Controller_CS
             //----------------------------------------------------------------------------------------------------------------------------------
             static void Main(string[] args)
             {
-                Console.WriteLine("Hello World! This is the Commercial Controller in C#!!!");
 
                 /* ******* CALL SCENARIOS ******* */
                 scenario1();
