@@ -36,7 +36,7 @@
 
  numberOfBasements
  numberOfFloors                                                     //Floors of the building excluding the number of basements
- totalNumberOfFloors = numberOfFloors + Math.abs(numberOfBasements) //Transform the number of basements to a positive number
+ totalNumberOfFloors = numberOfFloors + math.Abs(numberOfBasements) //Transform the number of basements to a positive number
  minBuildingFloor                                                   //Is equal to 1 OR equal the numberOfBasements if there is a basement
  maxBuildingFloor = numberOfFloors                                  //Is the last floor of the building
  maxWeight                                                          //Maximum weight an elevator can carry in KG
@@ -45,7 +45,10 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 //------------------------------------------- BATTERY -----------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -56,7 +59,7 @@ type Battery struct {
 	maxBuildingFloor           int //Is the last floor of the building
 	numberOfFloors             int //Floors of the building excluding the number of basements
 	numberOfBasements          int
-	totalNumberOfFloors        int //numberOfFloors + Math.abs(numberOfBasements)
+	totalNumberOfFloors        int //numberOfFloors + math.Abs(numberOfBasements)
 	numberOfElevatorsPerColumn int
 	numberOfFloorsPerColumn    int
 	status                     BatteryStatus
@@ -77,6 +80,7 @@ func newBattery(id int, numberOfColumns int, totalNumberOfFloors int, numberOfBa
 	createColumnsList(b)
 	setColumnValues(b)
 	createListsInsideColumns(b)
+	fmt.Printf("battery%d | Basements: %d | Columns: %d | Elevators per column: %d\n", b.id, b.numberOfBasements, b.numberOfColumns, b.numberOfElevatorsPerColumn)
 
 	return b
 }
@@ -99,7 +103,7 @@ func createListsInsideColumns(b *Battery) {
 	for _, c := range b.columnsList {
 		createElevatorsList(&c)
 		createButtonsUpList(&c)
-		// createButtonsDownList()
+		createButtonsDownList(&c)
 	}
 }
 
@@ -210,6 +214,7 @@ func newColumn(id int, name rune, columnStatus ColumnStatus, numberOfElevatorsPe
 	c.elevatorsList = []Elevator{}
 	c.buttonsUpList = []Button{}
 	c.buttonsDownList = []Button{}
+	fmt.Printf("column%v | Served floors: %d | Min floor: %d | Max floor: %d\n", c.name, c.numberServedFloors, c.minFloor, c.maxFloor)
 
 	return c
 }
@@ -232,8 +237,108 @@ func createButtonsUpList(c *Column) {
 		bt = newButton(i, buttonOff, i)
 		c.buttonsUpList = append(c.buttonsUpList, *bt)
 	}
-	// fmt.Printf("Created column%v buttonsUpList:\n", string(c.name))
-	// fmt.Printf("%v\n", c.buttonsUpList)
+	// fmt.Printf("Created buttons UP list - column%v\n", string(c.name))
+}
+
+/* ******* CREATE A LIST WITH DOWN BUTTONS FROM THE SECOND FLOOR TO THE LAST FLOOR ******* */
+func createButtonsDownList(c *Column) {
+	bt := newButton(1, buttonOff, 1)
+	c.buttonsDownList = append(c.buttonsDownList, *bt)
+	var minBuildingFloor int
+	if c.numberOfBasements > 0 {
+		minBuildingFloor = c.numberOfBasements * -1
+	} else {
+		minBuildingFloor = 1
+	}
+	for i := minBuildingFloor + 1; i <= c.maxFloor; i++ {
+		bt = newButton(i, buttonOff, i)
+		c.buttonsDownList = append(c.buttonsDownList, *bt)
+	}
+	// fmt.Printf("Created buttons DOWN list - column%v\n", string(c.name))
+}
+
+//----------------- Functions for logic -----------------//
+/* ******* LOGIC TO FIND THE BEST ELEVATOR WITH A PRIORITIZATION LOGIC ******* */
+func findElevator(currentFloor int, direction Direction, c *Column) Elevator {
+	var bestElevator Elevator
+	var activeElevatorList = []Elevator{}
+	var idleElevatorList = []Elevator{}
+	var sameDirectionElevatorList = []Elevator{}
+	for _, elevator := range c.elevatorsList {
+		if elevator.status != elevatorIdle {
+			//Verify if the request is on the elevators way, otherwise the elevator will just continue its way ignoring this call
+			if elevator.status == elevatorUp && elevator.floor <= currentFloor || elevator.status == elevatorDown && elevator.floor >= currentFloor {
+				activeElevatorList = append(activeElevatorList, elevator)
+			}
+		} else {
+			idleElevatorList = append(idleElevatorList, elevator)
+		}
+	}
+
+	if len(activeElevatorList) > 0 { //Create new list for elevators with same direction that the request
+		for _, elevator := range activeElevatorList {
+			if string(elevator.status) == string(direction) {
+				sameDirectionElevatorList = append(sameDirectionElevatorList, elevator)
+			}
+		}
+	}
+
+	if len(sameDirectionElevatorList) > 0 {
+		bestElevator = findNearestElevator(currentFloor, sameDirectionElevatorList, c) // 1- Try to use an elevator that is moving and has the same direction
+	} else if len(idleElevatorList) > 0 {
+		bestElevator = findNearestElevator(currentFloor, idleElevatorList, c) // 2- Try to use an elevator that is IDLE
+	} else {
+		bestElevator = findNearestElevator(currentFloor, activeElevatorList, c) // 3- As the last option, uses an elevator that is moving at the contrary direction
+	}
+
+	return bestElevator
+}
+
+/* ******* LOGIC TO FIND THE NEAREST ELEVATOR ******* */
+func findNearestElevator(currentFloor int, selectedList []Elevator, c *Column) Elevator {
+	var bestElevator Elevator = selectedList[0]
+	var bestDistance float64 = math.Abs(float64(selectedList[0].floor - currentFloor)) //math.Abs() returns the absolute value of a number (always positive).
+	for _, elevator := range selectedList {
+		if math.Abs(float64(elevator.floor-currentFloor)) < bestDistance {
+			bestElevator = elevator
+		}
+	}
+	fmt.Println("\n-----------------------------------------------------")
+	fmt.Printf("   > > >> >>> ELEVATOR%v%d WAS CALLED <<< << < <\n", string(c.name), bestElevator.id)
+	fmt.Println("-----------------------------------------------------\n")
+
+	return bestElevator
+}
+
+/* ******* LOGIC TO TURN ON THE BUTTONS FOR THE ASKED DIRECTION ******* */
+func manageButtonStatusOn(requestedFloor int, direction Direction, c *Column) {
+	var currentButton Button
+	if direction == directionUp {
+		for _, button := range c.buttonsUpList {
+			if button.id == requestedFloor { //find the UP button by ID
+				currentButton = button
+			}
+		}
+	} else {
+		for _, button := range c.buttonsDownList {
+			if button.id == requestedFloor { //find the DOWN button by ID
+				currentButton = button
+			}
+		}
+	}
+	currentButton.status = buttonOn
+}
+
+//----------------- Entry method -----------------//
+/* ******* ENTRY METHOD ******* */
+/* ******* REQUEST FOR AN ELEVATOR BY PRESSING THE UP OU DOWN BUTTON OUTSIDE THE ELEVATOR ******* */
+func requestElevator(requestedFloor int, direction Direction, c *Column) { // User goes to the specific column and press a button outside the elevator requesting for an elevator
+	manageButtonStatusOn(requestedFloor, direction, c)
+	var bestElevator Elevator = c.findElevator(requestedFloor, direction)
+	if bestElevator.floor != requestedFloor {
+		bestElevator.addFloorToFloorList(requestedFloor)
+		bestElevator.moveElevator(requestedFloor)
+	}
 }
 
 //------------------------------------------- ELEVATOR ----------------------------------------------------------------------------
@@ -266,10 +371,11 @@ func newElevator(id int, numberServedFloors int, floor int, elevatorStatus Eleva
 	e.column = *column
 	e.elevatorDoor = Door{0, doorClosed, 0}
 	e.elevatorDisplay = Display{0, displayOn, 0}
-	// e.floorDoorsList = createFloorDoorsList()
-	// e.floorDisplaysList = createDisplaysList()
-	// e.floorButtonsList = createFloorButtonsList()
+	e.floorDoorsList = createFloorDoorsList()
+	e.floorDisplaysList = createDisplaysList()
+	e.floorButtonsList = createFloorButtonsList()
 	e.floorList = []int{}
+	fmt.Printf("elevator%v%d | Floor: %d | Status: %d\n", string(column.name), e.id, e.floor, e.status)
 
 	return e
 }
@@ -388,23 +494,65 @@ const (
 type Direction string
 
 const (
-	directionOn  Direction = "Up"
-	directionOff           = "Down"
+	directionUp   Direction = "Up"
+	directionDown           = "Down"
 )
 
 //------------------------------------------- TESTING PROGRAM - SCENARIOS ---------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 /* ******* CREATE SCENARIO 1 ******* */
 func scenario1() {
+	fmt.Println("\n****************************** SCENARIO 1: ******************************")
+	fmt.Println()
+	batteryScenario1 := newBattery(1, 4, 66, 6, 5, batteryActive)
+	fmt.Println(batteryScenario1)
+	fmt.Println()
+	for _, column := range batteryScenario1.columnsList {
+		fmt.Println(column)
+	}
+	fmt.Println()
+	//--------- ElevatorB1 ---------
+	batteryScenario1.columnsList[1].elevatorsList[0].floor = 20
+	batteryScenario1.columnsList[1].elevatorsList[0].status = elevatorDown
+	batteryScenario1.columnsList[1].elevatorsList[0].addFloorToFloorList(5)
 
+	//--------- ElevatorB2 ---------
+	batteryScenario1.columnsList[1].elevatorsList[1].floor = 3
+	batteryScenario1.columnsList[1].elevatorsList[1].status = elevatorUp
+	batteryScenario1.columnsList[1].elevatorsList[1].addFloorToFloorList(15)
+
+	//--------- ElevatorB3 ---------
+	batteryScenario1.columnsList[1].elevatorsList[2].floor = 13
+	batteryScenario1.columnsList[1].elevatorsList[2].status = elevatorDown
+	batteryScenario1.columnsList[1].elevatorsList[2].addFloorToFloorList(1)
+
+	//--------- ElevatorB4 ---------
+	batteryScenario1.columnsList[1].elevatorsList[3].floor = 15
+	batteryScenario1.columnsList[1].elevatorsList[3].status = elevatorDown
+	batteryScenario1.columnsList[1].elevatorsList[3].addFloorToFloorList(2)
+
+	//--------- ElevatorB5 ---------
+	batteryScenario1.columnsList[1].elevatorsList[4].floor = 6
+	batteryScenario1.columnsList[1].elevatorsList[4].status = elevatorDown
+	batteryScenario1.columnsList[1].elevatorsList[4].addFloorToFloorList(1)
+
+	for _, elevator := range batteryScenario1.columnsList[1].elevatorsList {
+		fmt.Println(elevator)
+	}
+	fmt.Println()
+	fmt.Println("Person 1: (elevator B5 is expected)") //elevator expected
+	fmt.Println(">> User request an elevator from floor <1> and direction <UP> <<")
+	fmt.Println(">> User request to go to floor <20>")
+	batteryScenario1.columnsList[1].requestElevator(1, directionUp)   //parameters (requestedFloor, directionUp/directionDown)
+	batteryScenario1.columnsList[1].elevatorsList[4].requestFloor(20) //parameters (requestedFloor)
+	fmt.Println("=========================================================================")
 }
+
+/* ******* CREATE SCENARIO 2 ******* */
 
 func main() {
 	/* ******* CALL SCENARIOS ******* */
-	battery1 := newBattery(1, 4, 66, 6, 5, batteryActive)
-	fmt.Printf("Created battery%d%v\n", battery1.id, string(battery1.columnsList[0].name))
-
-	// scenario1()
+	scenario1()
 	// scenario2()
 	// scenario3()
 	// scenario4()

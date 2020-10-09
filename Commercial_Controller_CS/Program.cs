@@ -372,8 +372,7 @@ namespace Commercial_Controller_CS
                 if (direction == Direction.UP)
                 {
                     //find the UP button by ID
-                    // Optional<Button> currentButton = this.buttonsUpList.stream().filter(door => door.id == requestedFloor).findFirst();
-                    Button currentButton = this.buttonsUpList.FirstOrDefault(door => door.id == requestedFloor);
+                    Button currentButton = this.buttonsUpList.FirstOrDefault(button => button.id == requestedFloor);
                     if (currentButton != null)
                     {
                         currentButton.status = ButtonStatus.ON;
@@ -382,7 +381,7 @@ namespace Commercial_Controller_CS
                 else
                 {
                     //find the DOWN button by ID
-                    Button currentButton = this.buttonsDownList.FirstOrDefault(door => door.id == requestedFloor);
+                    Button currentButton = this.buttonsDownList.FirstOrDefault(button => button.id == requestedFloor);
                     if (currentButton != null)
                     {
                         currentButton.status = ButtonStatus.ON;
