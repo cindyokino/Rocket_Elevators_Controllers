@@ -39,3 +39,8 @@ Here are the steps if you want to run the code in each version of the elevator c
 * You can run the code with at the terminal of your preference by typing: **go run Commercial_Controller.go**
 
     Note that you have to be in the script folder for it to run correctly.
+
+## 🏢Commercial Controller Elixir - Commercial_Controller.ex
+* You can run the code with at the terminal of your preference by typing: **elixirc Commercial_Controller.ex**
+
+    Note that you have to be in the script folder **Commercial_Controller_ELIXIR** for it to run correctly.
