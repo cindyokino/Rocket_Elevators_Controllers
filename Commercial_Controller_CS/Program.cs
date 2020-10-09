@@ -507,24 +507,8 @@ namespace Commercial_Controller_CS
                         else
                         {
                             this.openDoors();
-                            this.deleteFloorFromList(requestedFloor);
-
-                            // finding buttons by ID
-                            Button currentUpButton = this.column.buttonsUpList.FirstOrDefault(button => button.id == requestedFloor);
-                            if (currentUpButton != null)
-                            {
-                                currentUpButton.status = ButtonStatus.OFF;
-                            }
-                            Button currentDownButton = this.column.buttonsDownList.FirstOrDefault(button => button.id == requestedFloor);
-                            if (currentDownButton != null)
-                            {
-                                currentDownButton.status = ButtonStatus.OFF;
-                            }
-                            Button currentFloorButton = this.floorButtonsList.FirstOrDefault(button => button.id == requestedFloor);
-                            if (currentFloorButton != null)
-                            {
-                                currentFloorButton.status = ButtonStatus.OFF;
-                            }
+                            this.deleteFloorFromList(requestedFloor); 
+                            this.manageButtonStatusOff(requestedFloor);                      
 
                         }
                     }
@@ -616,14 +600,19 @@ namespace Commercial_Controller_CS
             }
 
             /* ******* LOGIC TO FIND BUTTONS BY ID AND SET BUTTON STATUS OFF ******* */
-            private void manageButtonStatusOff(int nextFloor)
+            private void manageButtonStatusOff(int floor)
             {
-                Button currentUpButton = this.column.buttonsUpList.FirstOrDefault(button => button.id == nextFloor);
+                Button currentUpButton = this.column.buttonsUpList.FirstOrDefault(button => button.id == floor);
                 if (currentUpButton != null)
                 {
                     currentUpButton.status = ButtonStatus.OFF;
                 }
-                Button currentFloorButton = this.floorButtonsList.FirstOrDefault(button => button.id == nextFloor);
+                Button currentDownButton = this.column.buttonsDownList.FirstOrDefault(button => button.id == floor);
+                if (currentDownButton != null)
+                {
+                    currentDownButton.status = ButtonStatus.OFF;
+                }
+                Button currentFloorButton = this.floorButtonsList.FirstOrDefault(button => button.id == floor);
                 if (currentFloorButton != null)
                 {
                     currentFloorButton.status = ButtonStatus.OFF;

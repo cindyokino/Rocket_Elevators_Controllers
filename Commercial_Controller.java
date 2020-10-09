@@ -428,21 +428,7 @@ class Elevator {
                 } else {
                     this.openDoors();
                     this.deleteFloorFromList(requestedFloor);
-
-                    // finding buttons by ID using Optional
-                    Optional<Button> currentUpButton = this.column.buttonsUpList.stream().filter(button -> button.id == requestedFloor).findFirst();
-                    if (currentUpButton.isPresent()) {
-                        currentUpButton.get().status = ButtonStatus.OFF;
-                    }
-                    Optional<Button> currentDownButton = this.column.buttonsDownList.stream().filter(button -> button.id == requestedFloor).findFirst();
-                    if (currentDownButton.isPresent()) {
-                        currentDownButton.get().status = ButtonStatus.OFF;
-                    }
-                    Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == requestedFloor).findFirst();
-                    if (currentFloorButton.isPresent()) {
-                        currentFloorButton.get().status = ButtonStatus.OFF;
-                    }
-
+                    manageButtonStatusOff(requestedFloor);
                 }
             }
             if (this.status == ElevatorStatus.UP) {
@@ -515,12 +501,16 @@ class Elevator {
     }
 
     /* ******* LOGIC TO FIND BUTTONS BY ID AND SET BUTTON STATUS OFF ******* */
-    private void manageButtonStatusOff(int nextFloor) {
-        Optional<Button> currentUpButton = this.column.buttonsUpList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter UP button by ID and set status to OFF
+    private void manageButtonStatusOff(int floor) {
+        Optional<Button> currentUpButton = this.column.buttonsUpList.stream().filter(button -> button.id == floor).findFirst(); //filter UP button by ID and set status to OFF
         if (currentUpButton.isPresent()) {
             currentUpButton.get().status = ButtonStatus.OFF;
         }
-        Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == nextFloor).findFirst(); //filter floor button by ID and set status to OFF
+        Optional<Button> currentDownButton = this.column.buttonsDownList.stream().filter(button -> button.id == floor).findFirst(); //filter DOWN button by ID and set status to OFF
+        if (currentDownButton.isPresent()) {
+            currentDownButton.get().status = ButtonStatus.OFF;
+        }
+        Optional<Button> currentFloorButton = this.floorButtonsList.stream().filter(button -> button.id == floor).findFirst(); //filter floor button by ID and set status to OFF
         if (currentFloorButton.isPresent()) {
             currentFloorButton.get().status = ButtonStatus.OFF;
         }
